@@ -1,5 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
+import com.github.owlcs.ontapi.OntManagers
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 import org.apache.jena.rdf.model.Model
@@ -37,11 +38,11 @@ class GraphGenerator(
     }
 
     fun getGraphModel(vm: VirtualMachine, thread: ThreadReference): Model {
-        var model = ModelFactory.createDefaultModel()
-        // val ontManager = OntManagers.createManager()
-        // val ontology = ontManager.createOntology()
+        // var model = ModelFactory.createDefaultModel()
+        val ontManager = OntManagers.createManager()
+        val ontology = ontManager.createOntology()
 
-        // var model: Model = ontology.asGraphModel()
+        var model: Model = ontology.asGraphModel()
 
         // Load Java ontology
         model = loadJavaOntology(model)
@@ -52,6 +53,8 @@ class GraphGenerator(
         // Map program state
         model = mapProgramState(vm, thread, model)
 
+
         return ModelFactory.createInfModel(ReasonerRegistry.getOWLReasoner(), model)
+        //return model
     }
 }

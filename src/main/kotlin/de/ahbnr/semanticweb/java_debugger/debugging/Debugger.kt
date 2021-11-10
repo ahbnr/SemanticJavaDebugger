@@ -56,12 +56,18 @@ class Debugger(private val classToDebug: String, private val lineNum: Int) {
             println("RDF Graph")
             val ns = genDefaultNs()
 
-            val graphGen = GraphGenerator(applicationDomainDefFile, listOf(ClassMapper(ns), ObjectMapper(ns)))
+            val graphGen = GraphGenerator(
+                applicationDomainDefFile,
+                listOf(
+                    ClassMapper(ns),
+                    ObjectMapper(ns)
+                )
+            )
             val model = graphGen.getGraphModel(locatableEvent.virtualMachine(), locatableEvent.thread())
 
             println("WRITING")
             val fileOut = FileOutputStream("graph.rdf")
-            model.write(fileOut)
+            //model.write(fileOut)
             //model.write(System.out)
             //RDFDataMgr.write(fileOut, model, Lang.RDFXML)
             fileOut.close()
@@ -76,10 +82,19 @@ class Debugger(private val classToDebug: String, private val lineNum: Int) {
                 WHERE { ?x a domain:Root }
             """.trimIndent())
 
-            val queryExecution = QueryExecutionFactory.create(query, model)
+            //val query = QueryFactory.create("""
+            //    PREFIX domain: <https://github.com/ahbnr/SemanticJavaDebugger/TwoThreeTree#>
+            //    PREFIX prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#>
+            //    PREFIX java: <https://github.com/ahbnr/SemanticJavaDebugger#>
+            //    SELECT ?x
+            //    WHERE { ?x prog:Node_parent java:null }
+            //""".trimIndent())
 
+            val queryExecution = QueryExecutionFactory.create(query, model)
+            println("EXECUTING QUERY")
             val results = queryExecution.execSelect()
 
+            println("PRINTING RESULT")
             ResultSetFormatter.out(System.out, results, query)
 
             queryExecution.close()
