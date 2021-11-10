@@ -14,8 +14,10 @@ repositories {
 
 dependencies {
     implementation("org.apache.jena:apache-jena-libs:4.2.0")
+    implementation("com.github.owlcs:ontapi:2.1.0")
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("org.slf4j:slf4j-simple:1.7.32")
+    implementation("com.github.ajalt.clikt:clikt:3.3.0")
 
     testImplementation(kotlin("test"))
 }
