@@ -222,9 +222,9 @@ class ClassMapper(
                         is ClassType -> {
                             val classSubject = genClassTypeURI(referenceType, ns)
 
-                            if (referenceType.name().startsWith("java") || referenceType.name().startsWith("jdk") ||referenceType.name().startsWith("com") ) {
-                                continue
-                            }
+                            //if (referenceType.name().startsWith("java") || referenceType.name().startsWith("jdk") ||referenceType.name().startsWith("com") ) {
+                            //    continue
+                            //}
 
                             addClassNode(classSubject, referenceType)
                         }

@@ -38,11 +38,11 @@ class GraphGenerator(
     }
 
     fun getGraphModel(vm: VirtualMachine, thread: ThreadReference): Model {
-        // var model = ModelFactory.createDefaultModel()
-        val ontManager = OntManagers.createManager()
-        val ontology = ontManager.createOntology()
+        var model = ModelFactory.createDefaultModel()
+        //val ontManager = OntManagers.createManager()
+        //val ontology = ontManager.createOntology()
 
-        var model: Model = ontology.asGraphModel()
+        //var model: Model = ontology.asGraphModel()
 
         // Load Java ontology
         model = loadJavaOntology(model)
@@ -54,7 +54,15 @@ class GraphGenerator(
         model = mapProgramState(vm, thread, model)
 
 
-        return ModelFactory.createInfModel(ReasonerRegistry.getOWLReasoner(), model)
+        /**
+         * Maybe try out forward vs. backward chaining by selecting and configuring reasoner manually.
+         * See slide 66, lecture 6
+         */
+        // val reasoner = ReasonerRegistry.getOWLReasoner(); // sloooooow
+        // val reasoner = ReasonerRegistry.getOWLMiniReasoner() // also not fast enough
+        val reasoner = ReasonerRegistry.getOWLMicroReasoner() // much faster!
+        // val reasoner = ReasonerRegistry.getRDFSReasoner() // fast, but not powerful enough for our purposes.
+        return ModelFactory.createInfModel(reasoner, model)
         //return model
     }
 }
