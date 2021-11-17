@@ -1,59 +1,58 @@
+@file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE", "JAVA_MODULE_DOES_NOT_DEPEND_ON_MODULE")
+
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.int
-import com.sun.jdi.event.BreakpointEvent
-import com.sun.jdi.event.ClassPrepareEvent
-import com.sun.jdi.event.EventSet
-import com.sun.jdi.event.VMDisconnectEvent
-import de.ahbnr.semanticweb.java_debugger.debugging.Debugger
-import de.ahbnr.semanticweb.java_debugger.utils.ConcurrentLineCollector
+import com.github.ajalt.clikt.parameters.arguments.optional
+import de.ahbnr.semanticweb.java_debugger.debugging.JVMDebugger
+import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.repl.JLineLogger
+import de.ahbnr.semanticweb.java_debugger.repl.REPL
+import de.ahbnr.semanticweb.java_debugger.repl.commands.*
+import org.jline.terminal.TerminalBuilder
+import org.koin.core.context.startKoin
+import org.koin.dsl.module
+import java.io.FileInputStream
+
 
 class SemanticJavaDebugger: CliktCommand() {
-    val classToDebug by argument()
-    val lineNum: Int by argument().int()
-    val applicationDomainDefinition: String? by option()
+    val commandFile: String? by argument().optional()
 
     override fun run() {
-        val debuggerInstance = Debugger(classToDebug, lineNum)
+        val terminal = TerminalBuilder
+            .builder()
+            .build()
 
-        try {
-            val vm = debuggerInstance.launchVM()
-            val process = vm.process()
-
-            val procStdoutStream = process.inputStream
-            val procStderrStream = process.errorStream
-
-            val outputCollector = ConcurrentLineCollector(procStdoutStream, procStderrStream)
-
-            // Start the VM (necessary!)
-            vm.resume()
-
-            debuggerInstance.sendClassPrepareRequest(vm)
-            var eventSet: EventSet? = null
-            var connected = true
-            while (connected && vm.eventQueue().remove().also { eventSet = it } != null) {
-                for (event in eventSet!!) {
-                    // FIXME: Deal with this: https://dzone.com/articles/monitoring-classloading-jdi
-                    if (event is ClassPrepareEvent) {
-                        debuggerInstance.setBreakpoint(vm, event, lineNum)
-                    }
-                    if (event is BreakpointEvent) {
-                        debuggerInstance.displayVariables(applicationDomainDefinition, event)
-                    }
-                    if (event is VMDisconnectEvent) {
-                        connected = false
-                    }
-
-                    vm.resume()
+        startKoin {
+            modules(
+                module {
+                    single { JLineLogger(terminal) as Logger }
                 }
-            }
+            )
+        }
 
-            for (line in outputCollector.seq) {
-                println(line)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        val jvmDebugger = JVMDebugger()
+
+        val repl = REPL(
+            terminal,
+            listOf(
+                BuildKBCommand(jvmDebugger),
+                ContCommand(jvmDebugger),
+                DomainCommand(),
+                LocalsCommand(jvmDebugger),
+                RunCommand(jvmDebugger),
+                SparqlCommand(),
+                StopCommand(jvmDebugger)
+            )
+        )
+
+        if (commandFile != null) {
+            val fileInputStream = FileInputStream(commandFile!!)
+
+            repl.interpretStream(fileInputStream)
+        }
+
+        else {
+            repl.main()
         }
     }
 }

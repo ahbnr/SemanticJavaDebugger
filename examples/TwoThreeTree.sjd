@@ -1,0 +1,6 @@
+domain examples/TwoThreeTree.ttl
+stop at TwoThreeTree:41
+run TwoThreeTree
+buildkb
+sparql SELECT ?root ?var WHERE { ?root a domain:Root . ?var java:storesReferenceTo ?root . }
+cont

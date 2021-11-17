@@ -26,32 +26,6 @@ class ClassMapper(
         private val ns: Namespaces
     ): GraphBase() {
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
-            // Guard
-            if (triplePattern.subject is Node_URI && triplePattern.subject.nameSpace != ns.prog) {
-                return NullIterator()
-            }
-
-            // Guard
-            if (triplePattern.predicate is Node_URI){
-                val possiblePredicates = mutableListOf(
-                    "${ns.rdf}type",
-                    "${ns.java}hasField",
-                    "${ns.rdfs}domain",
-                    "${ns.java}hasMethod",
-                    "${ns.rdfs}subClassOf"
-                )
-
-                val anyEqual = possiblePredicates.any { it == triplePattern.predicate.uri }
-                if (!anyEqual) return NullIterator()
-            }
-
-            // Guard
-            if (triplePattern.getObject() is Node_URI){
-                val possibleObjectPrefixes = mutableListOf(ns.java, ns.owl, ns.prog)
-                val anyEqual = possibleObjectPrefixes.any { it == triplePattern.getObject().nameSpace }
-                if (!anyEqual) return NullIterator()
-            }
-
             val tripleCollector = TripleCollector(triplePattern)
 
             /**
@@ -83,13 +57,6 @@ class ClassMapper(
                 // A field is a property (of a class instance).
                 // Hence, we model it as a property in the ontology
                 val fieldPropertyName = genFieldPropertyURI(classType, field, ns)
-
-                // Guard
-                if (triplePattern.subject is Node_URI){
-                    if (triplePattern.subject.uri != classSubject && triplePattern.subject.uri != fieldPropertyName) {
-                        return;
-                    }
-                }
 
                 // this field is a java field
                 tripleCollector.addStatement(

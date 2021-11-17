@@ -1,8 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
-import com.github.owlcs.ontapi.OntManagers
 import com.sun.jdi.ThreadReference
-import com.sun.jdi.VirtualMachine
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.reasoner.ReasonerRegistry
@@ -20,7 +18,8 @@ class GraphGenerator(
         return model
     }
 
-    private fun mapProgramState(vm: VirtualMachine, thread: ThreadReference, model: Model): Model {
+    private fun mapProgramState(thread: ThreadReference, model: Model): Model {
+        val vm = thread.virtualMachine()
         for (mapper in mappers) {
             mapper.extendModel(vm, thread, model)
         }
@@ -37,7 +36,7 @@ class GraphGenerator(
         return model;
     }
 
-    fun getGraphModel(vm: VirtualMachine, thread: ThreadReference): Model {
+    fun getGraphModel(thread: ThreadReference): Model {
         var model = ModelFactory.createDefaultModel()
         //val ontManager = OntManagers.createManager()
         //val ontology = ontManager.createOntology()
@@ -51,7 +50,7 @@ class GraphGenerator(
         model = loadApplicationDomain(model)
 
         // Map program state
-        model = mapProgramState(vm, thread, model)
+        model = mapProgramState(thread, model)
 
 
         /**

@@ -6,4 +6,7 @@ module de.ahbnr.semanticweb.java_debugger {
     requires org.apache.jena.arq;
     requires com.github.ajalt.clikt;
     requires org.apache.jena.base;
+    requires org.jline;
+    // requires koin.core.jvm;
+    requires kotlin.stdlib.jdk7;
 }

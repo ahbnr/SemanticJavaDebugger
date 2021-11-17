@@ -11,6 +11,62 @@
 <https://github.com/ahbnr/SemanticJavaDebugger> rdf:type owl:Ontology .
 
 #################################################################
+#    Datatypes
+#################################################################
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#PrimitiveType
+java:PrimitiveType rdf:type rdfs:Datatype ;
+                   owl:equivalentClass java:boolean ,
+                                       java:byte ,
+                                       java:char ,
+                                       java:double ,
+                                       java:float ,
+                                       java:int ,
+                                       java:long ,
+                                       java:short .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#boolean
+java:boolean rdf:type rdfs:Datatype ;
+             owl:equivalentClass xsd:boolean .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#byte
+java:byte rdf:type rdfs:Datatype ;
+          owl:equivalentClass java:byte .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#char
+java:char rdf:type rdfs:Datatype ;
+          owl:equivalentClass xsd:unsignedShort .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#double
+java:double rdf:type rdfs:Datatype ;
+            owl:equivalentClass xsd:double .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#float
+java:float rdf:type rdfs:Datatype ;
+           owl:equivalentClass xsd:float .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#int
+java:int rdf:type rdfs:Datatype ;
+         owl:equivalentClass xsd:int .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#long
+java:long rdf:type rdfs:Datatype ;
+          owl:equivalentClass xsd:long .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#short
+java:short rdf:type rdfs:Datatype ;
+           owl:equivalentClass xsd:short .
+
+
+#################################################################
 #    Object Properties
 #################################################################
 
@@ -20,13 +76,35 @@ java:hasField rdf:type owl:ObjectProperty ;
               rdfs:range java:Field .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger#storesReferenceTo
+java:storesReferenceTo rdf:type owl:ObjectProperty ,
+                                owl:FunctionalProperty ;
+                       rdfs:domain [ rdf:type owl:Class ;
+                                     owl:unionOf ( java:Field
+                                                   java:Variable
+                                                 )
+                                   ] ;
+                       rdfs:range java:Object .
+
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#storesValue
+java:storesValue rdf:type owl:DatatypeProperty ,
+                          owl:FunctionalProperty ;
+                 rdfs:domain [ rdf:type owl:Class ;
+                               owl:unionOf ( java:Field
+                                             java:Variable
+                                           )
+                             ] ;
+                 rdfs:range java:PrimitiveType .
+
+
 #################################################################
 #    Classes
 #################################################################
-
-###  http://www.w3.org/2002/07/owl#Class
-owl:Class rdf:type owl:Class .
-
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#Class
 java:Class rdf:type owl:Class ;
@@ -44,6 +122,76 @@ java:Object rdf:type owl:Class .
 ###  https://github.com/ahbnr/SemanticJavaDebugger#UnloadedType
 java:UnloadedType rdf:type owl:Class ;
                   rdfs:subClassOf owl:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger#Variable
+java:Variable rdf:type owl:Class ;
+              rdfs:subClassOf [ rdf:type owl:Class ;
+                                owl:unionOf ( [ owl:intersectionOf ( [ rdf:type owl:Class ;
+                                                                       owl:complementOf [ rdf:type owl:Restriction ;
+                                                                                          owl:onProperty java:storesReferenceTo ;
+                                                                                          owl:someValuesFrom owl:Thing
+                                                                                        ]
+                                                                     ]
+                                                                     [ rdf:type owl:Restriction ;
+                                                                       owl:onProperty java:storesValue ;
+                                                                       owl:someValuesFrom rdfs:Datatype
+                                                                     ]
+                                                                   ) ;
+                                                rdf:type owl:Class
+                                              ]
+                                              [ owl:intersectionOf ( [ rdf:type owl:Class ;
+                                                                       owl:complementOf [ rdf:type owl:Restriction ;
+                                                                                          owl:onProperty java:storesValue ;
+                                                                                          owl:someValuesFrom rdfs:Datatype
+                                                                                        ]
+                                                                     ]
+                                                                     [ rdf:type owl:Restriction ;
+                                                                       owl:onProperty java:storesReferenceTo ;
+                                                                       owl:someValuesFrom owl:Thing
+                                                                     ]
+                                                                   ) ;
+                                                rdf:type owl:Class
+                                              ]
+                                            )
+                              ] .
+
+[ rdf:type owl:Axiom ;
+   owl:annotatedSource java:Variable ;
+   owl:annotatedProperty rdfs:subClassOf ;
+   owl:annotatedTarget [ rdf:type owl:Class ;
+                         owl:unionOf ( [ owl:intersectionOf ( [ rdf:type owl:Class ;
+                                                                owl:complementOf [ rdf:type owl:Restriction ;
+                                                                                   owl:onProperty java:storesReferenceTo ;
+                                                                                   owl:someValuesFrom owl:Thing
+                                                                                 ]
+                                                              ]
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty java:storesValue ;
+                                                                owl:someValuesFrom rdfs:Datatype
+                                                              ]
+                                                            ) ;
+                                         rdf:type owl:Class
+                                       ]
+                                       [ owl:intersectionOf ( [ rdf:type owl:Class ;
+                                                                owl:complementOf [ rdf:type owl:Restriction ;
+                                                                                   owl:onProperty java:storesValue ;
+                                                                                   owl:someValuesFrom rdfs:Datatype
+                                                                                 ]
+                                                              ]
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty java:storesReferenceTo ;
+                                                                owl:someValuesFrom owl:Thing
+                                                              ]
+                                                            ) ;
+                                         rdf:type owl:Class
+                                       ]
+                                     )
+                       ] ;
+   rdfs:comment """A variable either stores a reference or a value, but not both.
+
+So we restrict it to be a subclass of the symmetric difference things that store references and things that store values."""
+ ] .
 
 
 #################################################################

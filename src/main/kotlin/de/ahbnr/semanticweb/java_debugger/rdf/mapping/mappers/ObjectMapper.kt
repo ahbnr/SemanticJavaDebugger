@@ -3,7 +3,6 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.*
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.utils.TripleCollector
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.utils.addStatement
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase
 import org.apache.jena.rdf.model.Model
@@ -29,7 +28,7 @@ class ObjectMapper(
                 // or the value itself, in case of a primitive value
                 val valueObject = when(value) {
                     null -> ns.java + "null"
-                    is ObjectReference -> genObjectIndividualName(value, ns)
+                    is ObjectReference -> genObjectURI(value, ns)
                     else -> null // FIXME: Handle other cases
                 }
 
@@ -55,7 +54,7 @@ class ObjectMapper(
             }
 
             fun addObjectNode(objectReference: ObjectReference, classType: ClassType) {
-                val objectSubject = genObjectIndividualName(objectReference, ns)
+                val objectSubject = genObjectURI(objectReference, ns)
 
                 // The object is a particular individual (not a class/concept)
                 tripleCollector.addStatement(
@@ -82,6 +81,15 @@ class ObjectMapper(
                 addFields(objectSubject, objectReference, classType)
             }
 
+            fun addVariable(frameDepth: Int, variable: LocalVariable) {
+                val subject = genLocalVariableURI(frameDepth, variable, ns)
+                tripleCollector.addStatement(
+                    subject,
+                    ns.rdf + "type",
+                    ns.java + "Variable"
+                )
+            }
+
             fun addValues() {
                 // FIXME: Handle more than current stack frame
                 // FIXME: Handle multiple threads?
@@ -92,7 +100,8 @@ class ObjectMapper(
                     val values = frame.getValues(variables)
 
                     for ((variable, value) in values) {
-                        println("Checking " + variable.name())
+                        addVariable(0, variable)
+                        val variableURI = genLocalVariableURI(0, variable, ns)
 
                         when (value) {
                             is ObjectReference -> {
@@ -101,6 +110,14 @@ class ObjectMapper(
                                 when (referenceType) {
                                     is ClassType -> {
                                         addObjectNode(value, referenceType)
+
+                                        val objectURI = genObjectURI(value, ns)
+
+                                        tripleCollector.addStatement(
+                                            variableURI,
+                                            ns.java + "storesReferenceTo",
+                                            objectURI
+                                        )
                                     }
                                 }
                             }
@@ -123,8 +140,11 @@ class ObjectMapper(
     }
 
     companion object {
-        fun genObjectIndividualName(objectReference: ObjectReference, ns: Namespaces): String =
+        fun genObjectURI(objectReference: ObjectReference, ns: Namespaces): String =
             // FIXME: The documentation is not really clear on this, but experimentally this should be a unique id for the object being referenced (e.g. two references to the same object return the same id here)
             "${ns.run}object_${objectReference.uniqueID()}"
+
+        fun genLocalVariableURI(stackFrameDepth: Int, variable: LocalVariable, ns: Namespaces): String =
+            "${ns.run}localvariable_frame${stackFrameDepth}_${variable.name()}"
     }
 }
