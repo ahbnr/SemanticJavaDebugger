@@ -2,6 +2,7 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl
 
+import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
 import org.apache.jena.rdf.model.Model
@@ -21,7 +22,7 @@ class REPL(
     commands: List<IREPLCommand>
 ): KoinComponent {
     var applicationDomainDefFile: String? = null
-    var knowledgeBase: Model? = null
+    var knowledgeBase: Ontology? = null
 
     private val commandMap = commands.map { it.name to it }.toMap()
     private val parser = DefaultParser()

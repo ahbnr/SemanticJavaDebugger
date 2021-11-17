@@ -17,6 +17,10 @@ dependencies {
     // Apache Jena
     implementation("org.apache.jena:apache-jena-libs:4.2.0")
 
+    // HermiT reasoner
+    // implementation("com.hermit-reasoner:org.semanticweb.hermit:1.3.8.4")
+    implementation("net.sourceforge.owlapi:org.semanticweb.hermit:1.4.5.519")
+
     // Extended OWL support
     implementation("com.github.owlcs:ontapi:2.1.0")
 

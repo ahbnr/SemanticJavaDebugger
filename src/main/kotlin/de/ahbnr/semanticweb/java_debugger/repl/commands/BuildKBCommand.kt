@@ -18,6 +18,7 @@ import org.koin.core.component.inject
 
 class BuildKBCommand(
     val jvmDebugger: JVMDebugger,
+    val graphGenerator: GraphGenerator
 ): IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
@@ -35,17 +36,7 @@ class BuildKBCommand(
             logger.error("JVM is currently not paused.")
             return
         }
-
-        val ns = genDefaultNs()
-
-        val graphGen = GraphGenerator(
-            repl.applicationDomainDefFile,
-            listOf(
-                ClassMapper(ns),
-                ObjectMapper(ns)
-            )
-        )
-        val model = graphGen.getGraphModel(state.pausedThread)
-        repl.knowledgeBase = model
+        val ontology = graphGenerator.buildOntology(state.pausedThread, repl.applicationDomainDefFile)
+        repl.knowledgeBase = ontology
     }
 }

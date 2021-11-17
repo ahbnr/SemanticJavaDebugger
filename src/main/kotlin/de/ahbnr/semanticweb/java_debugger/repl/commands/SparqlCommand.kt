@@ -2,12 +2,8 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
-import de.ahbnr.semanticweb.java_debugger.debugging.JVMDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.genDefaultNs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ClassMapper
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ObjectMapper
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
@@ -16,17 +12,21 @@ import org.apache.jena.query.ResultSetFormatter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class SparqlCommand: IREPLCommand, KoinComponent {
+class SparqlCommand(
+    private val graphGenerator: GraphGenerator
+): IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "sparql"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
-        val model = repl.knowledgeBase
-        if (model == null) {
+        val ontology = repl.knowledgeBase
+        if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return
         }
+
+        val model = graphGenerator.buildInferredModel(ontology)
 
         val domainURI = model.getNsPrefixURI("domain")
         val sparqlPrefixString = if (domainURI != null) "PREFIX domain: <$domainURI>" else ""

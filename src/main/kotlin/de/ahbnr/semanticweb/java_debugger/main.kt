@@ -5,6 +5,10 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
 import de.ahbnr.semanticweb.java_debugger.debugging.JVMDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.GraphGenerator
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.genDefaultNs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ClassMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ObjectMapper
 import de.ahbnr.semanticweb.java_debugger.repl.JLineLogger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import de.ahbnr.semanticweb.java_debugger.repl.commands.*
@@ -32,15 +36,24 @@ class SemanticJavaDebugger: CliktCommand() {
 
         val jvmDebugger = JVMDebugger()
 
+        val ns = genDefaultNs()
+        val graphGen = GraphGenerator(
+            listOf(
+                ClassMapper(ns),
+                ObjectMapper(ns)
+            )
+        )
+
         val repl = REPL(
             terminal,
             listOf(
-                BuildKBCommand(jvmDebugger),
+                BuildKBCommand(jvmDebugger, graphGen),
+                CheckKBCommand(),
                 ContCommand(jvmDebugger),
                 DomainCommand(),
                 LocalsCommand(jvmDebugger),
                 RunCommand(jvmDebugger),
-                SparqlCommand(),
+                SparqlCommand(graphGen),
                 StopCommand(jvmDebugger)
             )
         )
