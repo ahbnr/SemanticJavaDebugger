@@ -83,7 +83,7 @@ tasks.withType<KotlinCompile>() {
 
 application {
     // applicationDefaultJvmArgs = listOf(
-    //     "--add-exports java.base/kotlin.collections=ALL-UNNAMED",
+    //     "--add-exports jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
     // )
 
     mainClassName = "MainKt"

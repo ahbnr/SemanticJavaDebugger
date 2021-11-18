@@ -7,6 +7,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.semanticweb.HermiT.ReasonerFactory
+import org.semanticweb.owlapi.reasoner.InconsistentOntologyException
 
 class CheckKBCommand: IREPLCommand, KoinComponent {
     val logger: Logger by inject()
@@ -23,7 +24,8 @@ class CheckKBCommand: IREPLCommand, KoinComponent {
         logger.log("${ontology.axiomCount} axioms.")
 
         val hermit = ReasonerFactory().createReasoner(ontology)
-        if (hermit.isConsistent) {
+        val isConsistent = hermit.isConsistent
+        if (isConsistent) {
             logger.log("Knowledge base is consistent.")
         }
 
@@ -31,15 +33,22 @@ class CheckKBCommand: IREPLCommand, KoinComponent {
             logger.error("Knowledge base is inconsistent!")
         }
 
-        // FIXME: Am I using Hermit correctly here?
-        val unsat = hermit.unsatisfiableClasses.entitiesMinusBottom
-        if (unsat.isEmpty()) {
-            logger.log("No unsatisfiable concepts except the default bottom concepts.")
-        }
+        if (argv.firstOrNull() == "full") {
+            if (!isConsistent) {
+                logger.error("Can only do a full check if Ontology is consistent.")
+                return
+            }
 
-        else {
-            logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
-            logger.error(unsat.toString())
+            // FIXME: Am I using Hermit correctly here?
+            val unsat = hermit.unsatisfiableClasses.entitiesMinusBottom
+            if (unsat.isEmpty()) {
+                logger.log("No unsatisfiable concepts except the default bottom concepts.")
+            }
+
+            else {
+                logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
+                logger.error(unsat.toString())
+            }
         }
     }
 }

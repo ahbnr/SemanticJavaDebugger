@@ -2,22 +2,15 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
-import de.ahbnr.semanticweb.java_debugger.debugging.JVMDebugger
+import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.genDefaultNs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ClassMapper
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ObjectMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import org.apache.jena.query.QueryExecutionFactory
-import org.apache.jena.query.QueryFactory
-import org.apache.jena.query.QueryParseException
-import org.apache.jena.query.ResultSetFormatter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class BuildKBCommand(
-    val jvmDebugger: JVMDebugger,
+    val jvmDebugger: JvmDebugger,
     val graphGenerator: GraphGenerator
 ): IREPLCommand, KoinComponent {
     val logger: Logger by inject()
@@ -36,7 +29,7 @@ class BuildKBCommand(
             logger.error("JVM is currently not paused.")
             return
         }
-        val ontology = graphGenerator.buildOntology(state.pausedThread, repl.applicationDomainDefFile)
+        val ontology = graphGenerator.buildOntology(state, repl.applicationDomainDefFile)
         repl.knowledgeBase = ontology
     }
 }

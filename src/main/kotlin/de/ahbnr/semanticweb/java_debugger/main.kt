@@ -3,12 +3,16 @@
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
-import de.ahbnr.semanticweb.java_debugger.debugging.JVMDebugger
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.switch
+import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.GraphGenerator
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.genDefaultNs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ClassMapper
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers.ObjectMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers.ClassMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers.ObjectMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers.VariableMapper
 import de.ahbnr.semanticweb.java_debugger.repl.JLineLogger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import de.ahbnr.semanticweb.java_debugger.repl.commands.*
@@ -20,11 +24,18 @@ import java.io.FileInputStream
 
 class SemanticJavaDebugger: CliktCommand() {
     val commandFile: String? by argument().optional()
+    val forceColor by option().switch(
+        "--color" to "color",
+        "--no-color" to "no-color"
+    ).default("unknown")
 
     override fun run() {
-        val terminal = TerminalBuilder
-            .builder()
-            .build()
+        var terminalBuilder = TerminalBuilder.builder()
+        if (forceColor != "unknown") {
+            terminalBuilder.color(forceColor == "color")
+        }
+
+        val terminal = terminalBuilder.build()
 
         startKoin {
             modules(
@@ -34,13 +45,15 @@ class SemanticJavaDebugger: CliktCommand() {
             )
         }
 
-        val jvmDebugger = JVMDebugger()
+        val jvmDebugger = JvmDebugger()
 
         val ns = genDefaultNs()
         val graphGen = GraphGenerator(
+            ns,
             listOf(
                 ClassMapper(ns),
-                ObjectMapper(ns)
+                ObjectMapper(ns),
+                VariableMapper(ns)
             )
         )
 
@@ -51,6 +64,8 @@ class SemanticJavaDebugger: CliktCommand() {
                 CheckKBCommand(),
                 ContCommand(jvmDebugger),
                 DomainCommand(),
+                InspectCommand(ns),
+                ReverseCommand(jvmDebugger, ns),
                 LocalsCommand(jvmDebugger),
                 RunCommand(jvmDebugger),
                 SparqlCommand(graphGen),

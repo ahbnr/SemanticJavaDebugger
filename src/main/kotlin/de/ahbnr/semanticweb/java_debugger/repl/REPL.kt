@@ -5,6 +5,8 @@ package de.ahbnr.semanticweb.java_debugger.repl
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
+import org.apache.jena.query.QuerySolution
+import org.apache.jena.query.ResultSet
 import org.apache.jena.rdf.model.Model
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReaderBuilder
@@ -23,6 +25,8 @@ class REPL(
 ): KoinComponent {
     var applicationDomainDefFile: String? = null
     var knowledgeBase: Ontology? = null
+    var queryResult: List<QuerySolution>? = null
+    var queryResultVars: Set<String>? = null
 
     private val commandMap = commands.map { it.name to it }.toMap()
     private val parser = DefaultParser()
@@ -40,13 +44,19 @@ class REPL(
     private val logger: Logger by inject()
 
     private fun interpretLine(line: String) {
-        val argv = line.split(' ')
+        val trimmedLine = line.trimStart()
+        if (trimmedLine.startsWith("#")) {
+            return // its a comment line
+        }
+
+        val argv = trimmedLine.split(' ')
         val commandName = argv.firstOrNull()
+
         val command = commandMap.getOrDefault(commandName, null)
         if (command != null) {
             command.handleInput(
                 argv.drop(1),
-                line.drop(commandName?.length ?: 0).trimStart(),
+                trimmedLine.drop(commandName?.length ?: 0).trimStart(),
                 this
             )
         }

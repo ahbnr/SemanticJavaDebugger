@@ -9,8 +9,8 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class JVMDebugger: KoinComponent {
-    var jvm: JVMInstance? = null
+class JvmDebugger: KoinComponent {
+    var jvm: JvmInstance? = null
         private set
 
     private val deferredBreakpoints = mutableMapOf<String, MutableList<Int>>()
@@ -31,7 +31,7 @@ class JVMDebugger: KoinComponent {
         }
     }
 
-    private fun tryApplyingDeferredBreakpoints(jvm: JVMInstance, preparedType: ReferenceType) {
+    private fun tryApplyingDeferredBreakpoints(jvm: JvmInstance, preparedType: ReferenceType) {
         val typeName = preparedType.name()
         val lines = deferredBreakpoints.getOrDefault(typeName, null)
 
@@ -44,8 +44,8 @@ class JVMDebugger: KoinComponent {
         }
     }
 
-    private val eventHandler = object: JVMEventHandler {
-        override fun handleEvent(jvm: JVMInstance, event: Event) {
+    private val eventHandler = object: IJvmEventHandler {
+        override fun handleEvent(jvm: JvmInstance, event: Event) {
             when (event) {
                 is ClassPrepareEvent -> {
                     tryApplyingDeferredBreakpoints(jvm, event.referenceType())
@@ -57,7 +57,7 @@ class JVMDebugger: KoinComponent {
 
                 is VMDisconnectEvent -> {
                     logger.log("The JVM terminated.")
-                    this@JVMDebugger.jvm = null
+                    this@JvmDebugger.jvm = null
                 }
             }
         }
@@ -81,7 +81,7 @@ class JVMDebugger: KoinComponent {
         classPrepareRequest.addClassFilter(mainClass)
         classPrepareRequest.enable()
 
-        jvm = JVMInstance(
+        jvm = JvmInstance(
             rawVM,
             eventHandler
         )

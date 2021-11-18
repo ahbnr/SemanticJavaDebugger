@@ -3,12 +3,9 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.GraphGenerator
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import org.apache.jena.query.QueryExecutionFactory
-import org.apache.jena.query.QueryFactory
-import org.apache.jena.query.QueryParseException
-import org.apache.jena.query.ResultSetFormatter
+import org.apache.jena.query.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -20,6 +17,9 @@ class SparqlCommand(
     override val name = "sparql"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+        repl.queryResult = null
+        repl.queryResultVars = null
+
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
@@ -73,11 +73,17 @@ class SparqlCommand(
             //    WHERE { ?x prog:Node_parent java:null }
             //""".trimIndent())
 
-            val queryExecution = QueryExecutionFactory.create(query, model)
-            val results = queryExecution.execSelect()
+            QueryExecutionFactory.create(query, model).use { execution ->
+                val results = execution.execSelect().rewindable()
+                ResultSetFormatter.out(logger.logStream(), results, query)
+                results.reset()
 
-            ResultSetFormatter.out(logger.logStream(), results, query)
-            queryExecution.close()
+                val resultList = mutableListOf<QuerySolution>()
+                results.forEachRemaining(resultList::add)
+
+                repl.queryResult = resultList
+                repl.queryResultVars = results.resultVars.toSet()
+            }
         }
 
         catch (e: QueryParseException) {

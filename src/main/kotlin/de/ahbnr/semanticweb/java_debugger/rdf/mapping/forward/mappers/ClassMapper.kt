@@ -1,16 +1,16 @@
-package de.ahbnr.semanticweb.java_debugger.rdf.mapping.mappers
+package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
 import com.sun.jdi.*
+import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.*
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.utils.TripleCollector
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.atlas.lib.IRILib
-import org.apache.jena.graph.Node_URI
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.iterator.ExtendedIterator
-import org.apache.jena.util.iterator.NullIterator
 
 sealed class JavaType {
     data class LoadedType(val type: Type): JavaType()
@@ -21,8 +21,7 @@ class ClassMapper(
     private val ns: Namespaces
 ): IMapper {
     private class Graph(
-        private val vm: VirtualMachine,
-        private val thread: ThreadReference,
+        private val jvmState: JvmState,
         private val ns: Namespaces
     ): GraphBase() {
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
@@ -182,7 +181,7 @@ class ClassMapper(
             }
 
             fun addClasses() {
-                val allReferenceTypes = vm.allClasses()
+                val allReferenceTypes = jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
                     when (referenceType) {
@@ -205,8 +204,8 @@ class ClassMapper(
         }
     }
 
-    override fun extendModel(vm: VirtualMachine, thread: ThreadReference, outputModel: Model) {
-        val graph = Graph(vm, thread, ns)
+    override fun extendModel(jvmState: JvmState, outputModel: Model) {
+        val graph = Graph(jvmState, ns)
 
         val graphModel = ModelFactory.createModelForGraph(graph)
 

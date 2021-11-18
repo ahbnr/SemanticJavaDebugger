@@ -1,7 +1,10 @@
 domain examples/TwoThreeTree.ttl
-stop at TwoThreeTree:41
+stop at TwoThreeTree:40
 run TwoThreeTree
 buildkb
-checkkb
+# checkkb
 sparql SELECT ?root ?var WHERE { ?root a domain:Root . ?var java:storesReferenceTo ?root . }
+inspect root
+inspect var
+reverse root
 cont

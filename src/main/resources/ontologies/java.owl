@@ -16,14 +16,17 @@
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#PrimitiveType
 java:PrimitiveType rdf:type rdfs:Datatype ;
-                   owl:equivalentClass java:boolean ,
-                                       java:byte ,
-                                       java:char ,
-                                       java:double ,
-                                       java:float ,
-                                       java:int ,
-                                       java:long ,
-                                       java:short .
+                   owl:equivalentClass [ rdf:type rdfs:Datatype ;
+                                         owl:unionOf ( java:boolean
+                                                       java:byte
+                                                       java:char
+                                                       java:double
+                                                       java:float
+                                                       java:int
+                                                       java:long
+                                                       java:short
+                                                     )
+                                       ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#boolean
@@ -33,7 +36,7 @@ java:boolean rdf:type rdfs:Datatype ;
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#byte
 java:byte rdf:type rdfs:Datatype ;
-          owl:equivalentClass java:byte .
+          owl:equivalentClass xsd:byte .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#char
@@ -91,6 +94,13 @@ java:storesReferenceTo rdf:type owl:ObjectProperty ,
 #    Data properties
 #################################################################
 
+###  https://github.com/ahbnr/SemanticJavaDebugger#hasJDWPObjectId
+java:hasJDWPObjectId rdf:type owl:DatatypeProperty ,
+                              owl:FunctionalProperty ;
+                     rdfs:domain java:Object ;
+                     rdfs:range java:long .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger#storesValue
 java:storesValue rdf:type owl:DatatypeProperty ,
                           owl:FunctionalProperty ;
@@ -106,6 +116,14 @@ java:storesValue rdf:type owl:DatatypeProperty ,
 #    Classes
 #################################################################
 
+###  http://www.w3.org/2000/01/rdf-schema#Datatype
+rdfs:Datatype rdf:type owl:Class .
+
+
+###  http://www.w3.org/2002/07/owl#Class
+owl:Class rdf:type owl:Class .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger#Class
 java:Class rdf:type owl:Class ;
            rdfs:subClassOf owl:Class .
@@ -116,7 +134,11 @@ java:Field rdf:type owl:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#Object
-java:Object rdf:type owl:Class .
+java:Object rdf:type owl:Class ;
+            rdfs:subClassOf [ rdf:type owl:Restriction ;
+                              owl:onProperty java:hasJDWPObjectId ;
+                              owl:someValuesFrom java:long
+                            ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#UnloadedType
@@ -200,7 +222,8 @@ So we restrict it to be a subclass of the symmetric difference things that store
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger#null
 java:null rdf:type owl:NamedIndividual ,
-                   java:Object .
+                   java:Object ;
+          java:hasJDWPObjectId "0"^^java:long .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#Object

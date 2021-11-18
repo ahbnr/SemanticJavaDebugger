@@ -2,14 +2,14 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
-import de.ahbnr.semanticweb.java_debugger.debugging.JVMDebugger
+import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class LocalsCommand(
-    val jvmDebugger: JVMDebugger
+    val jvmDebugger: JvmDebugger
 ): IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 

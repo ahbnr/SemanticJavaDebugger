@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.java_debugger.rdf.mapping.utils
+package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils
 
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase

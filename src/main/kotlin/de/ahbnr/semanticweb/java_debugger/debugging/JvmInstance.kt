@@ -6,23 +6,20 @@ import com.sun.jdi.ClassType
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.BreakpointEvent
-import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.event.EventSet
 import com.sun.jdi.event.VMDisconnectEvent
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.utils.ConcurrentLineCollector
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.InputStream
 import java.io.OutputStream
-import kotlin.concurrent.thread
 
-class JVMInstance(
+class JvmInstance(
     val vm: VirtualMachine,
-    val eventHandler: JVMEventHandler
+    val eventHandler: IJvmEventHandler
 ): KoinComponent {
     val logger: Logger by inject()
-    var state: JVMState? = null
+    var state: JvmState? = null
         private set
 
     init {
@@ -70,7 +67,7 @@ class JVMInstance(
             for (event in eventSet!!) {
                 when (event) {
                     is BreakpointEvent -> {
-                        state = JVMState(event.thread())
+                        state = JvmState(event.thread())
                         paused = true
                     }
                     is VMDisconnectEvent -> paused = true
