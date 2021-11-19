@@ -27,7 +27,7 @@ fun genDefaultNs(): Namespaces {
         rdfs = "http://www.w3.org/2000/01/rdf-schema#",
         owl = "http://www.w3.org/2002/07/owl#",
         // FIXME: Check if these are really appropriate:
-        java = "https://github.com/ahbnr/SemanticJavaDebugger#",
+        java = "https://github.com/ahbnr/SemanticJavaDebugger/Java#",
         prog = "https://github.com/ahbnr/SemanticJavaDebugger/Program#",
         run = "https://github.com/ahbnr/SemanticJavaDebugger/Run${System.nanoTime()}#"
     )

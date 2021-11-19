@@ -12,7 +12,7 @@ import org.apache.jena.riot.RDFDataMgr
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class InspectCommand(val ns: Namespaces): IREPLCommand, KoinComponent {
+class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "inspect"
@@ -34,6 +34,11 @@ class InspectCommand(val ns: Namespaces): IREPLCommand, KoinComponent {
         val resultVars = repl.queryResultVars
         if (queryResults == null || resultVars == null) {
             logger.error("You must first perform a successful query before you can inspect query results")
+            return
+        }
+
+        if (queryResults.isEmpty()) {
+            logger.error("There are no results to inspect.")
             return
         }
 

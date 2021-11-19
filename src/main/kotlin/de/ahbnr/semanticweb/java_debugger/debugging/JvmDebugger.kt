@@ -4,12 +4,16 @@ package de.ahbnr.semanticweb.java_debugger.debugging
 
 import com.sun.jdi.Bootstrap
 import com.sun.jdi.ReferenceType
-import com.sun.jdi.event.*
+import com.sun.jdi.event.BreakpointEvent
+import com.sun.jdi.event.ClassPrepareEvent
+import com.sun.jdi.event.Event
+import com.sun.jdi.event.VMDisconnectEvent
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.Closeable
 
-class JvmDebugger: KoinComponent {
+class JvmDebugger : Closeable, KoinComponent {
     var jvm: JvmInstance? = null
         private set
 
@@ -21,9 +25,7 @@ class JvmDebugger: KoinComponent {
         val classType = jvm?.getClass(className)
         if (classType != null) {
             jvm?.setBreakpointOnReferenceType(classType, line)
-        }
-
-        else {
+        } else {
             val lines = deferredBreakpoints.getOrPut(className, { mutableListOf() })
             lines.add(line)
 
@@ -44,7 +46,7 @@ class JvmDebugger: KoinComponent {
         }
     }
 
-    private val eventHandler = object: IJvmEventHandler {
+    private val eventHandler = object : IJvmEventHandler {
         override fun handleEvent(jvm: JvmInstance, event: Event) {
             when (event) {
                 is ClassPrepareEvent -> {
@@ -88,9 +90,7 @@ class JvmDebugger: KoinComponent {
         jvm?.resume()
     }
 
-    // fun sendClassPrepareRequest(vm: VirtualMachine) {
-    //     val classPrepareRequest = vm.eventRequestManager().createClassPrepareRequest()
-    //     classPrepareRequest.addClassFilter(classToDebug)
-    //     classPrepareRequest.enable()
-    // }
+    override fun close() {
+        jvm?.vm?.exit(-1)
+    }
 }

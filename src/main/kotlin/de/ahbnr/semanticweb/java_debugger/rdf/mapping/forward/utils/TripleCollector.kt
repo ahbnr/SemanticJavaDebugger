@@ -16,16 +16,20 @@ class TripleCollector(private val triplePattern: Triple) {
         }
     }
 
-    fun addStatement(subject: String, predicate: String, obj: String) {
-        val candidateTriple = Triple(
+    fun addStatement(subject: String, predicate: String, `object`: Node) {
+        addStatement(
             NodeFactory.createURI(subject),
             NodeFactory.createURI(predicate),
+            `object`
+        )
+    }
+
+    fun addStatement(subject: String, predicate: String, obj: String) {
+        addStatement(
+            subject,
+            predicate,
             NodeFactory.createURI(obj)
         )
-
-        if (triplePattern.matches(candidateTriple)) {
-            collectedTriples.add(candidateTriple)
-        }
     }
 
     fun buildIterator(): ExtendedIterator<Triple> = TripleIterableIterator(collectedTriples)

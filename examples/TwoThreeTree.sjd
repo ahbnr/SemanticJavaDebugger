@@ -1,8 +1,12 @@
 domain examples/TwoThreeTree.ttl
-stop at TwoThreeTree:40
+stop at TwoThreeTree:43
 run TwoThreeTree
+locals
 buildkb
-# checkkb
+checkkb full
+# sparql SELECT ?root ?parent WHERE { ?root a prog:Node . ?root prog:Node_parent ?parent }
+# sparql SELECT ?root WHERE { ?root a domain:Root }
+# sparql SELECT ?var WHERE { ?var a java:LocalVariable }
 sparql SELECT ?root ?var WHERE { ?root a domain:Root . ?var java:storesReferenceTo ?root . }
 inspect root
 inspect var

@@ -37,5 +37,11 @@ public class TwoThreeTree {
 
         leaf1.parent = root;
         leaf2.parent = root;
+
+        Runnable lambda = () -> {
+            int x = 42;
+        };
+
+        lambda.run();
     }
 }

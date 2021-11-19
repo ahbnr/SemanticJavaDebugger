@@ -8,17 +8,13 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.backward.BackwardMapper
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import de.ahbnr.semanticweb.java_debugger.utils.expandResourceToModel
-import de.ahbnr.semanticweb.java_debugger.utils.toPrettyString
-import org.apache.jena.riot.Lang
-import org.apache.jena.riot.RDFDataMgr
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ReverseCommand(
     val jvmDebugger: JvmDebugger,
     val ns: Namespaces
-): IREPLCommand, KoinComponent {
+) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "reverse"
@@ -52,6 +48,11 @@ class ReverseCommand(
         val resultVars = repl.queryResultVars
         if (queryResults == null || resultVars == null) {
             logger.error("You must first perform a successful query before you can inspect query results")
+            return
+        }
+
+        if (queryResults.isEmpty()) {
+            logger.error("There are no results to reverse.")
             return
         }
 

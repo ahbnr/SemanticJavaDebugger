@@ -1,9 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.StackFrame
-import com.sun.jdi.ThreadReference
+import com.sun.jdi.*
 
 /**
  * Later, we might want to implement an abstract interface over the JVM state here
@@ -11,7 +8,7 @@ import com.sun.jdi.ThreadReference
  */
 
 data class JvmState(
-    val pausedThread: ThreadReference,
+    val pausedThread: ThreadReference
 ) {
     /**
      * Utility function to iterate over all objects

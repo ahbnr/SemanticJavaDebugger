@@ -17,7 +17,7 @@ import java.io.OutputStream
 class JvmInstance(
     val vm: VirtualMachine,
     val eventHandler: IJvmEventHandler
-): KoinComponent {
+) : KoinComponent {
     val logger: Logger by inject()
     var state: JvmState? = null
         private set
@@ -35,14 +35,15 @@ class JvmInstance(
         val thread = Thread {
             inputStream.transferTo(outputStream)
         }
-        thread.priority = Thread.MAX_PRIORITY - 1 // needs high priority to display all messages before the debugger exits
+        thread.priority =
+            Thread.MAX_PRIORITY - 1 // needs high priority to display all messages before the debugger exits
         thread.start()
     }
 
     fun setBreakpointOnReferenceType(referenceType: ReferenceType, line: Int) {
         val location = referenceType.locationsOfLine(line).firstOrNull()
         if (location == null) {
-            logger.error("Can not set breakpoint: There is no line ${line} in class ${referenceType.name()}.")
+            logger.error("Can not set breakpoint: There is no line $line in class ${referenceType.name()}.")
             return
         }
 

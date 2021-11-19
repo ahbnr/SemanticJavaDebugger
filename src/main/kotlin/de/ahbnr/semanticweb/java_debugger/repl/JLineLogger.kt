@@ -10,9 +10,31 @@ import java.nio.charset.Charset
 
 class JLineLogger(
     private val terminal: Terminal
-): Logger {
+) : Logger {
+    override fun debug(line: String) {
+        terminal.writer().println(
+            AttributedStringBuilder()
+                .style(AttributedStyle.DEFAULT.foreground(146, 131, 116))
+                .append(line)
+                .style(AttributedStyle.DEFAULT)
+                .toAnsi(terminal)
+        )
+        terminal.flush()
+    }
+
     override fun log(line: String) {
         terminal.writer().println(line)
+        terminal.flush()
+    }
+
+    override fun success(line: String) {
+        terminal.writer().println(
+            AttributedStringBuilder()
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
+                .append(line)
+                .style(AttributedStyle.DEFAULT)
+                .toAnsi(terminal)
+        )
         terminal.flush()
     }
 

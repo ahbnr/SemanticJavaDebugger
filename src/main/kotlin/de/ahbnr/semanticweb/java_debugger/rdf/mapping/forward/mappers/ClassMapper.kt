@@ -2,28 +2,31 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.*
+import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
-import org.apache.jena.atlas.lib.IRILib
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.iterator.ExtendedIterator
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-sealed class JavaType {
-    data class LoadedType(val type: Type): JavaType()
-    data class UnloadedType(val typeName: String): JavaType()
+private sealed class JavaType {
+    data class LoadedType(val type: Type) : JavaType()
+    data class UnloadedType(val typeName: String) : JavaType()
 }
 
-class ClassMapper(
-    private val ns: Namespaces
-): IMapper {
+class ClassMapper : IMapper {
     private class Graph(
-        private val jvmState: JvmState,
-        private val ns: Namespaces
-    ): GraphBase() {
+        private val jvmState: JvmState
+    ) : GraphBase(), KoinComponent {
+        private val URIs: OntURIs by inject()
+        private val logger: Logger by inject()
+
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
 
@@ -34,58 +37,55 @@ class ClassMapper(
              * See also https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/ClassNotLoadedException.html
              */
             fun addUnloadedType(typeName: String) {
-                val subject = genUnloadedTypeURI(typeName, ns)
+                val subject = URIs.prog.genUnloadedTypeURI(typeName)
 
                 // FIXME: Check if we already added a triple for this unloaded type
                 tripleCollector.addStatement(
                     subject,
-                    ns.rdf + "type",
-                    ns.java + "UnloadedType"
+                    URIs.rdf.type,
+                    URIs.java.UnloadedType
                 )
 
                 // it is also an owl class
                 // TODO: Why? Check model
                 tripleCollector.addStatement(
                     subject,
-                    ns.rdf + "type",
-                    ns.owl + "Class"
+                    URIs.rdf.type,
+                    URIs.owl.Class
                 )
             }
 
             fun addField(classSubject: String, classType: ClassType, field: Field) {
                 // A field is a property (of a class instance).
                 // Hence, we model it as a property in the ontology
-                val fieldPropertyName = genFieldPropertyURI(classType, field, ns)
+                val fieldURI = URIs.prog.genFieldURI(classType, field)
 
                 // this field is a java field
                 tripleCollector.addStatement(
-                    fieldPropertyName,
-                    ns.rdf + "type",
-                    ns.java + "Field"
+                    fieldURI,
+                    URIs.rdf.type,
+                    URIs.java.Field
                 )
 
                 // and it is part of the class
                 tripleCollector.addStatement(
                     classSubject,
-                    ns.java + "hasField",
-                    fieldPropertyName
+                    URIs.java.hasField,
+                    fieldURI
                 )
 
                 // the field is a thing defined for every object instance of the class concept via rdfs:domain
                 // (this also drives some implications, e.g. if there exists a field, there must also be some class it belongs to etc)
-                // FIXME: Clearify the use of rdfs:domain
                 tripleCollector.addStatement(
-                    fieldPropertyName,
-                    ns.rdfs + "domain",
+                    fieldURI,
+                    URIs.rdfs.domain,
                     classSubject
                 )
 
                 // Now we need to clarify the type of the field
                 val fieldType = try {
                     JavaType.LoadedType(field.type())
-                }
-
-                catch (e: ClassNotLoadedException) {
+                } catch (e: ClassNotLoadedException) {
                     JavaType.UnloadedType(field.typeName())
                 }
 
@@ -97,26 +97,25 @@ class ClassMapper(
                             // that is, a property that links individuals to individuals
                             // (here: Java class instances (parent object) to Java class instances (field value))
                             tripleCollector.addStatement(
-                                fieldPropertyName,
-                                ns.rdf + "type",
-                                ns.owl + "ObjectProperty"
+                                fieldURI,
+                                URIs.rdf.type,
+                                URIs.owl.ObjectProperty
                             )
 
                             // it is even a functional property: https://www.w3.org/TR/owl-ref/ (4.3.1)
                             // For every instance of the field (there is only one for the object) there is exactly one property value
                             tripleCollector.addStatement(
-                                fieldPropertyName,
-                                ns.rdf + "type",
-                                ns.owl + "FunctionalProperty"
+                                fieldURI,
+                                URIs.rdf.type,
+                                URIs.owl.FunctionalProperty
                             )
 
                             // We now restrict the kind of values the field property can link to, that is, we
                             // set the rdfs:range to the field type
-
-                            val fieldTypeSubject = genClassTypeURI(fieldType.type, ns)
+                            val fieldTypeSubject = URIs.prog.genReferenceTypeURI(fieldType.type)
                             tripleCollector.addStatement(
-                                fieldPropertyName,
-                                ns.rdfs + "range",
+                                fieldURI,
+                                URIs.rdfs.range,
                                 fieldTypeSubject
                             )
                         }
@@ -127,21 +126,21 @@ class ClassMapper(
                         addUnloadedType(fieldType.typeName)
 
                         tripleCollector.addStatement(
-                            fieldPropertyName,
-                            ns.rdf + "type",
-                            ns.owl + "ObjectProperty"
+                            fieldURI,
+                            URIs.rdf.type,
+                            URIs.owl.ObjectProperty
                         )
 
                         tripleCollector.addStatement(
-                            fieldPropertyName,
-                            ns.rdf + "type",
-                            ns.owl + "FunctionalProperty"
+                            fieldURI,
+                            URIs.rdf.type,
+                            URIs.owl.FunctionalProperty
                         )
 
-                        val fieldTypeObject = genUnloadedTypeURI(fieldType.typeName, ns)
+                        val fieldTypeObject = URIs.prog.genUnloadedTypeURI(fieldType.typeName)
                         tripleCollector.addStatement(
-                            fieldPropertyName,
-                            ns.rdfs + "range",
+                            fieldURI,
+                            URIs.rdfs.range,
                             fieldTypeObject
                         )
                     }
@@ -155,28 +154,102 @@ class ClassMapper(
                 }
             }
 
-            fun addClassNode(classSubject: String, classType: ClassType) {
+            fun addVariableDeclaration(
+                variable: LocalVariable,
+                methodSubject: String,
+                method: Method,
+                classType: ClassType
+            ) {
+                val variableDeclarationSubject = URIs.prog.genVariableDeclarationURI(variable, method, classType)
+
+                // it *is* a VariableDeclaration
+                tripleCollector.addStatement(
+                    variableDeclarationSubject,
+                    URIs.rdf.type,
+                    URIs.java.VariableDeclaration
+                )
+
+                // ...and it is declared by the surrounding method
+                tripleCollector.addStatement(
+                    methodSubject,
+                    URIs.java.declaresVariable,
+                    variableDeclarationSubject
+                )
+            }
+
+            fun addVariableDeclarations(methodSubject: String, method: Method, classType: ClassType) {
+                val variables = (
+                        if (!method.isAbstract && !method.isNative)
+                            try {
+                                method.variables()
+                            } catch (e: AbsentInformationException) {
+                                if (AbsentInformationPackages.none { classType.name().startsWith(it) }) {
+                                    logger.debug("Unable to get variables for $method. This can happen for native and abstract methods.")
+                                }
+                                null
+                            }
+                        else null)
+                    ?: listOf()
+
+                for (variable in variables) {
+                    // FIXME: Deal with scopes
+
+                    addVariableDeclaration(variable, methodSubject, method, classType)
+                }
+            }
+
+            fun addMethod(method: Method, classSubject: String, classType: ClassType) {
+                val methodSubject = URIs.prog.genMethodURI(method, classType)
+
+                // The methodSubject *is* a method
+                tripleCollector.addStatement(
+                    methodSubject,
+                    URIs.rdf.type,
+                    URIs.java.Method
+                )
+
+                // ...and the class contains the method
+                tripleCollector.addStatement(
+                    classSubject,
+                    URIs.java.hasMethod,
+                    methodSubject
+                )
+
+                // ...and the method declares some variables
+                addVariableDeclarations(methodSubject, method, classType)
+            }
+
+            fun addMethods(classSubject: String, classType: ClassType) {
+                for (method in classType.methods()) { // inherited methods are not included!
+                    addMethod(method, classSubject, classType)
+                }
+            }
+
+            fun addClass(classType: ClassType) {
+                val classSubject = URIs.prog.genReferenceTypeURI(classType)
+
                 // classSubject is a java class
                 tripleCollector.addStatement(
                     classSubject,
-                    ns.rdf + "type",
-                    ns.java + "Class"
+                    URIs.rdf.type,
+                    URIs.java.Class
                 )
 
-                // classType is an owl class
+                // classSubject is an owl class
                 tripleCollector.addStatement(
                     classSubject,
-                    ns.rdf + "type",
-                    ns.owl + "Class"
+                    URIs.rdf.type,
+                    URIs.owl.Class
                 )
 
-                // every class is also an object
+                // every class is also an object (FIXME: subClassOf??)
                 tripleCollector.addStatement(
                     classSubject,
-                    ns.rdfs + "subClassOf",
-                    ns.prog + "Object"
+                    URIs.rdfs.subClassOf,
+                    URIs.prog.Object
                 )
 
+                addMethods(classSubject, classType)
                 addFields(classSubject, classType)
             }
 
@@ -186,14 +259,13 @@ class ClassMapper(
                 for (referenceType in allReferenceTypes) {
                     when (referenceType) {
                         is ClassType -> {
-                            val classSubject = genClassTypeURI(referenceType, ns)
-
                             //if (referenceType.name().startsWith("java") || referenceType.name().startsWith("jdk") ||referenceType.name().startsWith("com") ) {
                             //    continue
                             //}
 
-                            addClassNode(classSubject, referenceType)
+                            addClass(referenceType)
                         }
+                        // FIXME handle other reference types
                     }
                 }
             }
@@ -205,54 +277,10 @@ class ClassMapper(
     }
 
     override fun extendModel(jvmState: JvmState, outputModel: Model) {
-        val graph = Graph(jvmState, ns)
+        val graph = Graph(jvmState)
 
         val graphModel = ModelFactory.createModelForGraph(graph)
 
         outputModel.add(graphModel)
-    }
-
-    companion object {
-        fun genFieldPropertyURI(classType: ClassType, field: Field, ns: Namespaces): String =
-            "${ns.prog}${IRILib.encodeUriComponent(classType.name())}_${IRILib.encodeUriComponent(field.name())}"
-
-        fun genClassTypeURI(classType: ClassType, ns: Namespaces): String {
-            return ns.prog + IRILib.encodeUriComponent(classType.name())
-        }
-
-        fun genUnloadedTypeURI(typeName: String, ns: Namespaces): String {
-            return ns.prog + IRILib.encodeUriComponent(typeName)
-        }
-
-        /**
-        /**
-         * Type names may contain characters not allowed in URI fragments or with special meaning, e.g. [] in `java.security.Permission[]`
-         *
-         * https://en.wikipedia.org/wiki/URI_fragment
-         * https://datatracker.ietf.org/doc/html/rfc3986/#section-3.5
-         *
-         * This method will properly encode them.
-         */
-        fun typeNameToURIFragment(className: String): String {
-            /**
-             * The grammar for a fragment is:
-             *       fragment    = *( pchar / "/" / "?" )
-             * using this BNF syntax: https://datatracker.ietf.org/doc/html/rfc2234
-             *
-             * pchar is defined as
-             *       pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-             *
-             * These characters are unreserved: https://datatracker.ietf.org/doc/html/rfc3986/#section-2.3
-             * And everything else must be encoded using percent encoding: https://datatracker.ietf.org/doc/html/rfc3986/#section-2.1
-             *
-             * The Java 11 type grammar is specified here:
-             * https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html
-             *
-             * This can get complex, we rely on Apache Jena to safely encode:
-             */
-            return URIref.encode(className) // FIXME: Verify this is working
-        }
-         //FIXME: What about unicode?
-        **/
     }
 }
