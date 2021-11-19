@@ -6,8 +6,6 @@ import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
 import org.apache.jena.query.QuerySolution
-import org.apache.jena.query.ResultSet
-import org.apache.jena.rdf.model.Model
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
@@ -19,14 +17,29 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.InputStream
 
+private sealed class Mode {
+    object Normal : Mode()
+
+    // see https://en.wikipedia.org/wiki/Here_document#Unix_shells
+    data class HereDoc(
+        val delimiterId: String,
+        val originalLine: String,
+        val insertIdx: Int
+    ) : Mode() {
+        val hereDocBuffer: StringBuilder = StringBuilder()
+    }
+}
+
 class REPL(
     private val terminal: Terminal,
     commands: List<IREPLCommand>
-): KoinComponent {
+) : KoinComponent {
     var applicationDomainDefFile: String? = null
     var knowledgeBase: Ontology? = null
     var queryResult: List<QuerySolution>? = null
     var queryResultVars: Set<String>? = null
+
+    private var mode: Mode = Mode.Normal
 
     private val commandMap = commands.map { it.name to it }.toMap()
     private val parser = DefaultParser()
@@ -43,34 +56,66 @@ class REPL(
 
     private val logger: Logger by inject()
 
+    private val hereDocRegex = """<<\s*([A-z]+)""".toRegex()
+
     private fun interpretLine(line: String) {
-        val trimmedLine = line.trimStart()
-        if (trimmedLine.startsWith("#")) {
-            return // its a comment line
+        val lastMode = mode
+        when (lastMode) {
+            is Mode.Normal -> {
+                val trimmedLine = line.trimStart()
+                if (trimmedLine.startsWith("#")) {
+                    return // its a comment line
+                }
+
+                val hereDocMatch = hereDocRegex.find(line)
+                if (hereDocMatch != null) {
+                    mode = Mode.HereDoc(
+                        delimiterId = hereDocMatch.groupValues[1],
+                        originalLine = line.substring(0 until hereDocMatch.range.first) + line.substring(hereDocMatch.range.last + 1 until line.length),
+                        insertIdx = hereDocMatch.range.first
+                    )
+                } else {
+                    val argv = trimmedLine.split(' ')
+                    val commandName = argv.firstOrNull()
+
+                    val command = commandMap.getOrDefault(commandName, null)
+                    if (command != null) {
+                        command.handleInput(
+                            argv.drop(1),
+                            trimmedLine.drop(commandName?.length ?: 0).trimStart(),
+                            this
+                        )
+                    } else {
+                        logger.error("No such command: ${argv[0]}")
+                    }
+
+                    terminal.flush()
+                }
+            }
+
+            is Mode.HereDoc -> {
+                val delimiterIdx = line.indexOf(lastMode.delimiterId)
+
+                if (delimiterIdx < 0) {
+                    lastMode.hereDocBuffer.append(line).append('\n')
+                } else {
+                    lastMode.hereDocBuffer.append(line.substring(0 until delimiterIdx))
+                    lastMode.hereDocBuffer.insert(0, lastMode.originalLine.substring(0 until lastMode.insertIdx))
+                    lastMode.hereDocBuffer.append(lastMode.originalLine.substring(lastMode.insertIdx))
+
+                    mode = Mode.Normal
+                    interpretLine(lastMode.hereDocBuffer.toString())
+                }
+            }
         }
-
-        val argv = trimmedLine.split(' ')
-        val commandName = argv.firstOrNull()
-
-        val command = commandMap.getOrDefault(commandName, null)
-        if (command != null) {
-            command.handleInput(
-                argv.drop(1),
-                trimmedLine.drop(commandName?.length ?: 0).trimStart(),
-                this
-            )
-        }
-
-        else {
-            logger.error("No such command: ${argv[0]}")
-        }
-
-        terminal.flush()
     }
 
     fun interpretStream(input: InputStream) {
         input.bufferedReader().forEachLine { line ->
-            terminal.writer().println("$prompt$line")
+            if (mode is Mode.Normal) {
+                terminal.writer().print(prompt)
+            }
+            terminal.writer().println(line)
             terminal.flush()
             interpretLine(line)
         }
@@ -83,10 +128,11 @@ class REPL(
                 val line = reader.readLine(prompt)
 
                 interpretLine(line)
+            } catch (e: UserInterruptException) {
+                readInput = false
+            } catch (e: EndOfFileException) {
+                readInput = false
             }
-
-            catch (e: UserInterruptException) { readInput = false }
-            catch (e: EndOfFileException) { readInput = false }
         }
     }
 }

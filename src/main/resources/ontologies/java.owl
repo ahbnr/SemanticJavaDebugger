@@ -112,6 +112,16 @@ java:hasMethod rdf:type owl:ObjectProperty ,
                rdfs:range java:Method .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isDefinedAt
+java:isDefinedAt rdf:type owl:ObjectProperty ,
+                          owl:FunctionalProperty ;
+                 rdfs:domain java:Method ;
+                 rdfs:range java:Location ;
+                 rdfs:comment """Points to the location of the method body execution block.
+
+This property may not always be set. In particular for abstract methods.""" .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesReferenceTo
 java:storesReferenceTo rdf:type owl:ObjectProperty ,
                                 owl:FunctionalProperty ;
@@ -139,6 +149,22 @@ java:hasVariableName rdf:type owl:DatatypeProperty ,
                               owl:FunctionalProperty ;
                      rdfs:domain java:VariableDeclaration ;
                      rdfs:range xsd:string .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isAtLine
+java:isAtLine rdf:type owl:DatatypeProperty ;
+              rdfs:comment """Gives the line number in the source file or a java:Location.
+
+It may not always be set, in particular for native methods or when source is not available.""" .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isAtSourcePath
+java:isAtSourcePath rdf:type owl:DatatypeProperty ;
+                    rdfs:domain java:Location ;
+                    rdfs:range xsd:string ;
+                    rdfs:comment """Gives the path to the source file for a java:Location.
+
+It may not always be set, in particular for native methods or when source is not available.""" .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isAtStackDepth
@@ -262,6 +288,10 @@ java:LocalVariable rdf:type owl:Class ;
 
 So we restrict it to be a subclass of the symmetric difference things that store references and things that store values."""
  ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Location
+java:Location rdf:type owl:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Method

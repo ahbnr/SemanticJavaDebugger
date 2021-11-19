@@ -2,6 +2,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
 // Maybe load some of these from the ontology files?
 data class Namespaces(
+    val xsd: String,
     val rdf: String,
     val rdfs: String,
     val owl: String,
@@ -23,6 +24,7 @@ fun genDefaultNs(): Namespaces {
     //   for now, we can approximate with the time when the program was stopped
 
     return Namespaces(
+        xsd = "http://www.w3.org/2001/XMLSchema#",
         rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         rdfs = "http://www.w3.org/2000/01/rdf-schema#",
         owl = "http://www.w3.org/2002/07/owl#",

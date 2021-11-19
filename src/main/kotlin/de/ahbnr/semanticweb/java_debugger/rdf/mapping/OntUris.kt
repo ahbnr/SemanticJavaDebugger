@@ -33,12 +33,16 @@ class OntURIs(val ns: Namespaces) {
         val Method = ns.java + "Method"
         val Field = ns.java + "Field"
         val VariableDeclaration = ns.java + "VariableDeclaration"
+        val Location = ns.java + "Location"
 
         val long = ns.java + "long"
 
         val hasMethod = ns.java + "hasMethod"
         val hasField = ns.java + "hasField"
         val declaresVariable = ns.java + "declaresVariable"
+        val isDefinedAt = ns.java + "isDefinedAt"
+        val isAtSourcePath = ns.java + "isAtSourcePath"
+        val isAtLine = ns.java + "isAtLine"
 
         val `null` = ns.java + "null"
 
@@ -78,6 +82,9 @@ class OntURIs(val ns: Namespaces) {
         fun genUnloadedTypeURI(typeName: String): String {
             return ns.prog + IRILib.encodeUriComponent(typeName)
         }
+
+        fun genLocationURI(location: Location): String =
+            "${ns.prog}location_${location.hashCode()}" // FIXME: unsure if hash is sufficient... should be when looking at JDI source code if JDWP Method IDs are unique. Are they?
     }
 
     val prog = ProgURIs()

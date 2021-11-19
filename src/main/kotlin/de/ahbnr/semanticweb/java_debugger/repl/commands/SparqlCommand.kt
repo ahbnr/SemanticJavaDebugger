@@ -37,6 +37,7 @@ class SparqlCommand(
                 PREFIX rdf: <${URIs.ns.rdf}>
                 PREFIX rdfs: <${URIs.ns.rdfs}>
                 PREFIX owl: <${URIs.ns.owl}>
+                PREFIX xsd: <${URIs.ns.xsd}>
                 PREFIX java: <${URIs.ns.java}>
                 PREFIX prog: <${URIs.ns.prog}>
                 PREFIX run: <${URIs.ns.run}>

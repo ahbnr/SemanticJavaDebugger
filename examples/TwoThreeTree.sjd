@@ -3,11 +3,24 @@ stop at TwoThreeTree:43
 run TwoThreeTree
 locals
 buildkb
+stats
 checkkb full
 # sparql SELECT ?root ?parent WHERE { ?root a prog:Node . ?root prog:Node_parent ?parent }
 # sparql SELECT ?root WHERE { ?root a domain:Root }
 # sparql SELECT ?var WHERE { ?var a java:LocalVariable }
 sparql SELECT ?root ?var WHERE { ?root a domain:Root . ?var java:storesReferenceTo ?root . }
+sparql <<EOF
+  SELECT ?root ?var ?varDecl ?method ?location ?source ?line
+  WHERE {
+      ?root a domain:Root .
+      ?var java:storesReferenceTo ?root .
+      ?var java:declaredByVariableDeclaration ?varDecl .
+      ?method java:declaresVariable ?varDecl .
+      ?method java:isDefinedAt ?location .
+      ?location java:isAtSourcePath ?source .
+      ?location java:isAtLine ?line .
+  }
+EOF
 inspect root
 inspect var
 reverse root

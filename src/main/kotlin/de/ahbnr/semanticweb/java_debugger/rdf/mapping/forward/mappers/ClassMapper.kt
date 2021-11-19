@@ -7,6 +7,8 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
+import org.apache.jena.datatypes.xsd.XSDDatatype
+import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase
 import org.apache.jena.rdf.model.Model
@@ -198,6 +200,58 @@ class ClassMapper : IMapper {
                 }
             }
 
+            fun addMethodLocation(method: Method, methodSubject: String) {
+                val location =
+                    method.location() // where is the method executable code defined? May return null for abstract methods
+
+                if (location != null) {
+                    val locationSubject = URIs.prog.genLocationURI(location)
+
+                    // it *is* a java:Location
+                    tripleCollector.addStatement(
+                        locationSubject,
+                        URIs.rdf.type,
+                        URIs.java.Location
+                    )
+
+                    // its the location of a method
+                    tripleCollector.addStatement(
+                        methodSubject,
+                        URIs.java.isDefinedAt,
+                        locationSubject
+                    )
+
+                    // set source path, if it is known
+                    val sourcePath = try {
+                        location.sourcePath()
+                    } catch (e: AbsentInformationException) {
+                        null
+                    }
+                    if (sourcePath != null) {
+                        tripleCollector.addStatement(
+                            locationSubject,
+                            URIs.java.isAtSourcePath,
+                            NodeFactory.createLiteral(sourcePath, XSDDatatype.XSDstring)
+                        )
+                    }
+
+                    val lineNumber = location.lineNumber()
+                    if (lineNumber >= 0) { // -1 indicates that the number is not known
+                        tripleCollector.addStatement(
+                            locationSubject,
+                            URIs.java.isAtLine,
+                            NodeFactory.createLiteral(lineNumber.toString(), XSDDatatype.XSDint)
+                        )
+                    }
+                } else if (!method.isAbstract) {
+                    logger.error(
+                        "${
+                            method.declaringType().name()
+                        }:${method.name()}: Location of method body could not be determined, even though the method is not abstract."
+                    )
+                }
+            }
+
             fun addMethod(method: Method, classSubject: String, classType: ClassType) {
                 val methodSubject = URIs.prog.genMethodURI(method, classType)
 
@@ -217,6 +271,9 @@ class ClassMapper : IMapper {
 
                 // ...and the method declares some variables
                 addVariableDeclarations(methodSubject, method, classType)
+
+                // Where in the source code is the method?
+                addMethodLocation(method, methodSubject)
             }
 
             fun addMethods(classSubject: String, classType: ClassType) {
