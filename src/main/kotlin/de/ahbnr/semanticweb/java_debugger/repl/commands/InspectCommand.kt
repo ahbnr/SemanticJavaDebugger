@@ -22,6 +22,12 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+        val variableName = argv.firstOrNull()
+        if (variableName == null) {
+            logger.error(usage)
+            return
+        }
+
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
@@ -30,47 +36,25 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
 
         val model = ontology.asGraphModel()
 
-        val queryResults = repl.queryResult
-        val resultVars = repl.queryResultVars
-        if (queryResults == null || resultVars == null) {
-            logger.error("You must first perform a successful query before you can inspect query results")
+        val node = repl.namedNodes.getOrDefault(variableName, null)
+        if (node == null) {
+            logger.error("No node is known under this name.")
             return
         }
 
-        if (queryResults.isEmpty()) {
-            logger.error("There are no results to inspect.")
-            return
-        }
-
-        val variableName = argv.firstOrNull()
-        if (variableName == null) {
-            logger.error(usage)
-            return
-        }
-
-        if (!resultVars.contains(variableName)) {
-            logger.error("The variable $variableName was not part of the query results.")
-            return
-        }
-
-        for ((solutionIdx, solution) in queryResults.withIndex()) {
-            logger.log("Solution #$solutionIdx:")
-
-            val node = solution[variableName]
-            when {
-                node.isResource -> {
-                    val resource = node.asResource()
-                    RDFDataMgr.write(logger.logStream(), expandResourceToModel(resource, ns), Lang.TTL)
-                    // for (property in resource.listProperties()) {
-                    //     logger.log(property.toPrettyString(model))
-                    // }
-                }
-                else -> {
-                    logger.log(node.toPrettyString(model))
-                }
+        when {
+            node.isResource -> {
+                val resource = node.asResource()
+                RDFDataMgr.write(logger.logStream(), expandResourceToModel(resource, ns), Lang.TTL)
+                // for (property in resource.listProperties()) {
+                //     logger.log(property.toPrettyString(model))
+                // }
             }
-
-            logger.log("")
+            else -> {
+                logger.log(node.toPrettyString(model))
+            }
         }
+
+        logger.log("")
     }
 }

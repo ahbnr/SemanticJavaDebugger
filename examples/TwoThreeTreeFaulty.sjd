@@ -1,0 +1,37 @@
+section Prepare Program & Domain
+domain examples/TwoThreeTree.ttl
+stop at TwoThreeTree:64
+run TwoThreeTree
+
+section Build Knowledge Base
+buildkb
+# checkkb
+
+section Detection by Explicit Model
+sparql <<EOF
+  SELECT ?faulty ?var
+  WHERE {
+      ?faulty a domain:FaultyNode .
+      ?var java:storesReferenceTo ?faulty .
+  }
+EOF
+reverse faulty
+
+section Detection by SPARQL Negation
+sparql <<EOF
+  SELECT ?faulty
+  WHERE {
+      ?faulty a prog:Node .
+      ?faulty a owl:NamedIndividual .
+      FILTER NOT EXISTS {
+          ?faulty a domain:TrueNode .
+      }
+  }
+EOF
+reverse faulty
+
+section Detection by SHACL
+shacl examples/TwoThreeTreeShapes.ttl
+reverse focus0
+
+cont

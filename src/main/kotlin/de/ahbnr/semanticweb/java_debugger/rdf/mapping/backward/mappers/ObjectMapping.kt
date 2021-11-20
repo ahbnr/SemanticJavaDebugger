@@ -22,10 +22,13 @@ object ObjectMapping {
 
         fun getObjectId(): Long? =
             (
-                resource.getProperty(
-                    model.getProperty(ns.java + "hasJDWPObjectId")
-                ).`object` as? Literal
-            )?.lexicalForm?.toLong()
+                    resource.getProperty(
+                        model.getProperty(ns.java + "hasJDWPObjectId")
+                    )
+                        ?.`object` as? Literal
+                    )
+                ?.lexicalForm
+                ?.toLong()
     }
 
 

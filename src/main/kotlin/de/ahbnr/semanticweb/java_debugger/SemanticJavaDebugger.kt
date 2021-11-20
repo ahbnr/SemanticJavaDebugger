@@ -64,13 +64,15 @@ class SemanticJavaDebugger : CliktCommand() {
                 terminal,
                 listOf(
                     BuildKBCommand(jvmDebugger, graphGen),
-                    CheckKBCommand(),
+                    CheckKBCommand(graphGen),
                     ContCommand(jvmDebugger),
                     DomainCommand(),
                     InspectCommand(ns),
                     ReverseCommand(jvmDebugger, ns),
                     LocalsCommand(jvmDebugger),
                     RunCommand(jvmDebugger),
+                    SectionCommand(),
+                    ShaclCommand(graphGen),
                     SparqlCommand(graphGen),
                     StatsCommand(graphGen),
                     StopCommand(jvmDebugger)

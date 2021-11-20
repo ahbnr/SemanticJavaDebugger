@@ -1,0 +1,99 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/TwoThreeTree#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+#domain:PairShape
+#    rdf:type sh:NodeShape ;
+#    sh:targetClass prog:Pair .
+    # sh:property [
+    #     sh:path prog:Pair_key ;
+    #     sh:datatype java:int ;
+    # ] ;
+    # sh:property [
+    #     sh:path prog:Pair_value ;
+    #     sh:datatype java:string ;
+    # ] .
+
+domain:LeafShape
+    rdf:type sh:NodeShape ;
+    sh:property [
+        sh:path prog:Node_childL ;
+        sh:hasValue java:null ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_dataL ;
+        sh:node prog:Pair ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_childM ;
+        sh:hasValue java:null ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_dataR ;
+        sh:hasValue java:null ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_childR ;
+        sh:hasValue java:null ;
+    ] .
+
+domain:TwoNodeShape
+    rdf:type sh:NodeShape ;
+    sh:property [
+        sh:path prog:Node_childL ;
+        sh:class prog:Node ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_dataL ;
+        sh:class prog:Pair ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_childM ;
+        sh:class prog:Node ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_dataR ;
+        sh:hasValue java:null ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_childR ;
+        sh:hasValue java:null ;
+    ] .
+
+domain:ThreeNodeShape
+    rdf:type sh:NodeShape ;
+    sh:property [
+        sh:path prog:Node_childL ;
+        sh:class prog:Node ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_dataL ;
+        sh:class prog:Pair ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_childM ;
+        sh:class prog:Node ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_dataR ;
+        sh:class prog:Pair ;
+    ] ;
+    sh:property [
+        sh:path prog:Node_childR ;
+        sh:class prog:Node ;
+    ] .
+
+domain:TrueNodeShape
+    rdf:type sh:NodeShape ;
+    sh:targetClass prog:Node ;
+    sh:or (
+        domain:LeafShape
+        domain:TwoNodeShape
+        domain:ThreeNodeShape
+    ) .

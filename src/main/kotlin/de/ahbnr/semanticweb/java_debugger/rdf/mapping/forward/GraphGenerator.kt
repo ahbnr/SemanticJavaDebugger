@@ -6,6 +6,7 @@ import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
+import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.reasoner.ReasonerRegistry
@@ -61,7 +62,7 @@ class GraphGenerator(
         return ontology
     }
 
-    fun buildInferredModel(ontology: Ontology): Model {
+    fun buildInferredModel(ontology: Ontology): InfModel {
         val model = ontology.asGraphModel()
 
         /**

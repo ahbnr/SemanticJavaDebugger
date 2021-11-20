@@ -13,3 +13,122 @@ domain:Root rdf:type owl:Class ;
                                   owl:hasValue java:null
                                 ] .
 
+domain:TruePair rdf:type owl:Class ;
+           owl:equivalentClass [
+                rdf:type owl:Restriction ;
+                owl:onProperty rdf:type;
+                owl:hasValue prog:Pair
+           ].
+
+domain:Node rdf:type owl:Class ;
+           owl:equivalentClass [
+                rdf:type owl:Restriction ;
+                owl:onProperty rdf:type;
+                owl:hasValue prog:Node
+           ].
+
+domain:Leaf rdf:type owl:Class ;
+            rdf:type domain:Node ;
+            owl:equivalentClass [
+                owl:intersectionOf (
+                    [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty prog:Node_childL ;
+                      owl:hasValue java:null
+                    ]
+                    [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty prog:Node_childM ;
+                      owl:hasValue java:null
+                    ]
+                    [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty prog:Node_childR ;
+                      owl:hasValue java:null
+                    ]
+                    [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty prog:Node_dataR ;
+                      owl:hasValue java:null
+                    ]
+                    [
+                      rdf:type owl:Restriction ;
+                      owl:onProperty prog:Node_dataL ;
+                      owl:someValuesFrom domain:TruePair
+                    ]
+                )
+            ] .
+
+domain:TwoNode rdf:type owl:Class ;
+      owl:equivalentClass [
+      owl:intersectionOf(
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_dataR ;
+                                      owl:hasValue java:null]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childR ;
+                                      owl:hasValue java:null]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_dataL;
+                                      owl:someValuesFrom domain:TruePair]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childL;
+                                      owl:someValuesFrom domain:Node]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childM;
+                                      owl:someValuesFrom domain:Node]
+                         )
+                         ] .
+
+domain:ThreeNode rdf:type owl:Class ;
+      owl:equivalentClass [
+      owl:intersectionOf(
+
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_dataR;
+                                      owl:someValuesFrom domain:TruePair]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childR;
+                                      owl:someValuesFrom domain:Node]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_dataL;
+                                      owl:someValuesFrom domain:TruePair]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childL;
+                                      owl:someValuesFrom domain:Node]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childM;
+                                      owl:someValuesFrom domain:Node]
+                         )
+     ] .
+
+domain:FaultyNode rdf:type owl:Class ;
+      owl:equivalentClass [
+      owl:intersectionOf(
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_dataL;
+                                      owl:someValuesFrom domain:TruePair]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_dataR;
+                                      owl:hasValue java:null]
+
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childL;
+                                      owl:someValuesFrom domain:Node]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childM;
+                                      owl:someValuesFrom domain:Node]
+                                     [rdf:type owl:Restriction ;
+                                      owl:onProperty prog:Node_childR;
+                                      owl:someValuesFrom domain:Node]
+                         )
+     ] .
+
+domain:TrueNode rdf:type owl:Class ;
+                owl:equivalentClass [
+                  owl:unionOf (
+                    domain:TwoNode
+                    domain:ThreeNode
+                    domain:Leaf
+                  )
+                ] .

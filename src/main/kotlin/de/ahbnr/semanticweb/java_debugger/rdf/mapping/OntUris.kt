@@ -5,7 +5,12 @@ import org.apache.jena.atlas.lib.IRILib
 
 class OntURIs(val ns: Namespaces) {
     inner class RdfURIs {
-        val type = "type"
+        val type = ns.rdf + "type"
+
+        val List = ns.rdf + "List"
+        val first = ns.rdf + "first"
+        val rest = ns.rdf + "rest"
+        val nil = ns.rdf + "nil"
     }
 
     val rdf = RdfURIs()
@@ -23,9 +28,20 @@ class OntURIs(val ns: Namespaces) {
         val ObjectProperty = ns.owl + "ObjectProperty"
         val FunctionalProperty = ns.owl + "FunctionalProperty"
         val NamedIndividual = ns.owl + "NamedIndividual"
+        val unionOf = ns.owl + "unionOf"
+        val oneOf = ns.owl + "oneOf"
     }
 
     val owl = OwlURIs()
+
+    inner class ShaclURIs {
+        val conforms = ns.sh + "conforms"
+        val result = ns.sh + "result"
+        val focusNode = ns.sh + "focusNode"
+        val value = ns.sh + "value"
+    }
+
+    val sh = ShaclURIs()
 
     inner class JavaURIs {
         val UnloadedType = ns.java + "UnloadedType"

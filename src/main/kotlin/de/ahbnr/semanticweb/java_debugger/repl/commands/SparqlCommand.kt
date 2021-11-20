@@ -6,7 +6,11 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import org.apache.jena.query.*
+import org.apache.jena.query.QueryExecutionFactory
+import org.apache.jena.query.QueryFactory
+import org.apache.jena.query.QueryParseException
+import org.apache.jena.query.ResultSetFormatter
+import org.apache.jena.rdf.model.RDFNode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -19,9 +23,6 @@ class SparqlCommand(
     override val name = "sparql"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
-        repl.queryResult = null
-        repl.queryResultVars = null
-
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
@@ -85,11 +86,20 @@ class SparqlCommand(
                 ResultSetFormatter.out(logger.logStream(), results, query)
                 results.reset()
 
-                val resultList = mutableListOf<QuerySolution>()
-                results.forEachRemaining(resultList::add)
+                var idx = 0;
+                val nameMap = mutableMapOf<String, RDFNode>()
+                results.forEachRemaining { solution ->
+                    solution.varNames().forEachRemaining { variableName ->
+                        val indexedName = if (idx == 0) variableName else "$variableName$idx"
 
-                repl.queryResult = resultList
-                repl.queryResultVars = results.resultVars.toSet()
+                        nameMap[indexedName] = solution.get(variableName)
+                    }
+                    ++idx
+                }
+                repl.namedNodes.putAll(nameMap)
+
+                logger.log("The solution variables are available under the following names:")
+                logger.log(nameMap.keys.joinToString(", "))
             }
         } catch (e: QueryParseException) {
             logger.error(e.message ?: "Could not parse query.")

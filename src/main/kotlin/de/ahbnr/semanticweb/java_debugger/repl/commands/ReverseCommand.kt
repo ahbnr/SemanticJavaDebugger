@@ -24,6 +24,12 @@ class ReverseCommand(
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+        val variableName = argv.firstOrNull()
+        if (variableName == null) {
+            logger.error(usage)
+            return
+        }
+
         val jvm = jvmDebugger.jvm
         if (jvm == null) {
             logger.error("No JVM is running.")
@@ -44,44 +50,25 @@ class ReverseCommand(
 
         val model = ontology.asGraphModel()
 
-        val queryResults = repl.queryResult
-        val resultVars = repl.queryResultVars
-        if (queryResults == null || resultVars == null) {
-            logger.error("You must first perform a successful query before you can inspect query results")
+        val node = repl.namedNodes.getOrDefault(variableName, null)
+        if (node == null) {
+            logger.error("No node is known under this name.")
             return
         }
 
-        if (queryResults.isEmpty()) {
-            logger.error("There are no results to reverse.")
-            return
-        }
+        val inverseMapping = BackwardMapper(ns, jvmState)
 
-        val variableName = argv.firstOrNull()
-        if (variableName == null) {
-            logger.error(usage)
-            return
-        }
-
-        if (!resultVars.contains(variableName)) {
-            logger.error("The variable $variableName was not part of the query results.")
-            return
-        }
-
-        for ((solutionIdx, solution) in queryResults.withIndex()) {
-            logger.log("Solution #$solutionIdx:")
-
-            val node = solution[variableName]
-            val inverseMapping = BackwardMapper(ns, jvmState)
-
-            val mapping = inverseMapping.map(node, model)
-            when (mapping) {
-                is ObjectReference -> {
-                    logger.log("Java Object: $mapping")
+        val mapping = inverseMapping.map(node, model)
+        when (mapping) {
+            is ObjectReference -> {
+                logger.log("Java Object: $mapping")
+                for ((field, value) in mapping.getValues(mapping.referenceType().allFields())) {
+                    logger.log("  ${field.name()} = $value")
                 }
-                else -> logger.error("Could not retrieve a Java construct for the given variable.")
             }
-
-            logger.log("")
+            else -> logger.error("Could not retrieve a Java construct for the given variable.")
         }
+
+        logger.log("")
     }
 }

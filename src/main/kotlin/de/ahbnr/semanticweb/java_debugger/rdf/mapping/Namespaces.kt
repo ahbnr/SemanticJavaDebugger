@@ -6,6 +6,8 @@ data class Namespaces(
     val rdf: String,
     val rdfs: String,
     val owl: String,
+    // shacl
+    val sh: String,
     // the language domain model
     val java: String,
     // the static internal program domain model (User defined classes etc.)
@@ -28,6 +30,7 @@ fun genDefaultNs(): Namespaces {
         rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         rdfs = "http://www.w3.org/2000/01/rdf-schema#",
         owl = "http://www.w3.org/2002/07/owl#",
+        sh = "http://www.w3.org/ns/shacl#",
         // FIXME: Check if these are really appropriate:
         java = "https://github.com/ahbnr/SemanticJavaDebugger/Java#",
         prog = "https://github.com/ahbnr/SemanticJavaDebugger/Program#",

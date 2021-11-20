@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.repl
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
-import org.apache.jena.query.QuerySolution
+import org.apache.jena.rdf.model.RDFNode
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
@@ -36,8 +36,7 @@ class REPL(
 ) : KoinComponent {
     var applicationDomainDefFile: String? = null
     var knowledgeBase: Ontology? = null
-    var queryResult: List<QuerySolution>? = null
-    var queryResultVars: Set<String>? = null
+    val namedNodes: MutableMap<String, RDFNode> = mutableMapOf()
 
     private var mode: Mode = Mode.Normal
 
@@ -59,6 +58,10 @@ class REPL(
     private val hereDocRegex = """<<\s*([A-z]+)""".toRegex()
 
     private fun interpretLine(line: String) {
+        if (line.isBlank()) {
+            return
+        }
+
         val lastMode = mode
         when (lastMode) {
             is Mode.Normal -> {
@@ -111,7 +114,7 @@ class REPL(
     }
 
     fun interpretStream(input: InputStream) {
-        input.bufferedReader().forEachLine { line ->
+        for (line in input.bufferedReader().lineSequence()) {
             if (mode is Mode.Normal) {
                 terminal.writer().print(prompt)
             }

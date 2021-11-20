@@ -118,7 +118,20 @@ class ClassMapper : IMapper {
                             tripleCollector.addStatement(
                                 fieldURI,
                                 URIs.rdfs.range,
-                                fieldTypeSubject
+                                // every reference type field can either be an instance or null:
+                                // fieldTypeSubject ∪ { java:null }
+                                // [ owl:unionOf ( fieldTypeSubject [ owl:oneOf ( java:null ) ] ) ] .
+                                tripleCollector.addCollection(
+                                    TripleCollector.CollectionObject.OWLUnion(
+                                        listOf(
+                                            NodeFactory.createURI(fieldTypeSubject),
+
+                                            tripleCollector.addCollection(
+                                                TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
+                                            )
+                                        )
+                                    )
+                                )
                             )
                         }
                         // FIXME: Handle the other cases

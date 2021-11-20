@@ -27,6 +27,17 @@ class JLineLogger(
         terminal.flush()
     }
 
+    override fun emphasize(line: String) {
+        terminal.writer().println(
+            AttributedStringBuilder()
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
+                .append(line)
+                .style(AttributedStyle.DEFAULT)
+                .toAnsi(terminal)
+        )
+        terminal.flush()
+    }
+
     override fun success(line: String) {
         terminal.writer().println(
             AttributedStringBuilder()
@@ -54,6 +65,11 @@ class JLineLogger(
     }
 
     override fun errorStream(): OutputStream {
+        // FIXME: no color here
+        return WriterOutputStream(terminal.writer(), Charset.defaultCharset())
+    }
+
+    override fun successStream(): OutputStream {
         // FIXME: no color here
         return WriterOutputStream(terminal.writer(), Charset.defaultCharset())
     }

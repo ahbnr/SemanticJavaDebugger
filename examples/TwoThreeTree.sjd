@@ -1,14 +1,22 @@
+section Prepare Program & Domain
 domain examples/TwoThreeTree.ttl
-stop at TwoThreeTree:43
+stop at TwoThreeTree:39
 run TwoThreeTree
 locals
+
+section Build Knowledge Base
 buildkb
 stats
-checkkb full
+# checkkb
+
+section SPARQL Queries
 # sparql SELECT ?root ?parent WHERE { ?root a prog:Node . ?root prog:Node_parent ?parent }
 # sparql SELECT ?root WHERE { ?root a domain:Root }
 # sparql SELECT ?var WHERE { ?var a java:LocalVariable }
 sparql SELECT ?root ?var WHERE { ?root a domain:Root . ?var java:storesReferenceTo ?root . }
+reverse root
+sparql SELECT ?node ?var WHERE { ?node a domain:TrueNode . ?var java:storesReferenceTo ?node . }
+reverse node
 sparql <<EOF
   SELECT ?root ?var ?varDecl ?method ?location ?source ?line
   WHERE {
@@ -24,4 +32,8 @@ EOF
 inspect root
 inspect var
 reverse root
+
+section SHACL Validation
+shacl examples/TwoThreeTreeShapes.ttl
+
 cont

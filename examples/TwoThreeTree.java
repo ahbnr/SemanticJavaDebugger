@@ -21,27 +21,51 @@ class Node<K, V> {
 
 
 public class TwoThreeTree {
-    public static void main(String[] args) {
+    private static Node<Integer, String> buildValid() {
+        var root = new Node<Integer, String>();
+
         var leaf1 = new Node<Integer, String>();
         leaf1.dataL = new Pair<>(0, "Lorem");
-        leaf1.dataR = new Pair<>(1, "ipsum");
+        leaf1.parent = root;
+        root.childL = leaf1;
+
+        root.dataL = new Pair<>(1, "ipsum");
 
         var leaf2 = new Node<Integer, String>();
-        leaf2.dataL = new Pair<>(3, "sit");
-
-        // Root is a two-node
-        var root = new Node<Integer, String>();
-        root.childL = leaf1;
-        root.dataL = new Pair<>(2, "dolor");
+        leaf2.dataL = new Pair<>(2, "dolor");
+        leaf2.parent = root;
         root.childM = leaf2;
 
-        leaf1.parent = root;
-        leaf2.parent = root;
+        return root;
+    }
 
-        Runnable lambda = () -> {
-            int x = 42;
-        };
+    private static Node<Integer, String> buildFaulty() {
+        var root = new Node<Integer, String>();
 
-        lambda.run();
+        var leafL = new Node<Integer, String>();
+        leafL.dataL = new Pair<>(0, "Lorem");
+        leafL.parent = root;
+        root.childL = leafL;
+
+        root.dataL = new Pair<>(1, "ipsum");
+
+        var leafM = new Node<Integer, String>();
+        leafM.dataL = new Pair<>(2, "dolor");
+        leafM.parent = root;
+        root.childM = leafM;
+
+        // root.dataR = new Pair<>(3, "sit");
+
+        var leafR = new Node<Integer, String>();
+        leafR.dataL = new Pair<>(4, "amet");
+        leafR.parent = root;
+        root.childR = leafR;
+
+        return root;
+    }
+
+    public static void main(String[] args) {
+        buildValid();
+        buildFaulty();
     }
 }
