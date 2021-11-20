@@ -7,7 +7,7 @@ locals
 section Build Knowledge Base
 buildkb
 stats
-# checkkb
+checkkb
 
 section SPARQL Queries
 # sparql SELECT ?root ?parent WHERE { ?root a prog:Node . ?root prog:Node_parent ?parent }

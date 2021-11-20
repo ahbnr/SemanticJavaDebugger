@@ -11,6 +11,7 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.datatypes.TypeMapper
+import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase
@@ -88,7 +89,7 @@ class ObjectMapper : IMapper {
                             URIs.java.hasJDWPObjectId,
                             NodeFactory.createLiteral(
                                 objectReference.uniqueID().toString(),
-                                tm.getSafeTypeByName(URIs.java.long)
+                                XSDDatatype.XSDlong
                             )
                         )
 

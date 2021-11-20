@@ -17,57 +17,16 @@
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveType
 java:PrimitiveType rdf:type rdfs:Datatype ;
                    owl:equivalentClass [ rdf:type rdfs:Datatype ;
-                                         owl:unionOf ( java:boolean
-                                                       java:byte
-                                                       java:char
-                                                       java:double
-                                                       java:float
-                                                       java:int
-                                                       java:long
-                                                       java:short
+                                         owl:unionOf ( xsd:boolean
+                                                       xsd:byte
+                                                       xsd:unsignedShort
+                                                       xsd:double
+                                                       xsd:float
+                                                       xsd:int
+                                                       xsd:long
+                                                       xsd:short
                                                      )
                                        ] .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#boolean
-java:boolean rdf:type rdfs:Datatype ;
-             owl:equivalentClass xsd:boolean .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#byte
-java:byte rdf:type rdfs:Datatype ;
-          owl:equivalentClass xsd:byte .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#char
-java:char rdf:type rdfs:Datatype ;
-          owl:equivalentClass xsd:unsignedShort .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#double
-java:double rdf:type rdfs:Datatype ;
-            owl:equivalentClass xsd:double .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#float
-java:float rdf:type rdfs:Datatype ;
-           owl:equivalentClass xsd:float .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#int
-java:int rdf:type rdfs:Datatype ;
-         owl:equivalentClass xsd:int .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#long
-java:long rdf:type rdfs:Datatype ;
-          owl:equivalentClass xsd:long .
-
-
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#short
-java:short rdf:type rdfs:Datatype ;
-           owl:equivalentClass xsd:short .
-
 
 #################################################################
 #    Object Properties
@@ -119,7 +78,7 @@ java:isDefinedAt rdf:type owl:ObjectProperty ,
                  rdfs:range java:Location ;
                  rdfs:comment """Points to the location of the method body execution block.
 
-This property may not always be set. In particular for abstract methods.""" .
+This property may not always be set. In particular for abstract methods."""^^rdfs:Literal .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesReferenceTo
@@ -141,7 +100,7 @@ java:storesReferenceTo rdf:type owl:ObjectProperty ,
 java:hasJDWPObjectId rdf:type owl:DatatypeProperty ,
                               owl:FunctionalProperty ;
                      rdfs:domain java:Object ;
-                     rdfs:range java:long .
+                     rdfs:range xsd:long .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasVariableName
@@ -155,7 +114,7 @@ java:hasVariableName rdf:type owl:DatatypeProperty ,
 java:isAtLine rdf:type owl:DatatypeProperty ;
               rdfs:comment """Gives the line number in the source file or a java:Location.
 
-It may not always be set, in particular for native methods or when source is not available.""" .
+It may not always be set, in particular for native methods or when source is not available."""^^rdfs:Literal .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isAtSourcePath
@@ -164,14 +123,14 @@ java:isAtSourcePath rdf:type owl:DatatypeProperty ;
                     rdfs:range xsd:string ;
                     rdfs:comment """Gives the path to the source file for a java:Location.
 
-It may not always be set, in particular for native methods or when source is not available.""" .
+It may not always be set, in particular for native methods or when source is not available."""^^rdfs:Literal .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isAtStackDepth
 java:isAtStackDepth rdf:type owl:DatatypeProperty ,
                              owl:FunctionalProperty ;
                     rdfs:domain java:StackFrame ;
-                    rdfs:range java:int .
+                    rdfs:range xsd:int .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesValue
@@ -286,7 +245,7 @@ java:LocalVariable rdf:type owl:Class ;
                        ] ;
    rdfs:comment """A variable either stores a reference or a value, but not both.
 
-So we restrict it to be a subclass of the symmetric difference things that store references and things that store values."""
+So we restrict it to be a subclass of the symmetric difference things that store references and things that store values."""^^rdfs:Literal
  ] .
 
 
@@ -302,7 +261,7 @@ java:Method rdf:type owl:Class .
 java:Object rdf:type owl:Class ;
             rdfs:subClassOf [ rdf:type owl:Restriction ;
                               owl:onProperty java:hasJDWPObjectId ;
-                              owl:someValuesFrom java:long
+                              owl:someValuesFrom xsd:long
                             ] .
 
 
@@ -310,7 +269,7 @@ java:Object rdf:type owl:Class ;
 java:StackFrame rdf:type owl:Class ;
                 rdfs:subClassOf [ rdf:type owl:Restriction ;
                                   owl:onProperty java:isAtStackDepth ;
-                                  owl:someValuesFrom java:int
+                                  owl:someValuesFrom xsd:int
                                 ] .
 
 
@@ -334,7 +293,7 @@ java:VariableDeclaration rdf:type owl:Class ;
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#null
 java:null rdf:type owl:NamedIndividual ,
                    java:Object ;
-          java:hasJDWPObjectId "0"^^java:long .
+          java:hasJDWPObjectId "0"^^xsd:long .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#Object

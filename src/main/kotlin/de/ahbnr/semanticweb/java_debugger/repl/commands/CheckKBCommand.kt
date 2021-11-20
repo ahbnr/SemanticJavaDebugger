@@ -5,6 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
+import org.apache.jena.reasoner.ReasonerRegistry
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.semanticweb.HermiT.ReasonerFactory
@@ -26,27 +27,43 @@ class CheckKBCommand(
         logger.log("${ontology.axiomCount} axioms.")
 
         logger.log("Performing basic validation on inference model...")
-        val infModel = graphGenerator.buildInferredModel(ontology)
+        // val reasoner = ReasonerRegistry.getOWLReasoner()
+        // val reasoner = ReasonerRegistry.getOWLMiniReasoner()
+        val reasoner = ReasonerRegistry.getOWLMicroReasoner()
+        val infModel = ontology.asGraphModel().getInferenceModel(reasoner)
+
         val validityReport = infModel.validate()
         if (validityReport.isValid) {
             logger.success("Model is valid.")
         } else {
-            logger.error("Model is invalid:")
+            logger.error("Model is invalid!")
+        }
+
+        if (validityReport.isClean) {
+            logger.success("Model is clean.")
+        } else {
+            logger.error("Model is not clean!")
+        }
+
+        if (!validityReport.isValid || !validityReport.isClean) {
             validityReport.reports.forEachRemaining {
                 logger.log(it.description)
             }
         }
 
-        logger.log("Performing consistency check with HermiT...")
+        var isConsistent = true
         val hermit = ReasonerFactory().createReasoner(ontology)
-        val isConsistent = hermit.isConsistent
-        if (isConsistent) {
-            logger.success("Knowledge base is consistent.")
-        } else {
-            logger.error("Knowledge base is inconsistent!")
+        if (argv.contains("isConsistent")) {
+            logger.log("Performing consistency check with HermiT...")
+            isConsistent = hermit.isConsistent
+            if (isConsistent) {
+                logger.success("Knowledge base is consistent.")
+            } else {
+                logger.error("Knowledge base is inconsistent!")
+            }
         }
 
-        if (argv.firstOrNull() == "full") {
+        if (argv.contains("hasUnsatisfiableClasses")) {
             if (!isConsistent) {
                 logger.error("Can only do a full check if Ontology is consistent.")
                 return

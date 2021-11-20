@@ -12,7 +12,7 @@ import org.koin.core.component.inject
 class BuildKBCommand(
     val jvmDebugger: JvmDebugger,
     val graphGenerator: GraphGenerator
-): IREPLCommand, KoinComponent {
+) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "buildkb"
@@ -31,5 +31,7 @@ class BuildKBCommand(
         }
         val ontology = graphGenerator.buildOntology(state, repl.applicationDomainDefFile)
         repl.knowledgeBase = ontology
+
+        logger.success("Knowledge base created.")
     }
 }

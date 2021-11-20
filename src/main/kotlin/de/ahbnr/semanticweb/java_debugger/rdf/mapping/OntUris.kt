@@ -3,6 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 import com.sun.jdi.*
 import org.apache.jena.atlas.lib.IRILib
 
+@Suppress("PropertyName")
 class OntURIs(val ns: Namespaces) {
     inner class RdfURIs {
         val type = ns.rdf + "type"
@@ -50,8 +51,6 @@ class OntURIs(val ns: Namespaces) {
         val Field = ns.java + "Field"
         val VariableDeclaration = ns.java + "VariableDeclaration"
         val Location = ns.java + "Location"
-
-        val long = ns.java + "long"
 
         val hasMethod = ns.java + "hasMethod"
         val hasField = ns.java + "hasField"
