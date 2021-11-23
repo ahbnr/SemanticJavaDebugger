@@ -24,7 +24,15 @@ class StatsCommand(
             return
         }
 
+        logger.log("Number of ontology axioms: ${ontology.axiomCount}")
+
         val model = graphGenerator.buildInferredModel(ontology)
+        //var numStatements = 0
+        //for (statement in model.listStatements()) {
+        //    ++numStatements
+        //}
+        //logger.log("Number of statements in Jena Model: $numStatements")
+        logger.log("")
 
         data class Countable(val name: String, val uri: String)
 
