@@ -27,6 +27,7 @@ class OntURIs(val ns: Namespaces) {
     inner class OwlURIs {
         val Class = ns.owl + "Class"
         val ObjectProperty = ns.owl + "ObjectProperty"
+        val DatatypeProperty = ns.owl + "DatatypeProperty"
         val FunctionalProperty = ns.owl + "FunctionalProperty"
         val NamedIndividual = ns.owl + "NamedIndividual"
         val unionOf = ns.owl + "unionOf"

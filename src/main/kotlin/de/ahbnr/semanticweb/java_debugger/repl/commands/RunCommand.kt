@@ -7,24 +7,44 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.nio.file.Paths
 
 class RunCommand(
     val jvmDebugger: JvmDebugger
-): IREPLCommand, KoinComponent {
+) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "run"
 
     private val usage = """
-        Usage: run <class>
+        Usage: run <class or source file>
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
-        if (argv.size != 1) {
+        val classOrSource = argv.firstOrNull()
+        if (classOrSource == null) {
             logger.error(usage)
             return
         }
 
-        jvmDebugger.launchVM(argv[0])
+        val className =
+            if (classOrSource.endsWith(".java")) {
+                val sourcePath = Paths.get(classOrSource)
+
+                val compiler = de.ahbnr.semanticweb.java_debugger.utils.Compiler(
+                    listOf(sourcePath),
+                    Paths.get("") // CWD
+                )
+
+                logger.log("Compiling...")
+                compiler.compile()
+                logger.success("Compiled!")
+
+                val fileName = sourcePath.fileName.toString()
+                fileName.substring(0 until fileName.length - ".java".length)
+            } else classOrSource
+
+        logger.log("Launching Java program.")
+        jvmDebugger.launchVM(className)
     }
 }

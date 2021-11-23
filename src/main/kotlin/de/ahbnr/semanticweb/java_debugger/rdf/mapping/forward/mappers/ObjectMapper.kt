@@ -48,10 +48,28 @@ class ObjectMapper : IMapper {
                         ) {
                             logger.error("Encountered a null value for a non-reference type for field ${classType.name()}::${field.name()}. This should never happen.")
                         }
-                        URIs.java.`null`
+                        NodeFactory.createURI(URIs.java.`null`)
                     }
-                    is ObjectReference -> URIs.run.genObjectURI(value)
-                    else -> null // FIXME: Handle other cases
+                    is ObjectReference -> NodeFactory.createURI(URIs.run.genObjectURI(value))
+                    is PrimitiveValue -> when (value) {
+                        is BooleanValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDboolean)
+                        is ByteValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDbyte)
+                        is CharValue -> NodeFactory.createLiteral(
+                            value.value().code.toString(),
+                            XSDDatatype.XSDunsignedShort
+                        )
+                        is DoubleValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDdouble)
+                        is FloatValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDfloat)
+                        is IntegerValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDint)
+                        is LongValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDlong)
+                        is ShortValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDshort)
+                        else -> {
+                            logger.error("Encountered unknown primitive value: $value")
+                            null
+                        }
+                    }
+                    else -> null
+                    // FIXME: Handle other cases
                 }
 
                 if (valueObject != null) {

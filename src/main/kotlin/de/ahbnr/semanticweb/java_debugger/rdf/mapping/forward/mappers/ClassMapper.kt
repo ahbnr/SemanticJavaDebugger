@@ -106,7 +106,7 @@ class ClassMapper : IMapper {
                 // The exact kind of property and ranges now depend on the field type:
                 when (fieldType) {
                     is JavaType.LoadedType -> when (fieldType.type) {
-                        is ClassType -> {
+                        is ReferenceType -> {
                             // Since the Java field is of a class type here, it must be an ObjectProperty,
                             // (https://www.w3.org/TR/owl-ref/#ObjectProperty-def)
                             // that is, a property that links individuals to individuals
@@ -123,6 +123,34 @@ class ClassMapper : IMapper {
                                 fieldURI,
                                 URIs.rdfs.range,
                                 addReferenceOrNullClass(fieldType.type)
+                            )
+                        }
+                        else -> {
+                            tripleCollector.addStatement(
+                                fieldURI,
+                                URIs.rdf.type,
+                                URIs.owl.DatatypeProperty
+                            )
+
+                            val datatype = when (fieldType.type) {
+                                is BooleanType -> XSDDatatype.XSDboolean
+                                is ByteType -> XSDDatatype.XSDbyte
+                                is CharType -> XSDDatatype.XSDunsignedShort
+                                is DoubleType -> XSDDatatype.XSDdouble
+                                is FloatType -> XSDDatatype.XSDfloat
+                                is IntegerType -> XSDDatatype.XSDint
+                                is LongType -> XSDDatatype.XSDlong
+                                is ShortType -> XSDDatatype.XSDshort
+                                else -> {
+                                    logger.error("Unknown primitive data type: ${fieldType.type}")
+                                    return
+                                }
+                            }
+
+                            tripleCollector.addStatement(
+                                fieldURI,
+                                URIs.rdfs.range,
+                                datatype.uri
                             )
                         }
                         // FIXME: Handle the other cases

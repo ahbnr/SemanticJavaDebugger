@@ -1,0 +1,23 @@
+section Prepare Program & Domain
+stop at DataTest:21
+run examples/DataTest.java
+
+section Build Knowledge Base
+buildkb --limit-sdk
+stats
+checkkb --is-consistent
+
+section SPARQL Queries
+
+sparql <<EOF
+    SELECT ?container ?boolVal
+    WHERE {
+        ?container a prog:DataContainer ;
+                   prog:DataContainer_booleanValue ?boolVal .
+        FILTER (?boolVal = "true"^^xsd:boolean)
+    }
+EOF
+inspect boolVal
+inspect container
+
+cont
