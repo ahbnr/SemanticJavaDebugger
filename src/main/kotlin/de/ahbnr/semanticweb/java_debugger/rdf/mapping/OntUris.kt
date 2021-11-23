@@ -2,6 +2,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
 import com.sun.jdi.*
 import org.apache.jena.atlas.lib.IRILib
+import org.apache.jena.datatypes.xsd.XSDDatatype
 
 @Suppress("PropertyName")
 class OntURIs(val ns: Namespaces) {
@@ -67,6 +68,18 @@ class OntURIs(val ns: Namespaces) {
 
         val isAtStackDepth = ns.java + "isAtStackDepth"
         val hasJDWPObjectId = ns.java + "hasJDWPObjectId"
+
+        fun genPrimitiveTypeURI(type: PrimitiveType): String? = when (type) {
+            is BooleanType -> XSDDatatype.XSDboolean
+            is ByteType -> XSDDatatype.XSDbyte
+            is CharType -> XSDDatatype.XSDunsignedShort
+            is DoubleType -> XSDDatatype.XSDdouble
+            is FloatType -> XSDDatatype.XSDfloat
+            is IntegerType -> XSDDatatype.XSDint
+            is LongType -> XSDDatatype.XSDlong
+            is ShortType -> XSDDatatype.XSDshort
+            else -> null
+        }?.uri
     }
 
     val java = JavaURIs()

@@ -2,21 +2,40 @@ class ExampleClass {
 }
 
 class DataContainer {
-    public boolean booleanValue = true;
-    public byte byteValue = 127;
-    public char charValue = 'a';
-    public double doubleValue = 3.141592653589793;
-    public float floatValue = 3.141592f;
-    public int intValue = 2147483647;
-    public long longValue = 9223372036854775807L;
-    public short shortValue = 32767;
+    public boolean booleanField = true;
+    public byte byteField = 127;
+    public char charField = 'a';
+    public double doubleField = 3.141592653589793;
+    public float floatField = 3.141592f;
+    public int intField = 2147483647;
+    public long longField = 9223372036854775807L;
+    public short shortField = 32767;
 
-    public ExampleClass classReference = new ExampleClass();
-    public Object nullReference = null;
+    public ExampleClass classReferenceField = new ExampleClass();
+    public Object nullReferenceField = null;
 }
 
 public class DataTest {
-    public static void main(String[] args) {
+    private static void fieldsTest() {
         var data = new DataContainer();
+    }
+
+    private static void varsTest() {
+        boolean booleanVar = true;
+        byte byteVar = 127;
+        char charVar = 'a';
+        double doubleVar = 3.141592653589793;
+        float floatVar = 3.141592f;
+        int intVar = 2147483647;
+        long longVar = 9223372036854775807L;
+        short shortVar = 32767;
+
+        ExampleClass classReferenceVar = new ExampleClass();
+        Object nullReferenceVar = null;
+    }
+
+    public static void main(String[] args) {
+        fieldsTest();
+        varsTest();
     }
 }

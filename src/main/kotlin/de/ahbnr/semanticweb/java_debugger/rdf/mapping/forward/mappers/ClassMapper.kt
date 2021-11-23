@@ -125,32 +125,23 @@ class ClassMapper : IMapper {
                                 addReferenceOrNullClass(fieldType.type)
                             )
                         }
-                        else -> {
+                        is PrimitiveType -> {
                             tripleCollector.addStatement(
                                 fieldURI,
                                 URIs.rdf.type,
                                 URIs.owl.DatatypeProperty
                             )
 
-                            val datatype = when (fieldType.type) {
-                                is BooleanType -> XSDDatatype.XSDboolean
-                                is ByteType -> XSDDatatype.XSDbyte
-                                is CharType -> XSDDatatype.XSDunsignedShort
-                                is DoubleType -> XSDDatatype.XSDdouble
-                                is FloatType -> XSDDatatype.XSDfloat
-                                is IntegerType -> XSDDatatype.XSDint
-                                is LongType -> XSDDatatype.XSDlong
-                                is ShortType -> XSDDatatype.XSDshort
-                                else -> {
-                                    logger.error("Unknown primitive data type: ${fieldType.type}")
-                                    return
-                                }
+                            val datatypeURI = URIs.java.genPrimitiveTypeURI(fieldType.type)
+                            if (datatypeURI == null) {
+                                logger.error("Unknown primitive data type: ${fieldType.type}")
+                                return
                             }
 
                             tripleCollector.addStatement(
                                 fieldURI,
                                 URIs.rdfs.range,
-                                datatype.uri
+                                datatypeURI
                             )
                         }
                         // FIXME: Handle the other cases
@@ -252,6 +243,25 @@ class ClassMapper : IMapper {
                                     variableDeclarationURI,
                                     URIs.rdfs.range,
                                     addReferenceOrNullClass(variableType.type)
+                                )
+                            }
+                            is PrimitiveType -> {
+                                tripleCollector.addStatement(
+                                    variableDeclarationURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.DatatypeProperty
+                                )
+
+                                val datatypeURI = URIs.java.genPrimitiveTypeURI(variableType.type)
+                                if (datatypeURI == null) {
+                                    logger.error("Unknown primitive data type: ${variableType.type}")
+                                    return
+                                }
+
+                                tripleCollector.addStatement(
+                                    variableDeclarationURI,
+                                    URIs.rdfs.range,
+                                    datatypeURI
                                 )
                             }
                             // FIXME: deal with other cases

@@ -13,11 +13,26 @@ sparql <<EOF
     SELECT ?container ?boolVal
     WHERE {
         ?container a prog:DataContainer ;
-                   prog:DataContainer_booleanValue ?boolVal .
+                   prog:DataContainer_booleanField ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
 inspect boolVal
 inspect container
+
+stop at DataTest:35
+cont
+buildkb --limit-sdk
+checkkb --is-consistent
+
+sparql <<EOF
+    SELECT ?boolVal
+    WHERE {
+        [] a java:StackFrame ;
+           prog:DataTest_varsTest_booleanVar ?boolVal .
+        FILTER (?boolVal = "true"^^xsd:boolean)
+    }
+EOF
+inspect boolVal
 
 cont

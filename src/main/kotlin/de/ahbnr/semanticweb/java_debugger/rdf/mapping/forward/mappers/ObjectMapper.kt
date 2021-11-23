@@ -9,6 +9,7 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.mapPrimitiveValue
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -51,23 +52,7 @@ class ObjectMapper : IMapper {
                         NodeFactory.createURI(URIs.java.`null`)
                     }
                     is ObjectReference -> NodeFactory.createURI(URIs.run.genObjectURI(value))
-                    is PrimitiveValue -> when (value) {
-                        is BooleanValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDboolean)
-                        is ByteValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDbyte)
-                        is CharValue -> NodeFactory.createLiteral(
-                            value.value().code.toString(),
-                            XSDDatatype.XSDunsignedShort
-                        )
-                        is DoubleValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDdouble)
-                        is FloatValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDfloat)
-                        is IntegerValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDint)
-                        is LongValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDlong)
-                        is ShortValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDshort)
-                        else -> {
-                            logger.error("Encountered unknown primitive value: $value")
-                            null
-                        }
-                    }
+                    is PrimitiveValue -> mapPrimitiveValue(value)
                     else -> null
                     // FIXME: Handle other cases
                 }
@@ -79,7 +64,7 @@ class ObjectMapper : IMapper {
                         fieldPropertyName,
                         valueObject
                     )
-                }
+                } else logger.error("Encountered unknown kind of value: $value")
 
                 // FIXME: Output a warning in the else case
             }
