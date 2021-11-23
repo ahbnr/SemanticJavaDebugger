@@ -21,11 +21,7 @@ domain:TruePair rdf:type owl:Class ;
            ].
 
 domain:Node rdf:type owl:Class ;
-           owl:equivalentClass [
-                rdf:type owl:Restriction ;
-                owl:onProperty rdf:type;
-                owl:hasValue prog:Node
-           ].
+           owl:equivalentClass prog:Node.
 
 domain:Leaf rdf:type owl:Class ;
             rdf:type domain:Node ;

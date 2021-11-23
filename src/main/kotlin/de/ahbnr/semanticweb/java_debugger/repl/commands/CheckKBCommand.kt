@@ -53,7 +53,7 @@ class CheckKBCommand(
 
         var isConsistent = true
         val hermit = ReasonerFactory().createReasoner(ontology)
-        if (argv.contains("isConsistent")) {
+        if (argv.contains("--is-consistent")) {
             logger.log("Performing consistency check with HermiT...")
             isConsistent = hermit.isConsistent
             if (isConsistent) {
@@ -63,7 +63,7 @@ class CheckKBCommand(
             }
         }
 
-        if (argv.contains("hasUnsatisfiableClasses")) {
+        if (argv.contains("--has-unsatisfiable-classes")) {
             if (!isConsistent) {
                 logger.error("Can only do a full check if Ontology is consistent.")
                 return

@@ -22,11 +22,11 @@ class GraphGenerator(
         model.read(owlInputStream, null, "TURTLE")
     }
 
-    private fun mapProgramState(jvmState: JvmState, model: Model) {
+    private fun mapProgramState(jvmState: JvmState, model: Model, limiter: MappingLimiter) {
         model.setNsPrefix("run", ns.run)
 
         for (mapper in mappers) {
-            mapper.extendModel(jvmState, model)
+            mapper.extendModel(jvmState, model, limiter)
         }
     }
 
@@ -42,7 +42,8 @@ class GraphGenerator(
 
     fun buildOntology(
         jvmState: JvmState,
-        applicationDomainRulesPath: String? /* turtle format file */
+        applicationDomainRulesPath: String?, /* turtle format file */
+        limiter: MappingLimiter
     ): Ontology {
         // var model = ModelFactory.createDefaultModel()
         val ontManager = OntManagers.createManager()
@@ -57,7 +58,7 @@ class GraphGenerator(
         loadApplicationDomain(applicationDomainRulesPath, model)
 
         // Map program state
-        mapProgramState(jvmState, model)
+        mapProgramState(jvmState, model, limiter)
 
         return ontology
     }

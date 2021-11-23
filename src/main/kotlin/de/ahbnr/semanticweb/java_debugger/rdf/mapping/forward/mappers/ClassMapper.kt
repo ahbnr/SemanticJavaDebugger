@@ -5,6 +5,7 @@ import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.datatypes.xsd.XSDDatatype
@@ -24,13 +25,30 @@ private sealed class JavaType {
 
 class ClassMapper : IMapper {
     private class Graph(
-        private val jvmState: JvmState
+        private val jvmState: JvmState,
+        private val limiter: MappingLimiter
     ) : GraphBase(), KoinComponent {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
 
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
+
+            fun addReferenceOrNullClass(referenceType: ReferenceType) =
+            // every reference can either be an instance or null:
+            // fieldTypeSubject ∪ { java:null }
+                // [ owl:unionOf ( fieldTypeSubject [ owl:oneOf ( java:null ) ] ) ] .
+                tripleCollector.addCollection(
+                    TripleCollector.CollectionObject.OWLUnion(
+                        listOf(
+                            NodeFactory.createURI(URIs.prog.genReferenceTypeURI(referenceType)),
+
+                            tripleCollector.addCollection(
+                                TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
+                            )
+                        )
+                    )
+                )
 
             /**
              * Some classes might not have been loaded by the JVM yet and are only known by name until now.
@@ -76,14 +94,6 @@ class ClassMapper : IMapper {
                     fieldURI
                 )
 
-                // the field is a thing defined for every object instance of the class concept via rdfs:domain
-                // (this also drives some implications, e.g. if there exists a field, there must also be some class it belongs to etc)
-                tripleCollector.addStatement(
-                    fieldURI,
-                    URIs.rdfs.domain,
-                    classSubject
-                )
-
                 // Now we need to clarify the type of the field
                 val fieldType = try {
                     JavaType.LoadedType(field.type())
@@ -91,6 +101,9 @@ class ClassMapper : IMapper {
                     JavaType.UnloadedType(field.typeName())
                 }
 
+                // Fields are modeled as properties.
+                // This way, the field type can be encoded in the property range.
+                // The exact kind of property and ranges now depend on the field type:
                 when (fieldType) {
                     is JavaType.LoadedType -> when (fieldType.type) {
                         is ClassType -> {
@@ -104,34 +117,12 @@ class ClassMapper : IMapper {
                                 URIs.owl.ObjectProperty
                             )
 
-                            // it is even a functional property: https://www.w3.org/TR/owl-ref/ (4.3.1)
-                            // For every instance of the field (there is only one for the object) there is exactly one property value
-                            tripleCollector.addStatement(
-                                fieldURI,
-                                URIs.rdf.type,
-                                URIs.owl.FunctionalProperty
-                            )
-
                             // We now restrict the kind of values the field property can link to, that is, we
                             // set the rdfs:range to the field type
-                            val fieldTypeSubject = URIs.prog.genReferenceTypeURI(fieldType.type)
                             tripleCollector.addStatement(
                                 fieldURI,
                                 URIs.rdfs.range,
-                                // every reference type field can either be an instance or null:
-                                // fieldTypeSubject ∪ { java:null }
-                                // [ owl:unionOf ( fieldTypeSubject [ owl:oneOf ( java:null ) ] ) ] .
-                                tripleCollector.addCollection(
-                                    TripleCollector.CollectionObject.OWLUnion(
-                                        listOf(
-                                            NodeFactory.createURI(fieldTypeSubject),
-
-                                            tripleCollector.addCollection(
-                                                TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
-                                            )
-                                        )
-                                    )
-                                )
+                                addReferenceOrNullClass(fieldType.type)
                             )
                         }
                         // FIXME: Handle the other cases
@@ -148,23 +139,37 @@ class ClassMapper : IMapper {
 
                         tripleCollector.addStatement(
                             fieldURI,
-                            URIs.rdf.type,
-                            URIs.owl.FunctionalProperty
-                        )
-
-                        val fieldTypeObject = URIs.prog.genUnloadedTypeURI(fieldType.typeName)
-                        tripleCollector.addStatement(
-                            fieldURI,
                             URIs.rdfs.range,
-                            fieldTypeObject
+                            URIs.prog.genUnloadedTypeURI(fieldType.typeName)
                         )
                     }
+                    // FIXME: Handle the other cases
                 }
+
+                // the field is a thing defined for every object instance of the class concept via rdfs:domain
+                // (this also drives some implications, e.g. if there exists a field, there must also be some class it belongs to etc)
+                tripleCollector.addStatement(
+                    fieldURI,
+                    URIs.rdfs.domain,
+                    classSubject
+                )
+
+                // Fields are functional properties.
+                // For every instance of the field (there is only one for the object) there is exactly one property value
+                tripleCollector.addStatement(
+                    fieldURI,
+                    URIs.rdf.type,
+                    URIs.owl.FunctionalProperty
+                )
             }
 
             fun addFields(classSubject: String, classType: ClassType) {
                 // Note, that "fields()" gives us the fields of the type in question only, not the fields of superclasses
                 for (field in classType.fields()) {
+                    if (!field.isPublic && limiter.isShallow(classType)) {
+                        continue
+                    }
+
                     addField(classSubject, classType, field)
                 }
             }
@@ -175,11 +180,11 @@ class ClassMapper : IMapper {
                 method: Method,
                 classType: ClassType
             ) {
-                val variableDeclarationSubject = URIs.prog.genVariableDeclarationURI(variable, method, classType)
+                val variableDeclarationURI = URIs.prog.genVariableDeclarationURI(variable, method, classType)
 
                 // it *is* a VariableDeclaration
                 tripleCollector.addStatement(
-                    variableDeclarationSubject,
+                    variableDeclarationURI,
                     URIs.rdf.type,
                     URIs.java.VariableDeclaration
                 )
@@ -188,7 +193,71 @@ class ClassMapper : IMapper {
                 tripleCollector.addStatement(
                     methodSubject,
                     URIs.java.declaresVariable,
-                    variableDeclarationSubject
+                    variableDeclarationURI
+                )
+
+                // Lets clarify the type of the variable and deal with unloaded types
+                val variableType = try {
+                    JavaType.LoadedType(variable.type())
+                } catch (e: ClassNotLoadedException) {
+                    JavaType.UnloadedType(variable.typeName())
+                }
+
+                // A variable declaration is modeled as a property that relates StackFrames and the variable values.
+                // This allows to encode the typing of the variable into the property range.
+
+                // The kind of property and range depend on the variable type:
+                when (variableType) {
+                    is JavaType.LoadedType -> {
+                        when (variableType.type) {
+                            is ReferenceType -> {
+                                // If its a reference type, then it must be an ObjectProperty
+                                tripleCollector.addStatement(
+                                    variableDeclarationURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.ObjectProperty
+                                )
+
+                                // ...and the variable property ranges over the reference type of the variable
+                                // and the null value:
+                                tripleCollector.addStatement(
+                                    variableDeclarationURI,
+                                    URIs.rdfs.range,
+                                    addReferenceOrNullClass(variableType.type)
+                                )
+                            }
+                            // FIXME: deal with other cases
+                        }
+                    }
+                    is JavaType.UnloadedType -> {
+                        addUnloadedType(variableType.typeName)
+
+                        tripleCollector.addStatement(
+                            variableDeclarationURI,
+                            URIs.rdf.type,
+                            URIs.owl.ObjectProperty
+                        )
+
+                        tripleCollector.addStatement(
+                            variableDeclarationURI,
+                            URIs.rdfs.range,
+                            URIs.prog.genUnloadedTypeURI(variableType.typeName)
+                        )
+                    }
+                }
+
+                // Variables are always functional properties
+                tripleCollector.addStatement(
+                    variableDeclarationURI,
+                    URIs.rdf.type,
+                    URIs.owl.FunctionalProperty
+                )
+
+                // The property domain is a StackFrame
+                tripleCollector.addStatement(
+                    variableDeclarationURI,
+                    URIs.rdfs.domain,
+                    URIs.java.StackFrame
                 )
             }
 
@@ -282,6 +351,10 @@ class ClassMapper : IMapper {
                     methodSubject
                 )
 
+                if (limiter.isShallow(classType)) {
+                    return
+                }
+
                 // ...and the method declares some variables
                 addVariableDeclarations(methodSubject, method, classType)
 
@@ -291,6 +364,10 @@ class ClassMapper : IMapper {
 
             fun addMethods(classSubject: String, classType: ClassType) {
                 for (method in classType.methods()) { // inherited methods are not included!
+                    if (!method.isPublic && limiter.isShallow(classType)) {
+                        continue
+                    }
+
                     addMethod(method, classSubject, classType)
                 }
             }
@@ -329,9 +406,9 @@ class ClassMapper : IMapper {
                 for (referenceType in allReferenceTypes) {
                     when (referenceType) {
                         is ClassType -> {
-                            //if (referenceType.name().startsWith("java") || referenceType.name().startsWith("jdk") ||referenceType.name().startsWith("com") ) {
-                            //    continue
-                            //}
+                            if (limiter.isExcluded(referenceType)) {
+                                continue
+                            }
 
                             addClass(referenceType)
                         }
@@ -346,8 +423,8 @@ class ClassMapper : IMapper {
         }
     }
 
-    override fun extendModel(jvmState: JvmState, outputModel: Model) {
-        val graph = Graph(jvmState)
+    override fun extendModel(jvmState: JvmState, outputModel: Model, limiter: MappingLimiter) {
+        val graph = Graph(jvmState, limiter)
 
         val graphModel = ModelFactory.createModelForGraph(graph)
 

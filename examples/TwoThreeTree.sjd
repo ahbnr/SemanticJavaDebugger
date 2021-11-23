@@ -5,32 +5,47 @@ run TwoThreeTree
 locals
 
 section Build Knowledge Base
-buildkb
+buildkb --limit-sdk
 stats
-checkkb
+# dumpkb rurunttl
+checkkb --is-consistent
 
 section SPARQL Queries
-# sparql SELECT ?root ?parent WHERE { ?root a prog:Node . ?root prog:Node_parent ?parent }
-# sparql SELECT ?root WHERE { ?root a domain:Root }
-# sparql SELECT ?var WHERE { ?var a java:LocalVariable }
-sparql SELECT ?root ?var WHERE { ?root a domain:Root . ?var java:storesReferenceTo ?root . }
-reverse root
-sparql SELECT ?node ?var WHERE { ?node a domain:TrueNode . ?var java:storesReferenceTo ?node . }
-reverse node
 sparql <<EOF
-  SELECT ?root ?var ?varDecl ?method ?location ?source ?line
+    SELECT ?root ?var
+    WHERE {
+        [] a java:StackFrame ;
+           ?var ?root .
+        ?var a java:VariableDeclaration .
+        ?root a domain:Root .
+    }
+EOF
+reverse root
+
+sparql <<EOF
+    SELECT ?node ?field
+    WHERE {
+        ?node a domain:TrueNode .
+        [] ?field ?node .
+        ?field a java:Field .
+    }
+EOF
+reverse node
+
+sparql <<EOF
+  SELECT ?root ?source ?line
   WHERE {
       ?root a domain:Root .
-      ?var java:storesReferenceTo ?root .
-      ?var java:declaredByVariableDeclaration ?varDecl .
-      ?method java:declaresVariable ?varDecl .
-      ?method java:isDefinedAt ?location .
-      ?location java:isAtSourcePath ?source .
-      ?location java:isAtLine ?line .
+      [] ?var ?root .
+      ?var a java:VariableDeclaration .
+      [] a java:Method ;
+           java:declaresVariable ?var ;
+           java:isDefinedAt ?location .
+      ?location java:isAtSourcePath ?source ;
+                java:isAtLine ?line .
   }
 EOF
 inspect root
-inspect var
 reverse root
 
 section SHACL Validation

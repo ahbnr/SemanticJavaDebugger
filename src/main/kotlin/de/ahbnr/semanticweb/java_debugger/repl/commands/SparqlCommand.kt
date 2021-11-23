@@ -98,8 +98,10 @@ class SparqlCommand(
                 }
                 repl.namedNodes.putAll(nameMap)
 
-                logger.log("The solution variables are available under the following names:")
-                logger.log(nameMap.keys.joinToString(", "))
+                if (nameMap.isNotEmpty()) {
+                    logger.log("The solution variables are available under the following names:")
+                    logger.log(nameMap.keys.joinToString(", "))
+                }
             }
         } catch (e: QueryParseException) {
             logger.error(e.message ?: "Could not parse query.")

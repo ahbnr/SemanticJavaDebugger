@@ -2,15 +2,13 @@
 
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
-import com.sun.jdi.ClassType
-import com.sun.jdi.Field
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.Value
+import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
+import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
-import org.apache.jena.datatypes.TypeMapper
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -23,13 +21,14 @@ import org.koin.core.component.inject
 
 class ObjectMapper : IMapper {
     private class Graph(
-        private val jvmState: JvmState
+        private val jvmState: JvmState,
+        private val limiter: MappingLimiter
     ) : GraphBase(), KoinComponent {
         private val URIs: OntURIs by inject()
+        private val logger: Logger by inject()
 
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
-            val tm = TypeMapper.getInstance()
 
             fun addField(field: Field, value: Value?, objectSubject: String, classType: ClassType) {
                 // we model a field as an instance of the field property of the class.
@@ -38,7 +37,19 @@ class ObjectMapper : IMapper {
                 // let's find out the object name, i.e. the name of the field value in case of a reference type value,
                 // or the value itself, in case of a primitive value
                 val valueObject = when (value) {
-                    null -> URIs.java.`null`
+                    // apparently null values are mirrored directly as null:
+                    // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/Value.html
+                    null -> {
+                        if (try {
+                                field.type() !is ReferenceType
+                            } catch (e: ClassNotLoadedException) {
+                                false
+                            }
+                        ) {
+                            logger.error("Encountered a null value for a non-reference type for field ${classType.name()}::${field.name()}. This should never happen.")
+                        }
+                        URIs.java.`null`
+                    }
                     is ObjectReference -> URIs.run.genObjectURI(value)
                     else -> null // FIXME: Handle other cases
                 }
@@ -60,6 +71,10 @@ class ObjectMapper : IMapper {
                 val fieldValues = objectReference.getValues(classType.fields())
 
                 for ((field, value) in fieldValues) {
+                    if (!field.isPublic && limiter.isShallow(classType)) {
+                        continue
+                    }
+
                     addField(field, value, objectSubject, classType)
                 }
             }
@@ -108,6 +123,10 @@ class ObjectMapper : IMapper {
 
             fun addObjects() {
                 for (obj in jvmState.allObjects()) {
+                    if (limiter.isExcluded(obj.referenceType())) {
+                        continue
+                    }
+
                     addObject(obj)
                 }
             }
@@ -118,8 +137,8 @@ class ObjectMapper : IMapper {
         }
     }
 
-    override fun extendModel(jvmState: JvmState, outputModel: Model) {
-        val graph = Graph(jvmState)
+    override fun extendModel(jvmState: JvmState, outputModel: Model, limiter: MappingLimiter) {
+        val graph = Graph(jvmState, limiter)
         val graphModel = ModelFactory.createModelForGraph(graph)
 
         outputModel.add(graphModel)

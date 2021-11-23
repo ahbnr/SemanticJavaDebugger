@@ -63,12 +63,8 @@ class OntURIs(val ns: Namespaces) {
 
         val Object = ns.java + "Object"
         val StackFrame = ns.java + "StackFrame"
-        val LocalVariable = ns.java + "LocalVariable"
 
         val isAtStackDepth = ns.java + "isAtStackDepth"
-        val hasLocalVariable = ns.java + "hasLocalVariable"
-        val declaredByVariableDeclaration = ns.java + "declaredByVariableDeclaration"
-        val storesReferenceTo = ns.java + "storesReferenceTo"
         val hasJDWPObjectId = ns.java + "hasJDWPObjectId"
     }
 
@@ -107,9 +103,6 @@ class OntURIs(val ns: Namespaces) {
     inner class RunURIs {
         fun genFrameURI(frameDepth: Int): String =
             "${ns.run}frame$frameDepth"
-
-        fun genLocalVariableURI(frameDepth: Int, variable: LocalVariable): String =
-            "${ns.run}frame${frameDepth}_${IRILib.encodeUriComponent(variable.name())}"
 
         fun genObjectURI(objectReference: ObjectReference): String =
             "${ns.run}object_${objectReference.uniqueID()}"

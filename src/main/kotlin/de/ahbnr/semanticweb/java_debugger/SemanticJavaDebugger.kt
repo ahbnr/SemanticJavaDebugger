@@ -67,6 +67,7 @@ class SemanticJavaDebugger : CliktCommand() {
                     CheckKBCommand(graphGen),
                     ContCommand(jvmDebugger),
                     DomainCommand(),
+                    DumpKBCommand(),
                     InspectCommand(ns),
                     ReverseCommand(jvmDebugger, ns),
                     LocalsCommand(jvmDebugger),

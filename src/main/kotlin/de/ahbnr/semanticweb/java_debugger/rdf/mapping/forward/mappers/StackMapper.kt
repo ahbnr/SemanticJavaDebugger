@@ -5,9 +5,9 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
@@ -22,6 +22,7 @@ import org.koin.core.component.inject
 class StackMapper : IMapper {
     private class Graph(
         private val jvmState: JvmState,
+        private val limiter: MappingLimiter
     ) : GraphBase(), KoinComponent {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
@@ -30,37 +31,41 @@ class StackMapper : IMapper {
             val tripleCollector = TripleCollector(triplePattern)
 
             fun addLocalVariable(
-                frameDepth: Int,
-                frameSubject: String,
+                stackFrameURI: String,
                 frame: StackFrame,
                 variable: LocalVariable,
-                value: Value
+                value: Value?
             ) {
-                // this *is* a LocalVariable
-                val localVariableSubject = URIs.run.genLocalVariableURI(frameDepth, variable)
-                tripleCollector.addStatement(
-                    localVariableSubject,
-                    URIs.rdf.type,
-                    URIs.java.LocalVariable
-                )
-
-                // ...and the variable has been declared here:
                 val method = frame.location().method()
                 val classType = method.declaringType()
-                tripleCollector.addStatement(
-                    localVariableSubject,
-                    URIs.java.declaredByVariableDeclaration,
-                    URIs.prog.genVariableDeclarationURI(variable, method, classType)
-                )
 
-                // ...and it carries this value / reference:
+                // we model this via the variable declaration property.
+                // The property value depends on the kind of value we have here
                 when (value) {
+                    // apparently null values are mirrored directly as null:
+                    // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/Value.html
+                    null -> {
+                        if (try {
+                                variable.type() !is ReferenceType
+                            } catch (e: ClassNotLoadedException) {
+                                false
+                            }
+                        ) {
+                            logger.error("Encountered a null value for a non-reference type for variable ${classType.name()}::${method.name()}::${variable.name()}. This should never happen.")
+                        }
+
+                        tripleCollector.addStatement(
+                            stackFrameURI,
+                            URIs.prog.genVariableDeclarationURI(variable, method, classType),
+                            URIs.java.`null`
+                        )
+                    }
                     is ObjectReference -> {
                         when (value.referenceType()) {
                             is ClassType -> {
                                 tripleCollector.addStatement(
-                                    localVariableSubject,
-                                    URIs.java.storesReferenceTo,
+                                    stackFrameURI,
+                                    URIs.prog.genVariableDeclarationURI(variable, method, classType),
                                     URIs.run.genObjectURI(value)
                                 )
                             }
@@ -68,13 +73,6 @@ class StackMapper : IMapper {
                         }
                     }
                 }
-
-                // ...and it is part of its frame
-                tripleCollector.addStatement(
-                    frameSubject,
-                    URIs.java.hasLocalVariable,
-                    localVariableSubject
-                )
             }
 
             fun addLocalVariables(frameDepth: Int, frameSubject: String, frame: StackFrame) {
@@ -89,7 +87,7 @@ class StackMapper : IMapper {
                     val values = frame.getValues(variables)
 
                     for ((variable, value) in values) {
-                        addLocalVariable(frameDepth, frameSubject, frame, variable, value)
+                        addLocalVariable(frameSubject, frame, variable, value)
                     }
                 }
             }
@@ -129,15 +127,10 @@ class StackMapper : IMapper {
         }
     }
 
-    override fun extendModel(jvmState: JvmState, outputModel: Model) {
-        val graph = Graph(jvmState)
+    override fun extendModel(jvmState: JvmState, outputModel: Model, limiter: MappingLimiter) {
+        val graph = Graph(jvmState, limiter)
         val graphModel = ModelFactory.createModelForGraph(graph)
 
         outputModel.add(graphModel)
-    }
-
-    companion object {
-        fun genLocalVariableURI(stackFrameDepth: Int, variable: LocalVariable, ns: Namespaces): String =
-            "${ns.run}localvariable_frame${stackFrameDepth}_${variable.name()}"
     }
 }

@@ -4,15 +4,16 @@ stop at TwoThreeTree:64
 run TwoThreeTree
 
 section Build Knowledge Base
-buildkb
-# checkkb
+buildkb --limit-sdk
+checkkb --is-consistent
 
 section Detection by Explicit Model
 sparql <<EOF
   SELECT ?faulty ?var
   WHERE {
       ?faulty a domain:FaultyNode .
-      ?var java:storesReferenceTo ?faulty .
+      [] ?var ?faulty .
+      ?var a java:VariableDeclaration .
   }
 EOF
 reverse faulty
