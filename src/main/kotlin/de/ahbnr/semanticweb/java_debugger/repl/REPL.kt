@@ -6,7 +6,10 @@ import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
 import org.apache.jena.rdf.model.RDFNode
+import org.jline.builtins.Nano
+import org.jline.console.impl.SystemHighlighter
 import org.jline.reader.EndOfFileException
+import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.reader.impl.DefaultParser
@@ -42,10 +45,24 @@ class REPL(
 
     private val commandMap = commands.map { it.name to it }.toMap()
     private val parser = DefaultParser()
-    private val reader = LineReaderBuilder.builder()
-        .terminal(terminal)
-        .parser(parser)
-        .build()
+    private val reader: LineReader
+
+    init {
+        val lineReaderBuilder = LineReaderBuilder.builder()
+            .terminal(terminal)
+            .parser(parser)
+
+        val syntaxFile = javaClass.getResource("/repl/sjd.nanorc")?.toString()
+        val highlighter = if (syntaxFile != null) Nano.SyntaxHighlighter.build(syntaxFile) else null
+        if (highlighter != null) {
+            lineReaderBuilder.highlighter(
+                SystemHighlighter(highlighter, highlighter, highlighter)
+            )
+        } else println("NONONO")
+
+        reader = lineReaderBuilder.build()
+    }
+
 
     private val prompt = AttributedStringBuilder()
         .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))

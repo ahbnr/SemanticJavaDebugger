@@ -1,0 +1,4 @@
+color brightmagenta "\<(buildkb|checkkb)\>"
+
+## Comments
+color cyan "(^|[[:space:]])#.*$"
