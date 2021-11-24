@@ -1,3 +1,5 @@
+package examples;
+
 class ExampleClass {
 }
 
@@ -10,6 +12,8 @@ class DataContainer {
     public int intField = 2147483647;
     public long longField = 9223372036854775807L;
     public short shortField = 32767;
+
+    public int[] intArrayField = new int[]{1, 2, 3};
 
     public ExampleClass classReferenceField = new ExampleClass();
     public Object nullReferenceField = null;
@@ -37,5 +41,7 @@ public class DataTest {
     public static void main(String[] args) {
         fieldsTest();
         varsTest();
+
+        System.out.println("Hello Data!");
     }
 }

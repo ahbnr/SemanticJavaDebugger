@@ -19,6 +19,7 @@ class OntURIs(val ns: Namespaces) {
 
     inner class RdfsURIs {
         val subClassOf = ns.rdfs + "subClassOf"
+        val subPropertyOf = ns.rdfs + "subPropertyOf"
         val domain = ns.rdfs + "domain"
         val range = ns.rdfs + "range"
     }
@@ -26,10 +27,15 @@ class OntURIs(val ns: Namespaces) {
     val rdfs = RdfsURIs()
 
     inner class OwlURIs {
+        val Restriction = ns.owl + "Restriction"
+        val onProperty = ns.owl + "onProperty"
+        val someValuesFrom = ns.owl + "someValuesFrom"
+
         val Class = ns.owl + "Class"
         val ObjectProperty = ns.owl + "ObjectProperty"
         val DatatypeProperty = ns.owl + "DatatypeProperty"
         val FunctionalProperty = ns.owl + "FunctionalProperty"
+        val cardinality = ns.owl + "cardinality"
         val NamedIndividual = ns.owl + "NamedIndividual"
         val unionOf = ns.owl + "unionOf"
         val oneOf = ns.owl + "oneOf"
@@ -51,7 +57,18 @@ class OntURIs(val ns: Namespaces) {
         val Class = ns.java + "Class"
         val Method = ns.java + "Method"
         val Field = ns.java + "Field"
+
+        val Array = ns.java + "Array"
+        val ArrayElement = ns.java + "ArrayElement"
+        val PrimitiveArrayElement = ns.java + "PrimitiveArrayElement"
+        val ReferenceArrayElement = ns.java + "ReferenceArrayElement"
+        val hasIndex = ns.java + "hasIndex"
+        val hasElement = ns.java + "hasElement"
+        val storesPrimitive = ns.java + "storesPrimitive"
+        val storesReference = ns.java + "storesReference"
+
         val VariableDeclaration = ns.java + "VariableDeclaration"
+
         val Location = ns.java + "Location"
 
         val hasMethod = ns.java + "hasMethod"
@@ -110,6 +127,15 @@ class OntURIs(val ns: Namespaces) {
 
         fun genLocationURI(location: Location): String =
             "${ns.prog}location_${location.hashCode()}" // FIXME: unsure if hash is sufficient... should be when looking at JDI source code if JDWP Method IDs are unique. Are they?
+
+        fun genTypedHasElementURI(elementType: Type): String =
+            "${ns.prog}hasElement${IRILib.encodeUriComponent("<${elementType.name()}>")}"
+
+        fun genTypedArrayElementURI(elementType: Type): String =
+            "${ns.prog}ArrayElement${IRILib.encodeUriComponent("<${elementType.name()}>")}"
+
+        fun genTypedStoresPrimitiveURI(arrayType: ArrayType): String =
+            "${ns.prog}storesPrimitive${IRILib.encodeUriComponent("${arrayType.name()}>")}"
     }
 
     val prog = ProgURIs()
@@ -120,6 +146,12 @@ class OntURIs(val ns: Namespaces) {
 
         fun genObjectURI(objectReference: ObjectReference): String =
             "${ns.run}object_${objectReference.uniqueID()}"
+
+        fun genSizedHasElementURI(arrayReference: ArrayReference): String =
+            "${ns.run}hasElement_object_${arrayReference.uniqueID()}"
+
+        fun genArrayElementInstanceURI(arrayReference: ArrayReference, index: Int) =
+            "${ns.run}element${index}_of_${arrayReference.uniqueID()}"
     }
 
     val run = RunURIs()

@@ -2,16 +2,18 @@
 
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
-import com.sun.jdi.*
+import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.LocalVariable
+import com.sun.jdi.StackFrame
+import com.sun.jdi.Value
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.mapPrimitiveValue
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.ValueToNodeMapper
 import org.apache.jena.datatypes.xsd.XSDDatatype
-import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
 import org.apache.jena.graph.impl.GraphBase
@@ -29,6 +31,8 @@ class StackMapper : IMapper {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
 
+        private val valueMapper = ValueToNodeMapper()
+
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
 
@@ -43,32 +47,7 @@ class StackMapper : IMapper {
 
                 // we model this via the variable declaration property.
                 // The property value depends on the kind of value we have here
-                val valueObject: Node? = when (value) {
-                    // apparently null values are mirrored directly as null:
-                    // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/Value.html
-                    null -> {
-                        if (try {
-                                variable.type() !is ReferenceType
-                            } catch (e: ClassNotLoadedException) {
-                                false
-                            }
-                        ) {
-                            logger.error("Encountered a null value for a non-reference type for variable ${classType.name()}::${method.name()}::${variable.name()}. This should never happen.")
-                        }
-
-                        NodeFactory.createURI(URIs.java.`null`)
-                    }
-                    is ObjectReference -> {
-                        when (value.referenceType()) {
-                            is ClassType -> NodeFactory.createURI(URIs.run.genObjectURI(value))
-                            else -> null
-                            //FIXME: handle other cases
-                        }
-                    }
-                    is PrimitiveValue -> mapPrimitiveValue(value)
-                    else -> null
-                    //FIXME: handle other cases
-                }
+                val valueObject = valueMapper.map(value)
 
                 if (valueObject != null) {
                     tripleCollector.addStatement(
@@ -76,7 +55,7 @@ class StackMapper : IMapper {
                         URIs.prog.genVariableDeclarationURI(variable, method, classType),
                         valueObject
                     )
-                } else logger.error("Encountered unknown kind of value: $value")
+                }
             }
 
             fun addLocalVariables(frameDepth: Int, frameSubject: String, frame: StackFrame) {

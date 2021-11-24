@@ -8,8 +8,9 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.mapPrimitiveValue
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.ValueToNodeMapper
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -28,45 +29,31 @@ class ObjectMapper : IMapper {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
 
+        private val valueMapper = ValueToNodeMapper()
+
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
 
             fun addField(field: Field, value: Value?, objectSubject: String, classType: ClassType) {
+                if (field.isStatic) {
+                    return // FIXME: handle static fields
+                }
+
+                val fieldPropertyName = URIs.prog.genFieldURI(classType, field)
                 // we model a field as an instance of the field property of the class.
                 // That one is created by the ClassMapper
 
                 // let's find out the object name, i.e. the name of the field value in case of a reference type value,
                 // or the value itself, in case of a primitive value
-                val valueObject = when (value) {
-                    // apparently null values are mirrored directly as null:
-                    // https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/Value.html
-                    null -> {
-                        if (try {
-                                field.type() !is ReferenceType
-                            } catch (e: ClassNotLoadedException) {
-                                false
-                            }
-                        ) {
-                            logger.error("Encountered a null value for a non-reference type for field ${classType.name()}::${field.name()}. This should never happen.")
-                        }
-                        NodeFactory.createURI(URIs.java.`null`)
-                    }
-                    is ObjectReference -> NodeFactory.createURI(URIs.run.genObjectURI(value))
-                    is PrimitiveValue -> mapPrimitiveValue(value)
-                    else -> null
-                    // FIXME: Handle other cases
-                }
+                val valueNode = valueMapper.map(value)
 
-                if (valueObject != null) {
-                    val fieldPropertyName = URIs.prog.genFieldURI(classType, field)
+                if (valueNode != null) {
                     tripleCollector.addStatement(
                         objectSubject,
                         fieldPropertyName,
-                        valueObject
+                        valueNode
                     )
-                } else logger.error("Encountered unknown kind of value: $value")
-
-                // FIXME: Output a warning in the else case
+                }
             }
 
             fun addFields(objectSubject: String, objectReference: ObjectReference, classType: ClassType) {
@@ -82,54 +69,173 @@ class ObjectMapper : IMapper {
                 }
             }
 
-            fun addObject(objectReference: ObjectReference) {
-                when (val referenceType = objectReference.referenceType()) {
-                    is ClassType -> {
-                        val objectSubject = URIs.run.genObjectURI(objectReference)
+            fun addPlainObject(objectURI: String, objectReference: ObjectReference, referenceType: ReferenceType) {
+                if (referenceType is ClassType) {
+                    addFields(objectURI, objectReference, referenceType)
+                } else {
+                    logger.error("Encountered regular object which is not of a class type: $objectURI of type $referenceType.")
+                }
+            }
 
-                        // The object is a particular individual (not a class/concept)
-                        tripleCollector.addStatement(
-                            objectSubject,
-                            URIs.rdf.type,
-                            URIs.owl.NamedIndividual
-                        )
+            fun addArray(objectURI: String, arrayReference: ArrayReference, referenceType: ReferenceType) {
+                if (!limiter.isDeep(referenceType) && !arrayReference.referringObjects(Long.MAX_VALUE)
+                        .any { limiter.isDeep(it.referenceType()) } // FIXME: Of course, this is incredibly slow
+                ) {
+                    return
+                }
 
-                        // it is a java object
-                        tripleCollector.addStatement(
-                            objectSubject,
-                            URIs.rdf.type,
-                            URIs.java.Object
-                        )
+                if (referenceType !is ArrayType) {
+                    logger.error("Encountered array whose type is not an array type: Object $objectURI of type $referenceType.")
+                    return
+                }
 
-                        // as such, it has been assigned a unique ID by the VM JDWP agent:
-                        tripleCollector.addStatement(
-                            objectSubject,
-                            URIs.java.hasJDWPObjectId,
-                            NodeFactory.createLiteral(
-                                objectReference.uniqueID().toString(),
-                                XSDDatatype.XSDlong
+                val componentType = try {
+                    JavaType.LoadedType(referenceType.componentType())
+                } catch (e: ClassNotLoadedException) {
+                    JavaType.UnloadedType(referenceType.componentTypeName())
+                }
+
+                when (componentType) {
+                    is JavaType.LoadedType -> when (componentType.type) {
+                        is PrimitiveType -> {
+                            // # More concrete hasElement relation
+
+                            // Create sub-relation of hasElement<Type> relation for this particular array object to encode
+                            // the array size in the cardinality
+                            val typedHasElementURI = URIs.prog.genTypedHasElementURI(componentType.type)
+                            val sizedHasElementURI = URIs.run.genSizedHasElementURI(arrayReference)
+                            tripleCollector.addStatement(
+                                sizedHasElementURI,
+                                URIs.rdfs.subPropertyOf,
+                                typedHasElementURI
                             )
-                        )
 
-                        // it is of a particular java class
-                        tripleCollector.addStatement(
-                            objectSubject,
-                            URIs.rdf.type,
-                            URIs.prog.genReferenceTypeURI(referenceType) // FIXME: we model Java classes as owl classes here, instead of being individuals. Not sure what the right design is here
-                        )
+                            tripleCollector.addStatement(
+                                sizedHasElementURI,
+                                URIs.rdfs.domain,
+                                tripleCollector.addCollection(
+                                    TripleCollector.CollectionObject.OWLOneOf.fromURIs(
+                                        listOf(
+                                            objectURI
+                                        )
+                                    )
+                                )
+                            )
 
-                        addFields(objectSubject, objectReference, referenceType)
+                            val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(componentType.type)
+                            tripleCollector.addStatement(
+                                sizedHasElementURI,
+                                URIs.rdfs.range,
+                                typedArrayElementURI
+                            )
+
+                            tripleCollector.addStatement(
+                                sizedHasElementURI,
+                                URIs.owl.cardinality,
+                                NodeFactory.createLiteral(
+                                    arrayReference.length().toString(),
+                                    XSDDatatype.XSDnonNegativeInteger
+                                )
+                            )
+
+                            // add the actual elements
+                            for (i in 0 until arrayReference.length()) {
+                                val value = arrayReference.getValue(i)
+
+                                val arrayElementInstanceURI = URIs.run.genArrayElementInstanceURI(arrayReference, i)
+                                tripleCollector.addStatement(
+                                    arrayElementInstanceURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.NamedIndividual
+                                )
+
+                                tripleCollector.addStatement(
+                                    arrayElementInstanceURI,
+                                    URIs.rdf.type,
+                                    typedArrayElementURI
+                                )
+
+                                tripleCollector.addStatement(
+                                    arrayElementInstanceURI,
+                                    URIs.java.hasIndex,
+                                    NodeFactory.createLiteral(i.toString(), XSDDatatype.XSDint)
+                                )
+
+                                val valueNode = valueMapper.map(value)
+
+                                if (valueNode != null) {
+                                    val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(referenceType)
+                                    tripleCollector.addStatement(
+                                        arrayElementInstanceURI,
+                                        typedStoresPrimitiveURI,
+                                        valueNode
+                                    )
+                                }
+
+                                tripleCollector.addStatement(
+                                    objectURI,
+                                    sizedHasElementURI,
+                                    arrayElementInstanceURI
+                                )
+                            }
+                        }
+                        is ReferenceType -> Unit // FIXME: Deal with this case
                     }
+                    is JavaType.UnloadedType -> Unit // FIXME: Deal with this case
+                }
+            }
+
+            fun addObject(objectReference: ObjectReference) {
+                val objectURI = URIs.run.genObjectURI(objectReference)
+
+                // The object is a particular individual (not a class/concept)
+                tripleCollector.addStatement(
+                    objectURI,
+                    URIs.rdf.type,
+                    URIs.owl.NamedIndividual
+                )
+
+                // it is a java object
+                tripleCollector.addStatement(
+                    objectURI,
+                    URIs.rdf.type,
+                    URIs.java.Object
+                )
+
+                // as such, it has been assigned a unique ID by the VM JDWP agent:
+                tripleCollector.addStatement(
+                    objectURI,
+                    URIs.java.hasJDWPObjectId,
+                    NodeFactory.createLiteral(
+                        objectReference.uniqueID().toString(),
+                        XSDDatatype.XSDlong
+                    )
+                )
+
+                val referenceType = objectReference.referenceType()
+                // it is of a particular java class
+                tripleCollector.addStatement(
+                    objectURI,
+                    URIs.rdf.type,
+                    URIs.prog.genReferenceTypeURI(referenceType) // FIXME: we model Java classes as owl classes here, instead of being individuals. Not sure what the right design is here
+                )
+
+                when (objectReference) {
+                    is ArrayReference -> addArray(objectURI, objectReference, referenceType)
+                    is ClassLoaderReference -> Unit
+                    is ClassObjectReference -> Unit
+                    is ModuleReference -> Unit
+                    is StringReference -> Unit
+                    is ThreadGroupReference -> Unit
+                    is ThreadReference -> Unit
+                    // "normal object"
+                    else -> addPlainObject(objectURI, objectReference, referenceType)
                     //FIXME: Other cases
                 }
             }
 
             fun addObjects() {
-                for (obj in jvmState.allObjects()) {
-                    if (limiter.isExcluded(obj.referenceType())) {
-                        continue
-                    }
-
+                for (obj in jvmState.allObjects(limiter)) {
                     addObject(obj)
                 }
             }

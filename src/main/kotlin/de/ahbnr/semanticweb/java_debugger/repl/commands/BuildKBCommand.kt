@@ -44,7 +44,12 @@ class BuildKBCommand(
                     "java.lang.invoke",
                 )
             else setOf(),
-            shallowPackages = setOf("java")
+            shallowPackages = setOf("java"),
+            deepPackages = argv
+                .filter { it.startsWith("--deep=") }
+                .map { it.substring("--deep=".length until it.length) }
+                .toSet(),
+            reachableOnly = true
         )
 
         val ontology = graphGenerator.buildOntology(state, repl.applicationDomainDefFile, limiter)

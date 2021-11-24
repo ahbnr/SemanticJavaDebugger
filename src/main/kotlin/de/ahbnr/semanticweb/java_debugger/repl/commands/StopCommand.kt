@@ -7,17 +7,16 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.lang.NumberFormatException
 
 class StopCommand(
     val jvmDebugger: JvmDebugger
-): IREPLCommand, KoinComponent {
+) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "stop"
 
     private val usage = """
-        Usage: stop at <class>:<line_number>
+        Usage: stop at <source path>:<line_number>
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
@@ -35,13 +34,11 @@ class StopCommand(
                     return
                 }
 
-                val (className, lineNumber) = split
+                val (sourcePath, lineNumber) = split
 
                 try {
-                    jvmDebugger.setBreakpoint(className, lineNumber.toInt())
-                }
-
-                catch (e: NumberFormatException) {
+                    jvmDebugger.setBreakpoint(sourcePath, lineNumber.toInt())
+                } catch (e: NumberFormatException) {
                     logger.error("Line number must be an integer: $lineNumber")
                 }
             }

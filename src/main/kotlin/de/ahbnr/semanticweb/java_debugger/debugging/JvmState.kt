@@ -1,6 +1,8 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
-import com.sun.jdi.*
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ThreadReference
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 
 /**
  * Later, we might want to implement an abstract interface over the JVM state here
@@ -10,6 +12,39 @@ import com.sun.jdi.*
 data class JvmState(
     val pausedThread: ThreadReference
 ) {
+    private fun recursivelyFindObjects(
+        objectReference: ObjectReference,
+        limiter: MappingLimiter,
+        seen: MutableSet<Long>
+    ): Sequence<ObjectReference> = sequence {
+        val id = objectReference.uniqueID()
+        if (seen.contains(id))
+            return@sequence
+        seen.add(id)
+
+        val referenceType = objectReference.referenceType()
+
+        if (limiter.isExcluded(referenceType))
+            return@sequence
+
+        for (field in referenceType.fields()) { // FIXME: Also handle inherited fields
+            if (field.isStatic)
+                continue
+
+            if (!field.isPublic && limiter.isShallow(referenceType))
+                continue
+
+            val value = objectReference.getValue(field)
+
+            if (value !is ObjectReference)
+                continue
+
+            yieldAll(recursivelyFindObjects(value, limiter, seen))
+        }
+
+        yield(objectReference)
+    }
+
     /**
      * Utility function to iterate over all objects
      *
@@ -18,14 +53,63 @@ data class JvmState(
      *
      * FIXME: Check if JDWP protocol allows some better way of accessing the heap
      */
-    fun allObjects(): Sequence<ObjectReference> = sequence {
+    fun allObjects(limiter: MappingLimiter?): Sequence<ObjectReference> = sequence {
         val vm = pausedThread.virtualMachine()
         val allReferenceTypes = vm.allClasses()
 
-        for (referenceType in allReferenceTypes) {
-            val allInstances = referenceType.instances(Long.MAX_VALUE)
+        if (limiter?.reachableOnly == true) {
+            val seen = mutableSetOf<Long>()
 
-            yieldAll(allInstances)
+            // get objects in variables
+            for (frameDepth in 0 until pausedThread.frameCount()) {
+                val frame = pausedThread.frame(0)
+
+                for ((_, value) in frame.getValues(frame.visibleVariables())) {
+                    if (value is ObjectReference) {
+                        yieldAll(
+                            recursivelyFindObjects(
+                                value,
+                                limiter,
+                                seen
+                            )
+                        )
+                    }
+                }
+            }
+
+            // get objects directly referenced by static fields
+            for (referenceType in allReferenceTypes) {
+                if (limiter.isExcluded(referenceType))
+                    continue
+
+                for (field in referenceType.allFields()) {
+                    if (!field.isStatic)
+                        continue
+
+                    if (!field.isPublic && limiter.isShallow(referenceType))
+                        continue
+
+                    val value = referenceType.getValue(field)
+                    if (value !is ObjectReference)
+                        continue
+
+                    yieldAll(
+                        recursivelyFindObjects(
+                            value,
+                            limiter,
+                            seen
+                        )
+                    )
+                }
+            }
+        } else {
+            // This is how IntelliJ does it in its memory view.
+            // However, IntelliJ limits the number of objects being retrieved.
+            for (referenceType in allReferenceTypes) {
+                val allInstances = referenceType.instances(Long.MAX_VALUE)
+
+                yieldAll(allInstances)
+            }
         }
     }
 
@@ -47,7 +131,7 @@ data class JvmState(
      *   5. Append the ObjectReferences to Apache Jena Nodes / Statements (is that possible?)
      */
     fun getObjectById(objectId: Long): ObjectReference? {
-        for (obj in allObjects()) {
+        for (obj in allObjects(null)) {
             if (obj.uniqueID() == objectId) {
                 return obj
             }

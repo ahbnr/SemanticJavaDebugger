@@ -40,8 +40,10 @@ class RunCommand(
                 compiler.compile()
                 logger.success("Compiled!")
 
-                val fileName = sourcePath.fileName.toString()
-                fileName.substring(0 until fileName.length - ".java".length)
+                sourcePath
+                    .toString()
+                    .take(classOrSource.length - ".java".length)
+                    .replace('/', '.')
             } else classOrSource
 
         logger.log("Launching Java program.")

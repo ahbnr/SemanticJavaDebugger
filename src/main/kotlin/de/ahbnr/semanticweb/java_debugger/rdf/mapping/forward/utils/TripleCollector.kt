@@ -11,7 +11,7 @@ import org.koin.core.component.inject
 class TripleCollector(private val triplePattern: Triple) : KoinComponent {
     private val URIs: OntURIs by inject()
 
-    private val collectedTriples = mutableListOf<Triple>()
+    private val collectedTriples = mutableSetOf<Triple>()
 
     sealed class CollectionObject {
         data class RDFList(val objects: List<Node>) : CollectionObject() {
@@ -34,6 +34,8 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
                     OWLOneOf(objects.map { NodeFactory.createURI(it) })
             }
         }
+
+        data class OWLSome(val propertyURI: String, val someURI: String) : CollectionObject()
     }
 
     fun addStatement(subject: Node, predicate: Node, `object`: Node) {
@@ -49,6 +51,14 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             NodeFactory.createURI(subject),
             NodeFactory.createURI(predicate),
             `object`
+        )
+    }
+
+    fun addStatement(subject: Node, predicate: String, obj: String) {
+        addStatement(
+            subject,
+            NodeFactory.createURI(predicate),
+            NodeFactory.createURI(obj)
         )
     }
 
@@ -71,7 +81,32 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             is CollectionObject.OWLOneOf -> addOneOfStatements(
                 collectionObject.objects
             )
+            is CollectionObject.OWLSome -> addSomeRestriction(collectionObject.propertyURI, collectionObject.someURI)
         }
+
+    private fun addSomeRestriction(property: String, someURI: String): Node {
+        val restrictionNode = NodeFactory.createBlankNode()
+
+        addStatement(
+            restrictionNode,
+            URIs.rdf.type,
+            URIs.owl.Restriction
+        )
+
+        addStatement(
+            restrictionNode,
+            URIs.owl.onProperty,
+            property
+        )
+
+        addStatement(
+            restrictionNode,
+            URIs.owl.someValuesFrom,
+            someURI
+        )
+
+        return restrictionNode
+    }
 
     private fun addOneOfStatements(objectList: List<Node>): Node {
         val oneOfNode = NodeFactory.createBlankNode()

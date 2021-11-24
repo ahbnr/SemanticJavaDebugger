@@ -34,6 +34,6 @@ fun genDefaultNs(): Namespaces {
         // FIXME: Check if these are really appropriate:
         java = "https://github.com/ahbnr/SemanticJavaDebugger/Java#",
         prog = "https://github.com/ahbnr/SemanticJavaDebugger/Program#",
-        run = "https://github.com/ahbnr/SemanticJavaDebugger/Run${System.nanoTime()}#"
+        run = "https://github.com/ahbnr/SemanticJavaDebugger/Run${System.currentTimeMillis()}#"
     )
 }

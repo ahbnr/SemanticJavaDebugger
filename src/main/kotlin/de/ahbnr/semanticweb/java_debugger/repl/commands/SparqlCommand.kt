@@ -49,38 +49,6 @@ class SparqlCommand(
         try {
             val query = QueryFactory.create(queryString)
 
-            // println("WRITING")
-            // FileOutputStream("graph.rdf").use {
-            //     model.write(it)
-            // }
-
-            //val query = QueryFactory.create("""
-            //        PREFIX domain: <https://github.com/ahbnr/SemanticJavaDebugger/TwoThreeTree#>
-            //        PREFIX prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#>
-            //        PREFIX java: <https://github.com/ahbnr/SemanticJavaDebugger#>
-            //        SELECT ?root ?var
-            //        WHERE {
-            //            ?root a domain:Root .
-            //            ?var java:storesReferenceTo ?root .
-            //        }
-            //    """.trimIndent())
-
-            //val query = QueryFactory.create("""
-            //    PREFIX domain: <https://github.com/ahbnr/SemanticJavaDebugger/TwoThreeTree#>
-            //    PREFIX prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#>
-            //    PREFIX java: <https://github.com/ahbnr/SemanticJavaDebugger#>
-            //    SELECT ?x
-            //    WHERE { ?x a domain:Root }
-            //""".trimIndent())
-
-            //val query = QueryFactory.create("""
-            //    PREFIX domain: <https://github.com/ahbnr/SemanticJavaDebugger/TwoThreeTree#>
-            //    PREFIX prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#>
-            //    PREFIX java: <https://github.com/ahbnr/SemanticJavaDebugger#>
-            //    SELECT ?x
-            //    WHERE { ?x prog:Node_parent java:null }
-            //""".trimIndent())
-
             QueryExecutionFactory.create(query, model).use { execution ->
                 val results = execution.execSelect().rewindable()
                 ResultSetFormatter.out(logger.logStream(), results, query)

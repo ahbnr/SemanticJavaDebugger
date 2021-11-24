@@ -4,10 +4,7 @@ package de.ahbnr.semanticweb.java_debugger.debugging
 
 import com.sun.jdi.Bootstrap
 import com.sun.jdi.ReferenceType
-import com.sun.jdi.event.BreakpointEvent
-import com.sun.jdi.event.ClassPrepareEvent
-import com.sun.jdi.event.Event
-import com.sun.jdi.event.VMDisconnectEvent
+import com.sun.jdi.event.*
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -21,7 +18,8 @@ class JvmDebugger : Closeable, KoinComponent {
 
     private val logger: Logger by inject()
 
-    fun setBreakpoint(className: String, line: Int) {
+    fun setBreakpoint(sourcePath: String, line: Int) {
+        val className = sourcePath.removeSuffix(".java").replace('/', '.')
         val classType = jvm?.getClass(className)
         if (classType != null) {
             jvm?.setBreakpointOnReferenceType(classType, line)
@@ -34,21 +32,25 @@ class JvmDebugger : Closeable, KoinComponent {
     }
 
     private fun tryApplyingDeferredBreakpoints(jvm: JvmInstance, preparedType: ReferenceType) {
-        val typeName = preparedType.name()
-        val lines = deferredBreakpoints.getOrDefault(typeName, null)
+        val className = preparedType.name()
+        val lines = deferredBreakpoints.getOrDefault(className, null)
 
         if (lines != null) {
             for (line in lines) {
                 jvm.setBreakpointOnReferenceType(preparedType, line)
             }
 
-            deferredBreakpoints.remove(typeName)
+            deferredBreakpoints.remove(className)
         }
     }
 
     private val eventHandler = object : IJvmEventHandler {
         override fun handleEvent(jvm: JvmInstance, event: Event) {
             when (event) {
+                is VMStartEvent -> {
+                    logger.log("JVM started.")
+                }
+
                 is ClassPrepareEvent -> {
                     tryApplyingDeferredBreakpoints(jvm, event.referenceType())
                 }

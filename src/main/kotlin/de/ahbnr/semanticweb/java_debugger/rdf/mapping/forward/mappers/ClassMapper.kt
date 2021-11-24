@@ -7,6 +7,7 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
@@ -17,11 +18,6 @@ import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.util.iterator.ExtendedIterator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-
-private sealed class JavaType {
-    data class LoadedType(val type: Type) : JavaType()
-    data class UnloadedType(val typeName: String) : JavaType()
-}
 
 class ClassMapper : IMapper {
     private class Graph(
@@ -34,14 +30,14 @@ class ClassMapper : IMapper {
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
 
-            fun addReferenceOrNullClass(referenceType: ReferenceType) =
+            fun addReferenceOrNullClass(referenceTypeURI: String) =
             // every reference can either be an instance or null:
             // fieldTypeSubject ∪ { java:null }
                 // [ owl:unionOf ( fieldTypeSubject [ owl:oneOf ( java:null ) ] ) ] .
                 tripleCollector.addCollection(
                     TripleCollector.CollectionObject.OWLUnion(
                         listOf(
-                            NodeFactory.createURI(URIs.prog.genReferenceTypeURI(referenceType)),
+                            NodeFactory.createURI(referenceTypeURI),
 
                             tripleCollector.addCollection(
                                 TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
@@ -76,6 +72,10 @@ class ClassMapper : IMapper {
             }
 
             fun addField(classSubject: String, classType: ClassType, field: Field) {
+                if (field.isStatic) {
+                    return // FIXME: Handle static fields
+                }
+
                 // A field is a property (of a class instance).
                 // Hence, we model it as a property in the ontology
                 val fieldURI = URIs.prog.genFieldURI(classType, field)
@@ -106,6 +106,7 @@ class ClassMapper : IMapper {
                 // The exact kind of property and ranges now depend on the field type:
                 when (fieldType) {
                     is JavaType.LoadedType -> when (fieldType.type) {
+                        // "normal" Java classes
                         is ReferenceType -> {
                             // Since the Java field is of a class type here, it must be an ObjectProperty,
                             // (https://www.w3.org/TR/owl-ref/#ObjectProperty-def)
@@ -122,7 +123,7 @@ class ClassMapper : IMapper {
                             tripleCollector.addStatement(
                                 fieldURI,
                                 URIs.rdfs.range,
-                                addReferenceOrNullClass(fieldType.type)
+                                addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
                             )
                         }
                         is PrimitiveType -> {
@@ -242,7 +243,7 @@ class ClassMapper : IMapper {
                                 tripleCollector.addStatement(
                                     variableDeclarationURI,
                                     URIs.rdfs.range,
-                                    addReferenceOrNullClass(variableType.type)
+                                    addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(variableType.type))
                                 )
                             }
                             is PrimitiveType -> {
@@ -373,6 +374,10 @@ class ClassMapper : IMapper {
             }
 
             fun addMethod(method: Method, classSubject: String, classType: ClassType) {
+                if (!method.isPublic && limiter.isShallow(classType)) {
+                    return
+                }
+
                 val methodSubject = URIs.prog.genMethodURI(method, classType)
 
                 // The methodSubject *is* a method
@@ -438,24 +443,129 @@ class ClassMapper : IMapper {
                 addFields(classSubject, classType)
             }
 
-            fun addClasses() {
+            fun addArrayType(arrayType: ArrayType) {
+                val arrayTypeURI = URIs.prog.genReferenceTypeURI(arrayType)
+
+                tripleCollector.addStatement(
+                    arrayTypeURI,
+                    URIs.rdf.type,
+                    URIs.java.Array
+                )
+
+                // every array is also an object (FIXME: subClassOf??)
+                tripleCollector.addStatement(
+                    arrayTypeURI,
+                    URIs.rdfs.subClassOf,
+                    URIs.prog.Object
+                )
+
+                // Now we need to clarify the type of the array elements
+                val componentType = try {
+                    JavaType.LoadedType(arrayType.componentType())
+                } catch (e: ClassNotLoadedException) {
+                    JavaType.UnloadedType(arrayType.componentTypeName())
+                }
+
+                when (componentType) {
+                    is JavaType.LoadedType -> {
+                        val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(componentType.type)
+                        when (componentType.type) {
+                            is PrimitiveType -> {
+                                tripleCollector.addStatement(
+                                    typedArrayElementURI,
+                                    URIs.rdfs.subClassOf,
+                                    URIs.java.PrimitiveArrayElement
+                                )
+
+                                // hasElement<type> Relation
+                                val typedHasElementURI = URIs.prog.genTypedHasElementURI(componentType.type)
+                                tripleCollector.addStatement(
+                                    typedHasElementURI,
+                                    URIs.rdfs.subPropertyOf,
+                                    URIs.java.hasElement
+                                )
+
+                                tripleCollector.addStatement(
+                                    typedHasElementURI,
+                                    URIs.rdfs.domain,
+                                    arrayTypeURI
+                                )
+
+                                tripleCollector.addStatement(
+                                    typedHasElementURI,
+                                    URIs.rdfs.range,
+                                    typedArrayElementURI
+                                )
+
+                                // storesPrimitive Relation
+                                val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(arrayType)
+
+                                tripleCollector.addStatement(
+                                    typedStoresPrimitiveURI,
+                                    URIs.rdfs.subPropertyOf,
+                                    URIs.java.storesPrimitive
+                                )
+
+                                tripleCollector.addStatement(
+                                    typedStoresPrimitiveURI,
+                                    URIs.rdfs.domain,
+                                    typedArrayElementURI
+                                )
+
+                                val datatypeURI = URIs.java.genPrimitiveTypeURI(componentType.type)
+                                if (datatypeURI == null) {
+                                    logger.error("Unknown primitive data type: $componentType.")
+                                    return
+                                }
+                                tripleCollector.addStatement(
+                                    typedStoresPrimitiveURI,
+                                    URIs.rdfs.range,
+                                    datatypeURI
+                                )
+
+                                tripleCollector.addStatement(
+                                    typedArrayElementURI,
+                                    URIs.rdfs.subClassOf,
+                                    tripleCollector.addCollection(
+                                        TripleCollector.CollectionObject.OWLSome(
+                                            typedStoresPrimitiveURI, datatypeURI
+                                        )
+                                    )
+                                )
+                            }
+                            // FIXME: Handle other cases
+                        }
+                    }
+                    else -> Unit // FIXME: Handle case
+                }
+            }
+
+            fun addReferenceTypes() {
                 val allReferenceTypes = jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
-                    when (referenceType) {
-                        is ClassType -> {
-                            if (limiter.isExcluded(referenceType)) {
-                                continue
-                            }
+                    if (limiter.isExcluded(referenceType)) {
+                        continue
+                    }
 
-                            addClass(referenceType)
-                        }
+                    if (
+                        referenceType !is ArrayType
+                        && !referenceType.isPublic
+                        // ^^isPublic can print exception stacktraces for arrays, very annoying. Without this, we could remove the restriction above
+                        && limiter.isShallow(referenceType)
+                    ) {
+                        continue
+                    }
+
+                    when (referenceType) {
+                        is ClassType -> addClass(referenceType)
+                        is ArrayType -> addArrayType(referenceType)
                         // FIXME handle other reference types
                     }
                 }
             }
 
-            addClasses()
+            addReferenceTypes()
 
             return tripleCollector.buildIterator()
         }

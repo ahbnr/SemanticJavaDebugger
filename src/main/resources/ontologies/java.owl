@@ -14,6 +14,10 @@
 #    Datatypes
 #################################################################
 
+###  http://www.w3.org/2001/XMLSchema#anySimpleType
+xsd:anySimpleType rdf:type rdfs:Datatype .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveType
 java:PrimitiveType rdf:type rdfs:Datatype ;
                    owl:equivalentClass [ rdf:type rdfs:Datatype ;
@@ -39,6 +43,13 @@ java:declaresVariable rdf:type owl:ObjectProperty ;
                       rdfs:range java:VariableDeclaration .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasElement
+java:hasElement rdf:type owl:ObjectProperty ,
+                         owl:InverseFunctionalProperty ;
+                rdfs:domain java:Array ;
+                rdfs:range java:ArrayElement .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasField
 java:hasField rdf:type owl:ObjectProperty ;
               rdfs:domain java:Class ;
@@ -61,9 +72,30 @@ java:isDefinedAt rdf:type owl:ObjectProperty ,
 This property may not always be set. In particular for abstract methods."""^^rdfs:Literal .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesReference
+java:storesReference rdf:type owl:ObjectProperty ,
+                              owl:FunctionalProperty ;
+                     rdfs:domain java:ReferenceArrayElement ;
+                     rdfs:range [ rdf:type owl:Class ;
+                                  owl:unionOf ( owl:Thing
+                                                [ rdf:type owl:Class ;
+                                                  owl:oneOf ( java:null
+                                                            )
+                                                ]
+                                              )
+                                ] .
+
+
 #################################################################
 #    Data properties
 #################################################################
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasIndex
+java:hasIndex rdf:type owl:DatatypeProperty ,
+                       owl:FunctionalProperty ;
+              rdfs:domain java:ArrayElement ;
+              rdfs:range xsd:int .
+
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasJDWPObjectId
 java:hasJDWPObjectId rdf:type owl:DatatypeProperty ,
@@ -106,6 +138,15 @@ java:isAtStackDepth rdf:type owl:DatatypeProperty ,
                     rdfs:range xsd:int .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesPrimitive
+java:storesPrimitive rdf:type owl:DatatypeProperty ,
+                              owl:FunctionalProperty ;
+                     rdfs:domain java:PrimitiveArrayElement ;
+                     rdfs:comment """This should range over java:PrimitiveType. However, Jena then fails validation because the type is not registered and Jena removed XSDDatatype.loadUserDefined silently without replacement.
+
+Until I define java:PrimitiveType for Jena, I wont set the range here."""^^rdfs:Literal .
+
+
 #################################################################
 #    Classes
 #################################################################
@@ -116,6 +157,17 @@ rdfs:Datatype rdf:type owl:Class .
 
 ###  http://www.w3.org/2002/07/owl#Class
 owl:Class rdf:type owl:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Array
+java:Array rdf:type owl:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement
+java:ArrayElement rdf:type owl:Class ;
+                  owl:disjointUnionOf ( java:PrimitiveArrayElement
+                                        java:ReferenceArrayElement
+                                      ) .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Class
@@ -141,6 +193,33 @@ java:Object rdf:type owl:Class ;
                               owl:onProperty java:hasJDWPObjectId ;
                               owl:someValuesFrom xsd:long
                             ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveArrayElement
+java:PrimitiveArrayElement rdf:type owl:Class ;
+                           rdfs:subClassOf [ owl:intersectionOf ( java:ArrayElement
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty java:storesPrimitive ;
+                                                                    owl:someValuesFrom xsd:anySimpleType
+                                                                  ]
+                                                                ) ;
+                                             rdf:type owl:Class
+                                           ] ;
+                           rdfs:comment """The storesPrimitive restriction should range over java:PrimitiveType. However, Jena then fails validation because the type is not registered and Jena removed XSDDatatype.loadUserDefined silently without replacement.
+
+Until I define java:PrimitiveType for Jena, I wont set the range here."""^^rdfs:Literal .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ReferenceArrayElement
+java:ReferenceArrayElement rdf:type owl:Class ;
+                           rdfs:subClassOf [ owl:intersectionOf ( java:ArrayElement
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty java:storesReference ;
+                                                                    owl:someValuesFrom java:Object
+                                                                  ]
+                                                                ) ;
+                                             rdf:type owl:Class
+                                           ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#StackFrame

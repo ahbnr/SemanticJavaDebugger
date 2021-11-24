@@ -1,35 +1,62 @@
 section Prepare Program & Domain
-stop at DataTest:21
+stop at examples/DataTest:25
 run examples/DataTest.java
 
 section Build Knowledge Base
-buildkb --limit-sdk
+buildkb --limit-sdk --deep=examples
+dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
 section SPARQL Queries
 
+# See if all fields have been registered in the graph
+sparql <<EOF
+    SELECT ?field
+    WHERE {
+        prog:examples.DataContainer java:hasField ?field .
+    }
+EOF
+
+# Try to extract a boolean field value
 sparql <<EOF
     SELECT ?container ?boolVal
     WHERE {
-        ?container a prog:DataContainer ;
-                   prog:DataContainer_booleanField ?boolVal .
+        ?container a prog:examples.DataContainer ;
+                   prog:examples.DataContainer_booleanField ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
 inspect boolVal
+
+# Try to extract the second array element
+sparql <<EOF
+    SELECT ?second
+    WHERE {
+        ?container a prog:examples.DataContainer ;
+                   prog:examples.DataContainer_intArrayField [
+                     java:hasElement [
+                         java:hasIndex 1 ;
+                         java:storesPrimitive ?second
+                     ]
+                   ] .
+    }
+EOF
+inspect second
+
+# Show the whole DataContainer instance
 inspect container
 
-stop at DataTest:35
+stop at examples/DataTest:39
 cont
-buildkb --limit-sdk
+buildkb --limit-sdk --deep=examples
 checkkb --is-consistent
 
 sparql <<EOF
     SELECT ?boolVal
     WHERE {
         [] a java:StackFrame ;
-           prog:DataTest_varsTest_booleanVar ?boolVal .
+           prog:examples.DataTest_varsTest_booleanVar ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
