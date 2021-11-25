@@ -12,7 +12,7 @@ class SectionCommand : IREPLCommand, KoinComponent {
 
     override val name = "section"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         logger.emphasize("")
         if (rawInput.isEmpty()) {
             logger.emphasize("**********************")
@@ -23,5 +23,7 @@ class SectionCommand : IREPLCommand, KoinComponent {
         }
 
         logger.emphasize("")
+
+        return true
     }
 }

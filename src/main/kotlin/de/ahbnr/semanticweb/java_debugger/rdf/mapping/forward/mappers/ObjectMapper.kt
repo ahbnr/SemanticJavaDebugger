@@ -39,7 +39,7 @@ class ObjectMapper : IMapper {
                     return // FIXME: handle static fields
                 }
 
-                val fieldPropertyName = URIs.prog.genFieldURI(classType, field)
+                val fieldPropertyName = URIs.prog.genFieldURI(field)
                 // we model a field as an instance of the field property of the class.
                 // That one is created by the ClassMapper
 
@@ -57,8 +57,8 @@ class ObjectMapper : IMapper {
             }
 
             fun addFields(objectSubject: String, objectReference: ObjectReference, classType: ClassType) {
-                // FIXME: Extend this also to the values from superclasses (allFields())
-                val fieldValues = objectReference.getValues(classType.fields())
+                val fieldValues =
+                    objectReference.getValues(classType.allFields()) // allFields does capture the fields of superclasses
 
                 for ((field, value) in fieldValues) {
                     if (!field.isPublic && limiter.isShallow(classType)) {

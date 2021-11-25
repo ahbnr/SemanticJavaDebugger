@@ -71,14 +71,14 @@ class ClassMapper : IMapper {
                 )
             }
 
-            fun addField(classSubject: String, classType: ClassType, field: Field) {
+            fun addField(classSubject: String, field: Field) {
                 if (field.isStatic) {
                     return // FIXME: Handle static fields
                 }
 
                 // A field is a property (of a class instance).
                 // Hence, we model it as a property in the ontology
-                val fieldURI = URIs.prog.genFieldURI(classType, field)
+                val fieldURI = URIs.prog.genFieldURI(field)
 
                 // this field is a java field
                 tripleCollector.addStatement(
@@ -190,7 +190,7 @@ class ClassMapper : IMapper {
                         continue
                     }
 
-                    addField(classSubject, classType, field)
+                    addField(classSubject, field)
                 }
             }
 
@@ -418,26 +418,40 @@ class ClassMapper : IMapper {
             fun addClass(classType: ClassType) {
                 val classSubject = URIs.prog.genReferenceTypeURI(classType)
 
-                // classSubject is a java class
-                tripleCollector.addStatement(
-                    classSubject,
-                    URIs.rdf.type,
-                    URIs.java.Class
-                )
+                // FIXME: Ensure that we can remove this
+                // FIXME: This should be given by transitivity of subClassOf java.lang.Object
+                //
+                // // classSubject is a java class
+                // tripleCollector.addStatement(
+                //     classSubject,
+                //     URIs.rdf.type,
+                //     URIs.java.Class
+                // )
+                //
+                // // classSubject is an owl class
+                // tripleCollector.addStatement(
+                //     classSubject,
+                //     URIs.rdf.type,
+                //     URIs.owl.Class
+                // )
 
-                // classSubject is an owl class
-                tripleCollector.addStatement(
-                    classSubject,
-                    URIs.rdf.type,
-                    URIs.owl.Class
-                )
+                // place it in the class hierarchy
+                val superClass: ClassType? = classType.superclass()
+                if (superClass != null) {
+                    tripleCollector.addStatement(
+                        classSubject,
+                        URIs.rdfs.subClassOf,
+                        URIs.prog.genReferenceTypeURI(superClass)
+                    )
+                }
 
-                // every class is also an object (FIXME: subClassOf??)
-                tripleCollector.addStatement(
-                    classSubject,
-                    URIs.rdfs.subClassOf,
-                    URIs.prog.Object
-                )
+                // FIXME: why do Kamburjan et. al. use subClassOf and prog:Object here?
+                //  Also: Classes are also objects in Java. However, I moved this to the object mapper
+                // tripleCollector.addStatement(
+                //     classSubject,
+                //     URIs.rdfs.subClassOf,
+                //     URIs.prog.Object
+                // )
 
                 addMethods(classSubject, classType)
                 addFields(classSubject, classType)
@@ -450,13 +464,6 @@ class ClassMapper : IMapper {
                     arrayTypeURI,
                     URIs.rdf.type,
                     URIs.java.Array
-                )
-
-                // every array is also an object (FIXME: subClassOf??)
-                tripleCollector.addStatement(
-                    arrayTypeURI,
-                    URIs.rdfs.subClassOf,
-                    URIs.prog.Object
                 )
 
                 // Now we need to clarify the type of the array elements

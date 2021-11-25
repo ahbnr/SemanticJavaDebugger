@@ -20,11 +20,11 @@ class RunCommand(
         Usage: run <class or source file>
     """.trimIndent()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val classOrSource = argv.firstOrNull()
         if (classOrSource == null) {
             logger.error(usage)
-            return
+            return false
         }
 
         val className =
@@ -48,5 +48,7 @@ class RunCommand(
 
         logger.log("Launching Java program.")
         jvmDebugger.launchVM(className)
+
+        return true
     }
 }

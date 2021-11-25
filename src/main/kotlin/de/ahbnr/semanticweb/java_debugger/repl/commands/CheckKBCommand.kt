@@ -17,11 +17,11 @@ class CheckKBCommand(
 
     override val name = "checkkb"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("No knowledge base is available. Run `buildkb` first.")
-            return
+            return false
         }
 
         logger.log("${ontology.axiomCount} axioms.")
@@ -66,7 +66,7 @@ class CheckKBCommand(
         if (argv.contains("--has-unsatisfiable-classes")) {
             if (!isConsistent) {
                 logger.error("Can only do a full check if Ontology is consistent.")
-                return
+                return false
             }
 
             // FIXME: Am I using Hermit correctly here?
@@ -78,5 +78,7 @@ class CheckKBCommand(
                 logger.error(unsat.toString())
             }
         }
+
+        return true
     }
 }

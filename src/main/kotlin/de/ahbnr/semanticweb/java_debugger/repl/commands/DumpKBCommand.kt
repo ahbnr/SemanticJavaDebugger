@@ -19,22 +19,24 @@ class DumpKBCommand : IREPLCommand, KoinComponent {
         Usage: dumpkb <file>
     """.trimIndent()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("No knowledge base is available. Run `buildkb` first.")
-            return
+            return false
         }
 
         val file = argv.firstOrNull()
         if (file == null) {
             logger.error(usage)
-            return
+            return false
         }
 
         File(file).outputStream().use { stream ->
             RDFDataMgr.write(stream, ontology.asGraphModel(), Lang.TTL)
             logger.success("Knowledge base saved to $file.")
         }
+
+        return true
     }
 }

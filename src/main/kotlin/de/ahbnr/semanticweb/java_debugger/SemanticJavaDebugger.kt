@@ -21,6 +21,7 @@ import org.jline.terminal.TerminalBuilder
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import java.io.FileInputStream
+import kotlin.system.exitProcess
 
 
 class SemanticJavaDebugger : CliktCommand() {
@@ -63,6 +64,7 @@ class SemanticJavaDebugger : CliktCommand() {
             val repl = REPL(
                 terminal,
                 listOf(
+                    AssertCommand(graphGen),
                     BuildKBCommand(jvmDebugger, graphGen),
                     CheckKBCommand(graphGen),
                     ContCommand(jvmDebugger),
@@ -80,12 +82,16 @@ class SemanticJavaDebugger : CliktCommand() {
                 )
             )
 
-            if (commandFile != null) {
+            val wasSuccessful = if (commandFile != null) {
                 val fileInputStream = FileInputStream(commandFile!!)
 
                 repl.interpretStream(fileInputStream)
             } else {
                 repl.main()
+            }
+
+            if (!wasSuccessful) {
+                exitProcess(1)
             }
         }
     }

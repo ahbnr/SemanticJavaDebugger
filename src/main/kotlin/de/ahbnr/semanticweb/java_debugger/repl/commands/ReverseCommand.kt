@@ -23,29 +23,29 @@ class ReverseCommand(
         Usage: reverse <variable name>
     """.trimIndent()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val variableName = argv.firstOrNull()
         if (variableName == null) {
             logger.error(usage)
-            return
+            return false
         }
 
         val jvm = jvmDebugger.jvm
         if (jvm == null) {
             logger.error("No JVM is running.")
-            return
+            return false
         }
 
         val jvmState = jvm.state
         if (jvmState == null) {
             logger.error("JVM is currently not paused.")
-            return
+            return false
         }
 
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
-            return
+            return false
         }
 
         val model = ontology.asGraphModel()
@@ -53,13 +53,12 @@ class ReverseCommand(
         val node = repl.namedNodes.getOrDefault(variableName, null)
         if (node == null) {
             logger.error("No node is known under this name.")
-            return
+            return false
         }
 
         val inverseMapping = BackwardMapper(ns, jvmState)
 
-        val mapping = inverseMapping.map(node, model)
-        when (mapping) {
+        when (val mapping = inverseMapping.map(node, model)) {
             is ObjectReference -> {
                 logger.log("Java Object: $mapping")
                 for ((field, value) in mapping.getValues(mapping.referenceType().allFields())) {
@@ -70,5 +69,7 @@ class ReverseCommand(
         }
 
         logger.log("")
+
+        return true
     }
 }

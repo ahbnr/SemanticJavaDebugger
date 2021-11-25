@@ -19,10 +19,10 @@ class StopCommand(
         Usage: stop at <source path>:<line_number>
     """.trimIndent()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         if (argv.size != 2) {
             logger.error(usage)
-            return
+            return false
         }
 
         when (argv[0]) {
@@ -31,7 +31,7 @@ class StopCommand(
 
                 if (split.size != 2) {
                     logger.error(usage)
-                    return
+                    return false
                 }
 
                 val (sourcePath, lineNumber) = split
@@ -40,9 +40,15 @@ class StopCommand(
                     jvmDebugger.setBreakpoint(sourcePath, lineNumber.toInt())
                 } catch (e: NumberFormatException) {
                     logger.error("Line number must be an integer: $lineNumber")
+                    return false
                 }
             }
-            else -> logger.error(usage)
+            else -> {
+                logger.error(usage)
+                return false
+            }
         }
+
+        return true
     }
 }

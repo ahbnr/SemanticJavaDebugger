@@ -18,17 +18,17 @@ class BuildKBCommand(
 
     override val name = "buildkb"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val jvm = jvmDebugger.jvm
         if (jvm == null) {
             logger.error("No JVM is running.")
-            return
+            return false
         }
 
         val state = jvm.state
         if (state == null) {
             logger.error("JVM is currently not paused.")
-            return
+            return false
         }
 
         val limiter = MappingLimiter(
@@ -56,5 +56,7 @@ class BuildKBCommand(
         repl.knowledgeBase = ontology
 
         logger.success("Knowledge base created.")
+
+        return true
     }
 }

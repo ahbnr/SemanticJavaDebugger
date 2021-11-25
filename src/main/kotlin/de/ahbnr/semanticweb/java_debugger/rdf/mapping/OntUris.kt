@@ -104,8 +104,6 @@ class OntURIs(val ns: Namespaces) {
     val java = JavaURIs()
 
     inner class ProgURIs {
-        val Object = ns.prog + "Object"
-
         fun genVariableDeclarationURI(variable: LocalVariable, method: Method, referenceType: ReferenceType): String =
             "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}_${
                 IRILib.encodeUriComponent(
@@ -120,8 +118,12 @@ class OntURIs(val ns: Namespaces) {
             return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}"
         }
 
-        fun genFieldURI(classType: ClassType, field: Field): String =
-            "${ns.prog}${IRILib.encodeUriComponent(classType.name())}_${IRILib.encodeUriComponent(field.name())}"
+        fun genFieldURI(field: Field): String =
+            "${ns.prog}${
+                IRILib.encodeUriComponent(
+                    field.declaringType().name()
+                )
+            }_${IRILib.encodeUriComponent(field.name())}"
 
         fun genUnloadedTypeURI(typeName: String): String {
             return ns.prog + IRILib.encodeUriComponent(typeName)

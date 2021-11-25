@@ -17,7 +17,7 @@ object ObjectMapping {
         fun isJavaObject(): Boolean =
             resource.hasProperty(
                 model.getProperty(ns.rdf + "type"),
-                model.getResource(ns.prog + "Object")
+                model.getResource(ns.java + "Object")
             )
 
         fun getObjectId(): Long? =

@@ -9,7 +9,7 @@ import org.koin.core.component.inject
 import java.nio.file.FileSystems
 import kotlin.io.path.exists
 
-class DomainCommand: IREPLCommand, KoinComponent {
+class DomainCommand : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "domain"
@@ -18,19 +18,21 @@ class DomainCommand: IREPLCommand, KoinComponent {
         Usage: domain <owl file path>
     """.trimIndent()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         if (argv.size != 1) {
             logger.error(usage)
-            return
+            return false
         }
 
         val domainFile = argv[0]
         if (!FileSystems.getDefault().getPath(domainFile).exists()) {
             logger.error("No such file.")
-            return
+            return false
         }
 
         repl.applicationDomainDefFile = domainFile
         logger.log("Will load application domain from $domainFile.")
+
+        return true
     }
 }

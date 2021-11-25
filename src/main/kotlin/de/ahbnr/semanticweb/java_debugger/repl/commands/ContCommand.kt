@@ -10,19 +10,20 @@ import org.koin.core.component.inject
 
 class ContCommand(
     val jvmDebugger: JvmDebugger
-): IREPLCommand, KoinComponent {
+) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "cont"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val jvm = jvmDebugger.jvm
 
         if (jvm == null) {
             logger.error("There is no JVM running.")
-            return
+            return false
         }
 
         jvm.resume()
+        return true
     }
 }

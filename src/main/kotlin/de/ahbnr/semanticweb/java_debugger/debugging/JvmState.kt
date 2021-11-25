@@ -114,6 +114,17 @@ data class JvmState(
                         )
                     )
                 }
+
+                // Reference types themselves are also objects
+                yieldAll(
+                    recursivelyFindObjects(
+                        referenceType.classObject(),
+                        limiter,
+                        seen
+                    )
+                )
+
+                // FIXME: Arent modules also objects?
             }
         } else {
             // This is how IntelliJ does it in its memory view.

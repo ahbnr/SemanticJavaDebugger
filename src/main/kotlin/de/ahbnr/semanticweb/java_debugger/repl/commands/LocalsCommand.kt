@@ -10,27 +10,27 @@ import org.koin.core.component.inject
 
 class LocalsCommand(
     val jvmDebugger: JvmDebugger
-): IREPLCommand, KoinComponent {
+) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 
     override val name = "locals"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val jvm = jvmDebugger.jvm
         if (jvm == null) {
             logger.error("No JVM is running.")
-            return
+            return false
         }
 
         val state = jvm.state
         if (state == null) {
             logger.error("JVM is currently not paused.")
-            return
+            return false
         }
 
         if (state.pausedThread.frameCount() == 0) {
             logger.error("JVM has not started yet.")
-            return
+            return false
         }
 
         val frame = state.pausedThread.frame(0)
@@ -39,5 +39,7 @@ class LocalsCommand(
         for ((key, value) in visibleVariables) {
             logger.log(key.name() + " = " + value)
         }
+
+        return true
     }
 }

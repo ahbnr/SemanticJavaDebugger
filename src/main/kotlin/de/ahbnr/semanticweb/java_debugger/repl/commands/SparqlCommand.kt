@@ -22,11 +22,11 @@ class SparqlCommand(
 
     override val name = "sparql"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return
+            return false
         }
 
         val model = graphGenerator.buildInferredModel(ontology)
@@ -73,6 +73,9 @@ class SparqlCommand(
             }
         } catch (e: QueryParseException) {
             logger.error(e.message ?: "Could not parse query.")
+            return false
         }
+
+        return true
     }
 }

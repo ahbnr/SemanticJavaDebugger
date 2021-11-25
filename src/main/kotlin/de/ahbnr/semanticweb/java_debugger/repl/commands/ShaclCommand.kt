@@ -29,17 +29,17 @@ class ShaclCommand(
         Usage: shacl <shapes file>4
     """.trimIndent()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL) {
+    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val shapesFile = argv.firstOrNull()
         if (shapesFile == null) {
             logger.error(usage)
-            return
+            return false
         }
 
         val ontology = repl.knowledgeBase
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return
+            return false
         }
 
 
@@ -80,5 +80,7 @@ class ShaclCommand(
             logger.log("The focus nodes have been made available under the following names: ")
             logger.log(nameMap.keys.joinToString(", "))
         }
+
+        return true
     }
 }

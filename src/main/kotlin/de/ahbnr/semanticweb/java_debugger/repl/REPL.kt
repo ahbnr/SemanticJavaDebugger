@@ -57,17 +57,17 @@ class REPL(
 
     private val hereDocRegex = """<<\s*([A-z]+)""".toRegex()
 
-    private fun interpretLine(line: String) {
+    private fun interpretLine(line: String): Boolean {
         if (line.isBlank()) {
-            return
+            return true
         }
 
         val lastMode = mode
-        when (lastMode) {
+        return when (lastMode) {
             is Mode.Normal -> {
                 val trimmedLine = line.trimStart()
                 if (trimmedLine.startsWith("#")) {
-                    return // its a comment line
+                    return true // its a comment line
                 }
 
                 val hereDocMatch = hereDocRegex.find(line)
@@ -77,23 +77,27 @@ class REPL(
                         originalLine = line.substring(0 until hereDocMatch.range.first) + line.substring(hereDocMatch.range.last + 1 until line.length),
                         insertIdx = hereDocMatch.range.first
                     )
-                } else {
-                    val argv = trimmedLine.split(' ')
-                    val commandName = argv.firstOrNull()
-
-                    val command = commandMap.getOrDefault(commandName, null)
-                    if (command != null) {
-                        command.handleInput(
-                            argv.drop(1),
-                            trimmedLine.drop(commandName?.length ?: 0).trimStart(),
-                            this
-                        )
-                    } else {
-                        logger.error("No such command: ${argv[0]}")
-                    }
-
-                    terminal.flush()
+                    return true
                 }
+
+                val argv = trimmedLine.split(' ')
+                val commandName = argv.firstOrNull()
+
+                val command = commandMap.getOrDefault(commandName, null)
+                if (command == null) {
+                    logger.error("No such command: ${argv[0]}")
+                    return false
+                }
+
+                val returnVal = command.handleInput(
+                    argv.drop(1),
+                    trimmedLine.drop(commandName?.length ?: 0).trimStart(),
+                    this
+                )
+
+                terminal.flush()
+
+                returnVal
             }
 
             is Mode.HereDoc -> {
@@ -101,6 +105,7 @@ class REPL(
 
                 if (delimiterIdx < 0) {
                     lastMode.hereDocBuffer.append(line).append('\n')
+                    true
                 } else {
                     lastMode.hereDocBuffer.append(line.substring(0 until delimiterIdx))
                     lastMode.hereDocBuffer.insert(0, lastMode.originalLine.substring(0 until lastMode.insertIdx))
@@ -113,29 +118,37 @@ class REPL(
         }
     }
 
-    fun interpretStream(input: InputStream) {
+    fun interpretStream(input: InputStream): Boolean {
         for (line in input.bufferedReader().lineSequence()) {
             if (mode is Mode.Normal) {
                 terminal.writer().print(prompt)
             }
             terminal.writer().println(line)
             terminal.flush()
-            interpretLine(line)
+            if (!interpretLine(line)) {
+                return false
+            }
         }
+
+        return true
     }
 
-    fun main() {
+    fun main(): Boolean {
         var readInput = true
         while (readInput) {
             try {
                 val line = reader.readLine(prompt)
 
-                interpretLine(line)
+                if (!interpretLine(line)) {
+                    return false
+                }
             } catch (e: UserInterruptException) {
                 readInput = false
             } catch (e: EndOfFileException) {
                 readInput = false
             }
         }
+
+        return true
     }
 }

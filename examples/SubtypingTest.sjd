@@ -1,0 +1,41 @@
+section Prepare Program & Domain
+stop at examples/SubtypingTest:31
+run examples/SubtypingTest.java
+
+section Build Knowledge Base
+buildkb --limit-sdk --deep=examples
+dumpkb datatest.ttl
+stats
+checkkb --is-consistent
+
+section Assertions
+
+assert exists <<EOF
+    ?output a prog:examples.Bot1 ;
+            prog:examples.Bot1_bot1Field [] ;
+            prog:examples.Mid_midField [] ;
+            prog:examples.Top_topField [] .
+EOF
+
+assert not-exists <<EOF
+    ?output a prog:examples.Bot1 ;
+            prog:examples.Bot1_bot2Field [] .
+EOF
+
+assert exists <<EOF
+    ?output a prog:examples.Mid ;
+            prog:examples.Mid_midField [] ;
+            prog:examples.Top_topField [] .
+EOF
+
+assert not-exists <<EOF
+    ?output a prog:examples.Mid ;
+            prog:examples.Bot1_botField [] .
+EOF
+
+assert not-exists <<EOF
+    ?output java:hasMethod prog:examples.Mid_midMethod .
+    FILTER (?output != prog:examples.Mid)
+EOF
+
+cont
