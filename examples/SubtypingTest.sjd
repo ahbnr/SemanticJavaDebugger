@@ -8,34 +8,120 @@ dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
-section Assertions
+section Checking Basic Type Hierarchy
 
-assert exists <<EOF
-    ?output a prog:examples.Bot1 ;
-            prog:examples.Bot1_bot1Field [] ;
-            prog:examples.Mid_midField [] ;
-            prog:examples.Top_topField [] .
+# There is nothing that is an array and a class
+assert sparql-fail <<EOF
+    SELECT ?classArray
+    WHERE {
+        ?classArray a java:Class ;
+                    a java:Array .
+    }
 EOF
 
-assert not-exists <<EOF
-    ?output a prog:examples.Bot1 ;
-            prog:examples.Bot1_bot2Field [] .
+# java.lang.Object is a class
+assert sparql-success <<EOF
+    SELECT ?object
+    WHERE {
+        ?object a java:Class .
+        FILTER (?object = prog:java.lang.Object)
+    }
 EOF
 
-assert exists <<EOF
-    ?output a prog:examples.Mid ;
-            prog:examples.Mid_midField [] ;
-            prog:examples.Top_topField [] .
+# java.lang.Object[] is an array
+assert sparql-success <<EOF
+    SELECT ?objectArray
+    WHERE {
+        ?objectArray a java:Array .
+        FILTER (?objectArray = prog:java.lang.Object%5B%5D)
+    }
 EOF
 
-assert not-exists <<EOF
-    ?output a prog:examples.Mid ;
-            prog:examples.Bot1_botField [] .
+# java.lang.Object[] instances are always also java.lang.Object instances
+assert sparql-success <<EOF
+    SELECT ?objectArray
+    WHERE {
+        ?objectArray rdfs:subClassOf prog:java.lang.Object .
+        FILTER (?objectArray = prog:java.lang.Object%5B%5D)
+    }
 EOF
 
-assert not-exists <<EOF
-    ?output java:hasMethod prog:examples.Mid_midMethod .
-    FILTER (?output != prog:examples.Mid)
+# Classes are always sub-types of java.lang.Object
+assert sparql-fail <<EOF
+    SELECT ?class
+    WHERE {
+        ?class a java:Class .
+        FILTER NOT EXISTS {
+            ?class rdfs:subClassOf prog:java.lang.Object .
+        }
+    }
+EOF
+
+# Arrays are sub-types of java.lang.Object
+assert sparql-fail <<EOF
+    SELECT ?array
+    WHERE {
+        ?array a java:Array .
+        FILTER NOT EXISTS {
+            ?array rdfs:subClassOf prog:java.lang.Object .
+        }
+    }
+EOF
+
+# Arrays are always sub-types of Object[] arrays
+assert sparql-fail <<EOF
+    SELECT ?arrayType
+    WHERE {
+        ?arrayType a java:Array .
+        FILTER NOT EXISTS {
+            ?arrayType rdfs:subClassOf prog:java.lang.Object%5B%5D .
+        }
+    }
+EOF
+
+section Checking Local Class Inheritance Hierarchy
+
+assert sparql-success <<EOF
+    SELECT ?bot1
+    WHERE {
+        ?bot1 a prog:examples.Bot1 ;
+              prog:examples.Bot1_bot1Field [] ;
+              prog:examples.Mid_midField [] ;
+              prog:examples.Top_topField [] .
+    }
+EOF
+
+assert sparql-fail <<EOF
+    SELECT ?bot1
+    WHERE {
+        ?bot1 a prog:examples.Bot1 ;
+              prog:examples.Bot1_bot2Field [] .
+    }
+EOF
+
+assert sparql-success <<EOF
+    SELECT ?mid
+    WHERE {
+        ?mid a prog:examples.Mid ;
+             prog:examples.Mid_midField [] ;
+             prog:examples.Top_topField [] .
+    }
+EOF
+
+assert sparql-fail <<EOF
+    SELECT ?mid
+    WHERE {
+        ?mid a prog:examples.Mid ;
+             prog:examples.Bot1_botField [] .
+    }
+EOF
+
+assert sparql-fail <<EOF
+    SELECT ?notMid
+    WHERE {
+        ?notMid java:hasMethod prog:examples.Mid_midMethod .
+        FILTER (?notMid != prog:examples.Mid)
+    }
 EOF
 
 cont

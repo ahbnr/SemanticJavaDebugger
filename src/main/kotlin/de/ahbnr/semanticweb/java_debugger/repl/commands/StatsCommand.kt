@@ -32,30 +32,10 @@ class StatsCommand(
         logger.log("Number of statements in Jena Model (without inference): ${ontology.asGraphModel().graph.size()}.")
         logger.log("")
 
-        val classesQueryString = """
-                PREFIX rdf: <${URIs.ns.rdf}>
-                PREFIX rdfs: <${URIs.ns.rdfs}>
-                PREFIX owl: <${URIs.ns.owl}>
-                PREFIX xsd: <${URIs.ns.xsd}>
-                PREFIX java: <${URIs.ns.java}>
-                PREFIX prog: <${URIs.ns.prog}>
-                PREFIX run: <${URIs.ns.run}>
-                SELECT (count(distinct ?class) as ?count)
-                WHERE {
-                    ?class rdfs:subClassOf java:Class ;
-                }
-        """.trimIndent()
-
-        val classesQuery = QueryFactory.create(classesQueryString)
-        QueryExecutionFactory.create(classesQuery, model).use { execution ->
-            val results = execution.execSelect()
-
-            logger.log("Classes: ${results.nextSolution().get("count").asLiteral().int}")
-        }
-
         data class Countable(val name: String, val uri: String)
 
         val toCount = listOf(
+            Countable("Classes", URIs.java.Class),
             Countable("Methods", URIs.java.Method),
             Countable("Fields", URIs.java.Field),
             Countable("Array Types", URIs.java.Array),

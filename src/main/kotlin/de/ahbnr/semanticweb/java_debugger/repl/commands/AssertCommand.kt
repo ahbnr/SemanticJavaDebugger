@@ -6,13 +6,10 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import de.ahbnr.semanticweb.java_debugger.utils.expandResourceToModel
-import de.ahbnr.semanticweb.java_debugger.utils.toPrettyString
+import org.apache.jena.query.ParameterizedSparqlString
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
-import org.apache.jena.riot.Lang
-import org.apache.jena.riot.RDFDataMgr
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -24,8 +21,20 @@ class AssertCommand(
 
     override val name = "assert"
 
+    private sealed class AssertionKind(val name: String) {
+        object SparqlSuccess : AssertionKind("sparql-success")
+        object SparqlError : AssertionKind("sparql-fail")
+
+        companion object {
+            val all = arrayOf(SparqlSuccess, SparqlError)
+
+            fun getByName(name: String): AssertionKind? =
+                all.firstOrNull { it.name == name }
+        }
+    }
+
     private val usage = """
-        Usage: assert [exists|not-exists] <sparql WHERE clause>
+        Usage: assert [${AssertionKind.all.joinToString("|") { it.name }}] <sparql WHERE clause>
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
@@ -41,74 +50,61 @@ class AssertCommand(
             return false
         }
 
-        val isExistsAssert = when (subCommand) {
-            "exists" -> true
-            "not-exists" -> false
-            else -> {
-                logger.error(usage)
-                return false
-            }
+        val assertionKind = AssertionKind.getByName(subCommand)
+        if (assertionKind == null) {
+            logger.error(usage)
+            return false
         }
 
-        val whereClause = rawInput.drop(subCommand.length)
-
+        val queryString = ParameterizedSparqlString(
+            rawInput.drop(subCommand.length)
+        )
         val model = graphGenerator.buildInferredModel(ontology)
 
-        val domainURI = model.getNsPrefixURI("domain")
-        val sparqlPrefixString = if (domainURI != null) "PREFIX domain: <$domainURI>" else ""
-
-        val queryString = """
-                PREFIX rdf: <${URIs.ns.rdf}>
-                PREFIX rdfs: <${URIs.ns.rdfs}>
-                PREFIX owl: <${URIs.ns.owl}>
-                PREFIX xsd: <${URIs.ns.xsd}>
-                PREFIX java: <${URIs.ns.java}>
-                PREFIX prog: <${URIs.ns.prog}>
-                PREFIX run: <${URIs.ns.run}>
-                $sparqlPrefixString
-                SELECT ?output
-                WHERE {
-                    $whereClause
-                }
-                LIMIT 1
-        """.trimIndent()
-
         try {
-            val query = QueryFactory.create(queryString)
+            queryString.setNsPrefix("rdf", URIs.ns.rdf)
+            queryString.setNsPrefix("rdfs", URIs.ns.rdfs)
+            queryString.setNsPrefix("owl", URIs.ns.owl)
+            queryString.setNsPrefix("xsd", URIs.ns.xsd)
+            queryString.setNsPrefix("java", URIs.ns.java)
+            queryString.setNsPrefix("prog", URIs.ns.prog)
+            queryString.setNsPrefix("run", URIs.ns.run)
+
+            val domainURI = model.getNsPrefixURI("domain")
+            if (domainURI != null) {
+                queryString.setNsPrefix("PREFIX", domainURI)
+            }
+
+            queryString.append("LIMIT ")
+            queryString.appendLiteral(1)
+
+            val query = QueryFactory.create(queryString.toString())
 
             QueryExecutionFactory.create(query, model).use { execution ->
                 val results = execution.execSelect()
 
-                if (isExistsAssert) {
-                    if (results.hasNext()) {
-                        logger.success("PASSED.")
-                    } else {
-                        logger.error("FAILED!")
-                        return false
-                    }
-                } else {
-                    if (results.hasNext()) {
-                        logger.error("FAILED!")
-                        logger.error("Found the following result:")
-
-                        val node = results.nextSolution().get("output")
-                        when {
-                            node.isResource -> {
-                                val resource = node.asResource()
-                                RDFDataMgr.write(logger.logStream(), expandResourceToModel(resource, URIs.ns), Lang.TTL)
-                            }
-                            else -> {
-                                logger.log(node.toPrettyString(model))
-                            }
+                return when (assertionKind) {
+                    is AssertionKind.SparqlSuccess -> {
+                        if (results.hasNext()) {
+                            logger.success("PASSED.")
+                            true
+                        } else {
+                            logger.error("FAILED!")
+                            false
                         }
+                    }
+                    is AssertionKind.SparqlError -> {
+                        if (results.hasNext()) {
+                            logger.error("FAILED!")
+                            logger.error("Found the following result: ${results.next()}")
 
-                        return false
-                    } else {
-                        logger.success("PASSED.")
+                            false
+                        } else {
+                            logger.success("PASSED.")
+                            true
+                        }
                     }
                 }
-
-                return true
             }
         } catch (e: QueryParseException) {
             logger.error(e.message ?: "Could not parse query.")

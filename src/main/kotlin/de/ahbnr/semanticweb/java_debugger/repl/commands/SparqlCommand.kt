@@ -54,6 +54,10 @@ class SparqlCommand(
                 ResultSetFormatter.out(logger.logStream(), results, query)
                 results.reset()
 
+                for (variable in query.resultVars) {
+                    repl.namedNodes.remove(variable)
+                }
+
                 var idx = 0;
                 val nameMap = mutableMapOf<String, RDFNode>()
                 results.forEachRemaining { solution ->

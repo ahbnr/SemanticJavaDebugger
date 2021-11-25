@@ -52,13 +52,13 @@ java:hasElement rdf:type owl:ObjectProperty ,
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasField
 java:hasField rdf:type owl:ObjectProperty ;
-              rdfs:domain java:Class ;
+              rdfs:domain java:ReferenceType ;
               rdfs:range java:Field .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasMethod
 java:hasMethod rdf:type owl:ObjectProperty ;
-               rdfs:domain java:Class ;
+               rdfs:domain java:ReferenceType ;
                rdfs:range java:Method .
 
 
@@ -75,9 +75,9 @@ This property may not always be set. In particular for abstract methods."""^^rdf
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesReference
 java:storesReference rdf:type owl:ObjectProperty ,
                               owl:FunctionalProperty ;
-                     rdfs:domain java:ReferenceArrayElement ;
+                     rdfs:domain <https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement%3CObject%3E> ;
                      rdfs:range [ rdf:type owl:Class ;
-                                  owl:unionOf ( owl:Thing
+                                  owl:unionOf ( java:ReferenceType
                                                 [ rdf:type owl:Class ;
                                                   owl:oneOf ( java:null
                                                             )
@@ -100,7 +100,7 @@ java:hasIndex rdf:type owl:DatatypeProperty ,
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasJDWPObjectId
 java:hasJDWPObjectId rdf:type owl:DatatypeProperty ,
                               owl:FunctionalProperty ;
-                     rdfs:domain java:Object ;
+                     rdfs:domain java:ReferenceType ;
                      rdfs:range xsd:long .
 
 
@@ -167,19 +167,29 @@ owl:Class rdf:type owl:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Array
-java:Array rdf:type owl:Class .
+java:Array rdf:type owl:Class ;
+           rdfs:subClassOf [ owl:intersectionOf ( java:ReferenceType
+                                                  prog:java.lang.Object
+                                                ) ;
+                             rdf:type owl:Class
+                           ] ;
+           owl:disjointWith java:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement
 java:ArrayElement rdf:type owl:Class ;
                   owl:disjointUnionOf ( java:PrimitiveArrayElement
-                                        java:ReferenceArrayElement
+                                        <https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement%3CObject%3E>
                                       ) .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Class
 java:Class rdf:type owl:Class ;
-           rdfs:subClassOf owl:Class .
+           rdfs:subClassOf [ owl:intersectionOf ( java:ReferenceType
+                                                  prog:java.lang.Object
+                                                ) ;
+                             rdf:type owl:Class
+                           ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Field
@@ -199,7 +209,8 @@ java:Object rdf:type owl:Class ;
             rdfs:subClassOf [ rdf:type owl:Restriction ;
                               owl:onProperty java:hasJDWPObjectId ;
                               owl:someValuesFrom xsd:long
-                            ] .
+                            ] ;
+            rdfs:comment "TODO: Do we need this, if we have java:ReferenceType?"^^rdfs:Literal .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveArrayElement
@@ -217,16 +228,8 @@ java:PrimitiveArrayElement rdf:type owl:Class ;
 Until I define java:PrimitiveType for Jena, I wont set the range here."""^^rdfs:Literal .
 
 
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ReferenceArrayElement
-java:ReferenceArrayElement rdf:type owl:Class ;
-                           rdfs:subClassOf [ owl:intersectionOf ( java:ArrayElement
-                                                                  [ rdf:type owl:Restriction ;
-                                                                    owl:onProperty java:storesReference ;
-                                                                    owl:someValuesFrom java:Object
-                                                                  ]
-                                                                ) ;
-                                             rdf:type owl:Class
-                                           ] .
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ReferenceType
+java:ReferenceType rdf:type owl:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#StackFrame
@@ -239,7 +242,11 @@ java:StackFrame rdf:type owl:Class ;
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#UnloadedType
 java:UnloadedType rdf:type owl:Class ;
-                  rdfs:subClassOf prog:java.lang.Object .
+                  rdfs:subClassOf [ owl:intersectionOf ( java:ReferenceType
+                                                         prog:java.lang.Object
+                                                       ) ;
+                                    rdf:type owl:Class
+                                  ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#VariableDeclaration
@@ -250,9 +257,21 @@ java:VariableDeclaration rdf:type owl:Class ;
                                          ] .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement%3CObject%3E
+<https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement%3CObject%3E> rdf:type owl:Class ;
+                                                                              rdfs:subClassOf [ owl:intersectionOf ( java:ArrayElement
+                                                                                                                     [ rdf:type owl:Restriction ;
+                                                                                                                       owl:onProperty java:storesReference ;
+                                                                                                                       owl:someValuesFrom java:Object
+                                                                                                                     ]
+                                                                                                                   ) ;
+                                                                                                rdf:type owl:Class
+                                                                                              ] .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object
 prog:java.lang.Object rdf:type owl:Class ;
-                      rdfs:subClassOf java:Class .
+                      rdfs:subClassOf owl:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.String
@@ -281,6 +300,11 @@ prog:java.lang.String rdf:type owl:Class ;
  ] .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D
+<https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D> rdf:type owl:Class ;
+                                                                               rdfs:subClassOf prog:java.lang.Object .
+
+
 #################################################################
 #    Individuals
 #################################################################
@@ -289,6 +313,21 @@ prog:java.lang.String rdf:type owl:Class ;
 java:null rdf:type owl:NamedIndividual ,
                    java:Object ;
           java:hasJDWPObjectId "0"^^xsd:long .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object
+prog:java.lang.Object rdf:type owl:NamedIndividual ,
+                               java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.String
+prog:java.lang.String rdf:type owl:NamedIndividual ,
+                               java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D
+<https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D> rdf:type owl:NamedIndividual ,
+                                                                                        java:Array .
 
 
 ###  Generated by the OWL API (version 4.5.9.2019-02-01T07:24:44Z) https://github.com/owlcs/owlapi

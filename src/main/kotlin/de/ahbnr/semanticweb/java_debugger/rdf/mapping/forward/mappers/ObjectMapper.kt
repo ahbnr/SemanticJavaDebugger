@@ -34,7 +34,7 @@ class ObjectMapper : IMapper {
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
 
-            fun addField(field: Field, value: Value?, objectSubject: String, classType: ClassType) {
+            fun addField(field: Field, value: Value?, objectSubject: String) {
                 if (field.isStatic) {
                     return // FIXME: handle static fields
                 }
@@ -65,7 +65,7 @@ class ObjectMapper : IMapper {
                         continue
                     }
 
-                    addField(field, value, objectSubject, classType)
+                    addField(field, value, objectSubject)
                 }
             }
 
@@ -200,6 +200,13 @@ class ObjectMapper : IMapper {
             fun addObject(objectReference: ObjectReference) {
                 val objectURI = URIs.run.genObjectURI(objectReference)
 
+                val referenceType = objectReference.referenceType()
+
+                // FIXME: Deal with enums
+                if (referenceType is ClassType && referenceType.isEnum) {
+                    return
+                }
+
                 // The object is a particular individual (not a class/concept)
                 tripleCollector.addStatement(
                     objectURI,
@@ -224,7 +231,6 @@ class ObjectMapper : IMapper {
                     )
                 )
 
-                val referenceType = objectReference.referenceType()
                 // it is of a particular java class
                 tripleCollector.addStatement(
                     objectURI,

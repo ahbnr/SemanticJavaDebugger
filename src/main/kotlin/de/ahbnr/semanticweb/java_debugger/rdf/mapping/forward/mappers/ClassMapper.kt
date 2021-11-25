@@ -9,6 +9,7 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.hasPublicSubClass
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -416,6 +417,11 @@ class ClassMapper : IMapper {
             }
 
             fun addClass(classType: ClassType) {
+                // FIXME: Deal with enums
+                if (classType.isEnum) {
+                    return
+                }
+
                 val classSubject = URIs.prog.genReferenceTypeURI(classType)
 
                 // FIXME: Ensure that we can remove this
@@ -435,7 +441,17 @@ class ClassMapper : IMapper {
                 //     URIs.owl.Class
                 // )
 
-                // place it in the class hierarchy
+                // This, as an individual, is a Java Class
+                tripleCollector.addStatement(
+                    classSubject,
+                    URIs.rdf.type,
+                    URIs.java.Class
+                )
+
+                // But we use Punning, and it is also an OWL class
+                // More specifically, all its individuals are also part of the superclass
+                //
+                // (btw. prog:java.lang.Object is defined as an OWL class in the base ontology)
                 val superClass: ClassType? = classType.superclass()
                 if (superClass != null) {
                     tripleCollector.addStatement(
@@ -460,10 +476,20 @@ class ClassMapper : IMapper {
             fun addArrayType(arrayType: ArrayType) {
                 val arrayTypeURI = URIs.prog.genReferenceTypeURI(arrayType)
 
+                // this, as an individual, is an array:
                 tripleCollector.addStatement(
                     arrayTypeURI,
                     URIs.rdf.type,
                     URIs.java.Array
+                )
+
+                // but it is also a class where all member individuals are also
+                // members of the class Object[]
+                // (this one in turn is defined as a subclass of java.lang.Object in the base ontology definition)
+                tripleCollector.addStatement(
+                    arrayTypeURI,
+                    URIs.rdfs.subClassOf,
+                    URIs.prog.`java_lang_Object%5B%5D`
                 )
 
                 // Now we need to clarify the type of the array elements
@@ -551,7 +577,10 @@ class ClassMapper : IMapper {
                 val allReferenceTypes = jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
-                    if (limiter.isExcluded(referenceType)) {
+                    if (
+                        limiter.isExcluded(referenceType)
+                        && (referenceType !is ClassType || !hasPublicSubClass(referenceType))
+                    ) {
                         continue
                     }
 
@@ -560,6 +589,7 @@ class ClassMapper : IMapper {
                         && !referenceType.isPublic
                         // ^^isPublic can print exception stacktraces for arrays, very annoying. Without this, we could remove the restriction above
                         && limiter.isShallow(referenceType)
+                        && (referenceType !is ClassType || !hasPublicSubClass(referenceType))
                     ) {
                         continue
                     }

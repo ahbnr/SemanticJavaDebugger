@@ -61,7 +61,6 @@ class OntURIs(val ns: Namespaces) {
         val Array = ns.java + "Array"
         val ArrayElement = ns.java + "ArrayElement"
         val PrimitiveArrayElement = ns.java + "PrimitiveArrayElement"
-        val ReferenceArrayElement = ns.java + "ReferenceArrayElement"
         val hasIndex = ns.java + "hasIndex"
         val hasElement = ns.java + "hasElement"
         val storesPrimitive = ns.java + "storesPrimitive"
@@ -104,6 +103,8 @@ class OntURIs(val ns: Namespaces) {
     val java = JavaURIs()
 
     inner class ProgURIs {
+        val `java_lang_Object%5B%5D` = ns.prog + IRILib.encodeUriComponent("java.lang.Object[]")
+
         fun genVariableDeclarationURI(variable: LocalVariable, method: Method, referenceType: ReferenceType): String =
             "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}_${
                 IRILib.encodeUriComponent(

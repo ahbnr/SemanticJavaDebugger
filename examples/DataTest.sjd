@@ -35,6 +35,7 @@ sparql <<EOF
     WHERE {
         ?container a prog:examples.DataContainer ;
                    prog:examples.DataContainer_intArrayField [
+                     a java:Array ;
                      java:hasElement [
                          java:hasIndex 1 ;
                          java:storesPrimitive ?second

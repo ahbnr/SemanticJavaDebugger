@@ -67,6 +67,12 @@ class ShaclCommand(
             RDFDataMgr.write(logger.logStream(), report.model, Lang.TTL)
             logger.log("")
 
+            repl
+                .namedNodes
+                .keys
+                .filter { it.startsWith("focus") }
+                .forEach { repl.namedNodes.remove(it) }
+
             val nameMap = mutableMapOf<String, RDFNode>()
             report.entries.forEachIndexed { idx, entry ->
                 val rdfNode = infModel.asRDFNode(entry.focusNode())
