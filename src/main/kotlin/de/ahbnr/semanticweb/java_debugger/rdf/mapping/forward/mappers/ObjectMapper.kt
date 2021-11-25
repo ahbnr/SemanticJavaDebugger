@@ -78,7 +78,9 @@ class ObjectMapper : IMapper {
             }
 
             fun addArray(objectURI: String, arrayReference: ArrayReference, referenceType: ReferenceType) {
-                if (!limiter.isDeep(referenceType) && !arrayReference.referringObjects(Long.MAX_VALUE)
+                if (!limiter.isDeep(referenceType) && !jvmState.isReferencedByVariable(arrayReference) && !arrayReference.referringObjects(
+                        Long.MAX_VALUE
+                    )
                         .any { limiter.isDeep(it.referenceType()) } // FIXME: Of course, this is incredibly slow
                 ) {
                     return

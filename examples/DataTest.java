@@ -34,6 +34,8 @@ public class DataTest {
         long longVar = 9223372036854775807L;
         short shortVar = 32767;
 
+        int[] intArrayVar = new int[]{1, 2, 3};
+
         ExampleClass classReferenceVar = new ExampleClass();
         Object nullReferenceVar = null;
     }

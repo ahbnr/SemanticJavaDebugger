@@ -100,7 +100,7 @@ class StackMapper : IMapper {
                 // FIXME: Handle multiple threads?
                 val numFrames = jvmState.pausedThread.frameCount()
                 for (i in 0 until numFrames) {
-                    addStackFrame(i, jvmState.pausedThread.frame(i))
+                    addStackFrame(numFrames - i - 1, jvmState.pausedThread.frame(i))
                 }
             }
 

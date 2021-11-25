@@ -4,7 +4,6 @@ run examples/DataTest.java
 
 section Build Knowledge Base
 buildkb --limit-sdk --deep=examples
-dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
@@ -47,11 +46,14 @@ inspect second
 # Show the whole DataContainer instance
 inspect container
 
-stop at examples/DataTest:39
+stop at examples/DataTest:41
 cont
 buildkb --limit-sdk --deep=examples
+dumpkb datatest.ttl
 checkkb --is-consistent
+stats
 
+# Extracting a boolean value
 sparql <<EOF
     SELECT ?boolVal
     WHERE {
@@ -61,5 +63,20 @@ sparql <<EOF
     }
 EOF
 inspect boolVal
+
+# Extracting an array value
+sparql <<EOF
+    SELECT ?intArrayVal
+    WHERE {
+        [] a java:StackFrame ;
+           prog:examples.DataTest_varsTest_intArrayVar [
+             java:hasElement [
+               java:hasIndex 2 ;
+               java:storesPrimitive ?intArrayVal
+             ]
+           ] .
+    }
+EOF
+inspect intArrayVal
 
 cont

@@ -12,6 +12,25 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 data class JvmState(
     val pausedThread: ThreadReference
 ) {
+    private val referencedByLocalVar = mutableSetOf<Long>()
+    private val stackReferences = mutableListOf<ObjectReference>()
+
+    init {
+        for (frameDepth in 0 until pausedThread.frameCount()) {
+            val frame = pausedThread.frame(0)
+
+            for ((_, value) in frame.getValues(frame.visibleVariables())) {
+                if (value is ObjectReference) {
+                    referencedByLocalVar.add(value.uniqueID())
+                    stackReferences.add(value)
+                }
+            }
+        }
+    }
+
+    fun isReferencedByVariable(objectReference: ObjectReference) =
+        referencedByLocalVar.contains(objectReference.uniqueID())
+
     private fun recursivelyFindObjects(
         objectReference: ObjectReference,
         limiter: MappingLimiter,
@@ -61,20 +80,14 @@ data class JvmState(
             val seen = mutableSetOf<Long>()
 
             // get objects in variables
-            for (frameDepth in 0 until pausedThread.frameCount()) {
-                val frame = pausedThread.frame(0)
-
-                for ((_, value) in frame.getValues(frame.visibleVariables())) {
-                    if (value is ObjectReference) {
-                        yieldAll(
-                            recursivelyFindObjects(
-                                value,
-                                limiter,
-                                seen
-                            )
-                        )
-                    }
-                }
+            for (value in stackReferences) {
+                yieldAll(
+                    recursivelyFindObjects(
+                        value,
+                        limiter,
+                        seen
+                    )
+                )
             }
 
             // get objects directly referenced by static fields
