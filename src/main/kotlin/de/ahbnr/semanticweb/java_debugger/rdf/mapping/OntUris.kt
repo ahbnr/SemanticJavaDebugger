@@ -86,6 +86,8 @@ class OntURIs(val ns: Namespaces) {
         val isAtStackDepth = ns.java + "isAtStackDepth"
         val hasJDWPObjectId = ns.java + "hasJDWPObjectId"
 
+        val hasStringValue = ns.java + "hasStringValue"
+
         fun genPrimitiveTypeURI(type: PrimitiveType): String? = when (type) {
             is BooleanType -> XSDDatatype.XSDboolean
             is ByteType -> XSDDatatype.XSDbyte

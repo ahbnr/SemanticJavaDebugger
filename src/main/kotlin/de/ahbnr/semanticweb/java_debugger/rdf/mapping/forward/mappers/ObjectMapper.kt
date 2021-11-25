@@ -187,6 +187,16 @@ class ObjectMapper : IMapper {
                 }
             }
 
+            fun addString(objectURI: String, stringReference: StringReference, referenceType: ReferenceType) {
+                addPlainObject(objectURI, stringReference, referenceType)
+
+                tripleCollector.addStatement(
+                    objectURI,
+                    URIs.java.hasStringValue,
+                    NodeFactory.createLiteral(stringReference.value(), XSDDatatype.XSDstring)
+                )
+            }
+
             fun addObject(objectReference: ObjectReference) {
                 val objectURI = URIs.run.genObjectURI(objectReference)
 
@@ -227,7 +237,7 @@ class ObjectMapper : IMapper {
                     is ClassLoaderReference -> Unit
                     is ClassObjectReference -> Unit
                     is ModuleReference -> Unit
-                    is StringReference -> Unit
+                    is StringReference -> addString(objectURI, objectReference, referenceType)
                     is ThreadGroupReference -> Unit
                     is ThreadReference -> Unit
                     // "normal object"

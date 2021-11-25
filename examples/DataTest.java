@@ -15,6 +15,8 @@ class DataContainer {
 
     public int[] intArrayField = new int[]{1, 2, 3};
 
+    public String stringField = "Hello String!";
+
     public ExampleClass classReferenceField = new ExampleClass();
     public Object nullReferenceField = null;
 }

@@ -1,9 +1,10 @@
 section Prepare Program & Domain
-stop at examples/DataTest:25
+stop at examples/DataTest:27
 run examples/DataTest.java
 
 section Build Knowledge Base
 buildkb --limit-sdk --deep=examples
+dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
@@ -43,13 +44,24 @@ sparql <<EOF
 EOF
 inspect second
 
+# Show value of the string field
+sparql <<EOF
+    SELECT ?string
+    WHERE {
+        [] a prog:examples.DataContainer ;
+           prog:examples.DataContainer_stringField [
+             java:hasStringValue ?string
+           ] .
+    }
+EOF
+inspect string
+
 # Show the whole DataContainer instance
 inspect container
 
-stop at examples/DataTest:41
+stop at examples/DataTest:43
 cont
 buildkb --limit-sdk --deep=examples
-dumpkb datatest.ttl
 checkkb --is-consistent
 stats
 

@@ -104,6 +104,13 @@ java:hasJDWPObjectId rdf:type owl:DatatypeProperty ,
                      rdfs:range xsd:long .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasStringValue
+java:hasStringValue rdf:type owl:DatatypeProperty ,
+                             owl:FunctionalProperty ;
+                    rdfs:domain prog:java.lang.String ;
+                    rdfs:range xsd:string .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasVariableName
 java:hasVariableName rdf:type owl:DatatypeProperty ,
                               owl:FunctionalProperty ;
@@ -241,6 +248,32 @@ java:VariableDeclaration rdf:type owl:Class ;
                                            owl:onProperty java:hasVariableName ;
                                            owl:someValuesFrom xsd:string
                                          ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.String
+prog:java.lang.String rdf:type owl:Class ;
+                      rdfs:subClassOf [ owl:intersectionOf ( java:Object
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty java:hasStringValue ;
+                                                               owl:someValuesFrom xsd:string
+                                                             ]
+                                                           ) ;
+                                        rdf:type owl:Class
+                                      ] .
+
+[ rdf:type owl:Axiom ;
+   owl:annotatedSource prog:java.lang.String ;
+   owl:annotatedProperty rdfs:subClassOf ;
+   owl:annotatedTarget [ owl:intersectionOf ( java:Object
+                                              [ rdf:type owl:Restriction ;
+                                                owl:onProperty java:hasStringValue ;
+                                                owl:someValuesFrom xsd:string
+                                              ]
+                                            ) ;
+                         rdf:type owl:Class
+                       ] ;
+   rdfs:comment "Any string object should always be associated with a xsd:string value to make the string easily accessible in queries."^^rdfs:Literal
+ ] .
 
 
 #################################################################
