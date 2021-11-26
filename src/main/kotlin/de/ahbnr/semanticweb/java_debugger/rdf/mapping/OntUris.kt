@@ -62,6 +62,8 @@ class OntURIs(val ns: Namespaces) {
 
         val Array = ns.java + "Array"
         val ArrayElement = ns.java + "ArrayElement"
+        val `ArrayElement%3CObject%3E` = ns.java + IRILib.encodeUriComponent("ArrayElement<Object>")
+        val UnloadedTypeArray = ns.java + "UnloadedTypeArray"
         val PrimitiveArray = ns.java + "PrimitiveArray"
         val PrimitiveArrayElement = ns.java + "PrimitiveArrayElement"
         val hasIndex = ns.java + "hasIndex"
@@ -137,14 +139,17 @@ class OntURIs(val ns: Namespaces) {
         fun genLocationURI(location: Location): String =
             "${ns.prog}location_${location.hashCode()}" // FIXME: unsure if hash is sufficient... should be when looking at JDI source code if JDWP Method IDs are unique. Are they?
 
-        fun genTypedHasElementURI(elementType: Type): String =
-            "${ns.prog}hasElement${IRILib.encodeUriComponent("<${elementType.name()}>")}"
+        fun genTypedHasElementURI(arrayType: ArrayType): String =
+            "${ns.prog}hasElement${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
 
-        fun genTypedArrayElementURI(elementType: Type): String =
-            "${ns.prog}ArrayElement${IRILib.encodeUriComponent("<${elementType.name()}>")}"
+        fun genTypedArrayElementURI(arrayType: ArrayType): String =
+            "${ns.prog}ArrayElement${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
 
         fun genTypedStoresPrimitiveURI(arrayType: ArrayType): String =
-            "${ns.prog}storesPrimitive${IRILib.encodeUriComponent("${arrayType.name()}>")}"
+            "${ns.prog}storesPrimitive${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
+
+        fun genTypedStoresReferenceURI(arrayType: ArrayType): String =
+            "${ns.prog}storesReference${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
     }
 
     val prog = ProgURIs()

@@ -1,5 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
+import com.sun.jdi.ArrayReference
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ThreadReference
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
@@ -59,6 +60,17 @@ data class JvmState(
                 continue
 
             yieldAll(recursivelyFindObjects(value, limiter, seen))
+        }
+
+        if (objectReference is ArrayReference) {
+            for (idx in 0 until objectReference.length()) {
+                val arrayElement = objectReference.getValue(idx)
+                if (arrayElement is ObjectReference) {
+                    yieldAll(
+                        recursivelyFindObjects(arrayElement, limiter, seen)
+                    )
+                }
+            }
         }
 
         yield(objectReference)

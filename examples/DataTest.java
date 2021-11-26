@@ -14,6 +14,7 @@ class DataContainer {
     public short shortField = 32767;
 
     public int[] intArrayField = new int[]{1, 2, 3};
+    public String[] stringArrayField = new String[]{"Lorem", "Ipsum"};
 
     public String stringField = "Hello String!";
 

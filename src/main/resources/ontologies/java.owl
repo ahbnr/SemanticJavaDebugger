@@ -269,6 +269,16 @@ java:UnloadedType rdf:type owl:Class ;
                   rdfs:subClassOf java:ReferenceType .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#UnloadedTypeArray
+java:UnloadedTypeArray rdf:type owl:Class ;
+                       rdfs:subClassOf [ owl:intersectionOf ( prog:java.io.Serializable
+                                                              prog:java.lang.Cloneable
+                                                              prog:java.lang.Object
+                                                            ) ;
+                                         rdf:type owl:Class
+                                       ] .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#VariableDeclaration
 java:VariableDeclaration rdf:type owl:Class ;
                          rdfs:subClassOf [ rdf:type owl:Restriction ;

@@ -8,7 +8,6 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.ValueToNodeMapper
 import org.apache.jena.datatypes.xsd.XSDDatatype
@@ -91,81 +90,81 @@ class ObjectMapper : IMapper {
                     return
                 }
 
-                val componentType = try {
-                    JavaType.LoadedType(referenceType.componentType())
-                } catch (e: ClassNotLoadedException) {
-                    JavaType.UnloadedType(referenceType.componentTypeName())
-                }
+                // # More concrete hasElement relation
+                // Create sub-relation of hasElement<Type> relation for this particular array object to encode
+                // the array size in the cardinality
+                val typedHasElementURI = URIs.prog.genTypedHasElementURI(referenceType)
+                val sizedHasElementURI = URIs.run.genSizedHasElementURI(arrayReference)
+                tripleCollector.addStatement(
+                    sizedHasElementURI,
+                    URIs.rdfs.subPropertyOf,
+                    typedHasElementURI
+                )
 
-                when (componentType) {
-                    is JavaType.LoadedType -> when (componentType.type) {
-                        is PrimitiveType -> {
-                            // # More concrete hasElement relation
-
-                            // Create sub-relation of hasElement<Type> relation for this particular array object to encode
-                            // the array size in the cardinality
-                            val typedHasElementURI = URIs.prog.genTypedHasElementURI(componentType.type)
-                            val sizedHasElementURI = URIs.run.genSizedHasElementURI(arrayReference)
-                            tripleCollector.addStatement(
-                                sizedHasElementURI,
-                                URIs.rdfs.subPropertyOf,
-                                typedHasElementURI
+                tripleCollector.addStatement(
+                    sizedHasElementURI,
+                    URIs.rdfs.domain,
+                    tripleCollector.addCollection(
+                        TripleCollector.CollectionObject.OWLOneOf.fromURIs(
+                            listOf(
+                                objectURI
                             )
+                        )
+                    )
+                )
 
-                            tripleCollector.addStatement(
-                                sizedHasElementURI,
-                                URIs.rdfs.domain,
-                                tripleCollector.addCollection(
-                                    TripleCollector.CollectionObject.OWLOneOf.fromURIs(
-                                        listOf(
-                                            objectURI
-                                        )
-                                    )
-                                )
-                            )
+                val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(referenceType)
+                tripleCollector.addStatement(
+                    sizedHasElementURI,
+                    URIs.rdfs.range,
+                    typedArrayElementURI
+                )
 
-                            val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(componentType.type)
-                            tripleCollector.addStatement(
-                                sizedHasElementURI,
-                                URIs.rdfs.range,
-                                typedArrayElementURI
-                            )
+                tripleCollector.addStatement(
+                    sizedHasElementURI,
+                    URIs.owl.cardinality,
+                    NodeFactory.createLiteral(
+                        arrayReference.length().toString(),
+                        XSDDatatype.XSDnonNegativeInteger
+                    )
+                )
 
-                            tripleCollector.addStatement(
-                                sizedHasElementURI,
-                                URIs.owl.cardinality,
-                                NodeFactory.createLiteral(
-                                    arrayReference.length().toString(),
-                                    XSDDatatype.XSDnonNegativeInteger
-                                )
-                            )
+                try {
+                    val componentType = referenceType.componentType()
 
-                            // add the actual elements
-                            for (i in 0 until arrayReference.length()) {
-                                val value = arrayReference.getValue(i)
+                    // add the actual elements
+                    for (i in 0 until arrayReference.length()) {
+                        val value = arrayReference.getValue(i)
 
-                                val arrayElementInstanceURI = URIs.run.genArrayElementInstanceURI(arrayReference, i)
-                                tripleCollector.addStatement(
-                                    arrayElementInstanceURI,
-                                    URIs.rdf.type,
-                                    URIs.owl.NamedIndividual
-                                )
+                        val arrayElementInstanceURI = URIs.run.genArrayElementInstanceURI(arrayReference, i)
+                        tripleCollector.addStatement(
+                            arrayElementInstanceURI,
+                            URIs.rdf.type,
+                            URIs.owl.NamedIndividual
+                        )
 
-                                tripleCollector.addStatement(
-                                    arrayElementInstanceURI,
-                                    URIs.rdf.type,
-                                    typedArrayElementURI
-                                )
+                        tripleCollector.addStatement(
+                            arrayElementInstanceURI,
+                            URIs.rdf.type,
+                            typedArrayElementURI
+                        )
 
-                                tripleCollector.addStatement(
-                                    arrayElementInstanceURI,
-                                    URIs.java.hasIndex,
-                                    NodeFactory.createLiteral(i.toString(), XSDDatatype.XSDint)
-                                )
+                        tripleCollector.addStatement(
+                            arrayElementInstanceURI,
+                            URIs.java.hasIndex,
+                            NodeFactory.createLiteral(i.toString(), XSDDatatype.XSDint)
+                        )
 
-                                val valueNode = valueMapper.map(value)
+                        tripleCollector.addStatement(
+                            objectURI,
+                            sizedHasElementURI,
+                            arrayElementInstanceURI
+                        )
 
-                                if (valueNode != null) {
+                        val valueNode = valueMapper.map(value)
+                        if (valueNode != null) {
+                            when (componentType) {
+                                is PrimitiveType -> {
                                     val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(referenceType)
                                     tripleCollector.addStatement(
                                         arrayElementInstanceURI,
@@ -173,17 +172,25 @@ class ObjectMapper : IMapper {
                                         valueNode
                                     )
                                 }
-
-                                tripleCollector.addStatement(
-                                    objectURI,
-                                    sizedHasElementURI,
-                                    arrayElementInstanceURI
-                                )
+                                is ReferenceType -> {
+                                    val typedStoresReferenceURI = URIs.prog.genTypedStoresReferenceURI(referenceType)
+                                    tripleCollector.addStatement(
+                                        arrayElementInstanceURI,
+                                        typedStoresReferenceURI,
+                                        valueNode
+                                    )
+                                }
+                                else -> {
+                                    logger.error("Encountered unknown array element component type: $componentType")
+                                    return
+                                }
                             }
                         }
-                        is ReferenceType -> Unit // FIXME: Deal with this case
                     }
-                    is JavaType.UnloadedType -> Unit // FIXME: Deal with this case
+                } catch (e: ClassNotLoadedException) {
+                    if (arrayReference.length() > 0) {
+                        logger.error("Array of unloaded component type that has elements. That should not happen.")
+                    }
                 }
             }
 
