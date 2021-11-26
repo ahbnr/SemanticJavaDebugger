@@ -35,7 +35,7 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             }
         }
 
-        data class OWLSome(val propertyURI: String, val someURI: String) : CollectionObject()
+        data class OWLSome(val propertyURI: String, val some: Node) : CollectionObject()
     }
 
     fun addStatement(subject: Node, predicate: Node, `object`: Node) {
@@ -44,6 +44,14 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         if (triplePattern.matches(candidateTriple)) {
             collectedTriples.add(candidateTriple)
         }
+    }
+
+    fun addStatement(subject: Node, predicate: String, `object`: Node) {
+        addStatement(
+            subject,
+            NodeFactory.createURI(predicate),
+            `object`
+        )
     }
 
     fun addStatement(subject: String, predicate: String, `object`: Node) {
@@ -81,10 +89,10 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             is CollectionObject.OWLOneOf -> addOneOfStatements(
                 collectionObject.objects
             )
-            is CollectionObject.OWLSome -> addSomeRestriction(collectionObject.propertyURI, collectionObject.someURI)
+            is CollectionObject.OWLSome -> addSomeRestriction(collectionObject.propertyURI, collectionObject.some)
         }
 
-    private fun addSomeRestriction(property: String, someURI: String): Node {
+    private fun addSomeRestriction(property: String, some: Node): Node {
         val restrictionNode = NodeFactory.createBlankNode()
 
         addStatement(
@@ -102,7 +110,7 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         addStatement(
             restrictionNode,
             URIs.owl.someValuesFrom,
-            someURI
+            some
         )
 
         return restrictionNode

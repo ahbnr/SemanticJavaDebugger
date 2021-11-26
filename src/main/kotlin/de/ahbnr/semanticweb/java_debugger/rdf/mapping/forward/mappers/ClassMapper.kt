@@ -123,6 +123,18 @@ class ClassMapper : IMapper {
                                 URIs.rdfs.range,
                                 addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
                             )
+
+                            // We force all individuals of the class to implement these fields
+                            tripleCollector.addStatement(
+                                classSubject,
+                                URIs.rdfs.subClassOf,
+                                tripleCollector.addCollection(
+                                    TripleCollector.CollectionObject.OWLSome(
+                                        fieldURI,
+                                        addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
+                                    )
+                                )
+                            )
                         }
                         is PrimitiveType -> {
                             tripleCollector.addStatement(
@@ -141,6 +153,18 @@ class ClassMapper : IMapper {
                                 fieldURI,
                                 URIs.rdfs.range,
                                 datatypeURI
+                            )
+
+                            // We force all individuals of the class to implement these fields
+                            tripleCollector.addStatement(
+                                classSubject,
+                                URIs.rdfs.subClassOf,
+                                tripleCollector.addCollection(
+                                    TripleCollector.CollectionObject.OWLSome(
+                                        fieldURI,
+                                        NodeFactory.createURI(datatypeURI)
+                                    )
+                                )
                             )
                         }
                         // FIXME: Handle the other cases
@@ -581,7 +605,7 @@ class ClassMapper : IMapper {
                                     URIs.rdfs.subClassOf,
                                     tripleCollector.addCollection(
                                         TripleCollector.CollectionObject.OWLSome(
-                                            typedStoresPrimitiveURI, datatypeURI
+                                            typedStoresPrimitiveURI, NodeFactory.createURI(datatypeURI)
                                         )
                                     )
                                 )
