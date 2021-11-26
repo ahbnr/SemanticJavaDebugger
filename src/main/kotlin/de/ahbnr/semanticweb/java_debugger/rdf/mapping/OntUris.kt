@@ -58,8 +58,11 @@ class OntURIs(val ns: Namespaces) {
         val Method = ns.java + "Method"
         val Field = ns.java + "Field"
 
+        val Interface = ns.java + "Interface"
+
         val Array = ns.java + "Array"
         val ArrayElement = ns.java + "ArrayElement"
+        val PrimitiveArray = ns.java + "PrimitiveArray"
         val PrimitiveArrayElement = ns.java + "PrimitiveArrayElement"
         val hasIndex = ns.java + "hasIndex"
         val hasElement = ns.java + "hasElement"
@@ -104,6 +107,7 @@ class OntURIs(val ns: Namespaces) {
 
     inner class ProgURIs {
         val `java_lang_Object%5B%5D` = ns.prog + IRILib.encodeUriComponent("java.lang.Object[]")
+        val java_lang_Object = ns.prog + IRILib.encodeUriComponent("java.lang.Object")
 
         fun genVariableDeclarationURI(variable: LocalVariable, method: Method, referenceType: ReferenceType): String =
             "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}_${
@@ -112,8 +116,8 @@ class OntURIs(val ns: Namespaces) {
                 )
             }"
 
-        fun genMethodURI(method: Method, classType: ClassType): String =
-            "${ns.prog}${IRILib.encodeUriComponent(classType.name())}_${IRILib.encodeUriComponent(method.name())}"
+        fun genMethodURI(method: Method, referenceType: ReferenceType): String =
+            "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}"
 
         fun genReferenceTypeURI(referenceType: ReferenceType): String {
             return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}"

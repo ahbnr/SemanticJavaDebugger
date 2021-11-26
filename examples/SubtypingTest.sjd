@@ -1,5 +1,5 @@
 section Prepare Program & Domain
-stop at examples/SubtypingTest:31
+stop at examples/SubtypingTest:51
 run examples/SubtypingTest.java
 
 section Build Knowledge Base
@@ -68,11 +68,42 @@ assert sparql-fail <<EOF
     }
 EOF
 
-# Arrays are always sub-types of Object[] arrays
+# Array types are also java.lang.Cloneable and java.io.Serializable
 assert sparql-fail <<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
+        FILTER NOT EXISTS {
+            ?arrayType rdfs:subClassOf prog:java.lang.Cloneable ;
+                       rdfs:subClassOf prog:java.io.Serializable .
+        }
+    }
+EOF
+
+# Primitive type arrays are always sub-types of java:PrimitiveArray
+assert sparql-fail <<EOF
+    SELECT ?arrayType
+    WHERE {
+        ?arrayType a java:Array .
+        ?hasElementRelation rdfs:subPropertyOf java:hasElement ;
+                            rdfs:domain ?arrayType ;
+                            rdfs:range ?arrayElementClass .
+        ?arrayElementClass rdfs:subClassOf java:PrimitiveArrayElement .
+        FILTER NOT EXISTS {
+            ?arrayType rdfs:subClassOf java:PrimitiveArray .
+        }
+    }
+EOF
+
+# Reference type Arrays are always sub-types of Object[] arrays
+assert sparql-fail <<EOF
+    SELECT ?arrayType
+    WHERE {
+        ?arrayType a java:Array .
+        ?hasElementRelation rdfs:subPropertyOf java:hasElement ;
+                            rdfs:domain ?arrayType ;
+                            rdfs:range ?arrayElementClass .
+        ?arrayElementClass rdfs:subClassOf java:ArrayElement%3CObject%3E .
         FILTER NOT EXISTS {
             ?arrayType rdfs:subClassOf prog:java.lang.Object%5B%5D .
         }
@@ -121,6 +152,54 @@ assert sparql-fail <<EOF
     WHERE {
         ?notMid java:hasMethod prog:examples.Mid_midMethod .
         FILTER (?notMid != prog:examples.Mid)
+    }
+EOF
+
+section Checking Local Interface Hierarchy
+
+# Check that mid interface has all the methods inherited from the top interface
+assert sparql-success <<EOF
+    SELECT  ?midInterface
+    WHERE {
+        FILTER (?midInterface = prog:examples.MidInterface) .
+        ?midInterface java:hasMethod prog:examples.MidInterface_midInterfaceMethod ;
+                      rdfs:subClassOf [
+                        a java:Interface ;
+                        java:hasMethod prog:examples.TopInterface1_topInterface1Method
+                      ] ;
+                      rdfs:subClassOf [
+                        a java:Interface ;
+                        java:hasMethod prog:examples.TopInterface2_topInterface2Method
+                      ] .
+    }
+EOF
+
+# Check that the Mid class which inherits from MidInterface also has them
+assert sparql-success <<EOF
+    SELECT  ?midClass
+    WHERE {
+        FILTER (?midClass = prog:examples.Mid) .
+        ?midClass rdfs:subClassOf [
+                    a java:Interface ;
+                    java:hasMethod prog:examples.MidInterface_midInterfaceMethod ;
+                  ] ;
+                  rdfs:subClassOf [
+                    a java:Interface ;
+                    java:hasMethod prog:examples.TopInterface1_topInterface1Method
+                  ] ;
+                  rdfs:subClassOf [
+                    a java:Interface ;
+                    java:hasMethod prog:examples.TopInterface2_topInterface2Method
+                  ] .
+    }
+EOF
+
+# All individuals of a top interface should also be individuals of java.lang.Object
+assert sparql-success <<EOF
+    SELECT ?topInterface1
+    WHERE {
+        FILTER (?topInterface1 = prog:examples.TopInterface1)
+        ?topInterface1 rdfs:subClassOf prog:java.lang.Object .
     }
 EOF
 

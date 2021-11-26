@@ -1,14 +1,34 @@
 package examples;
 
+interface TopInterface1 {
+    public void topInterface1Method();
+}
+
+interface TopInterface2 {
+    public void topInterface2Method();
+}
+
+interface MidInterface extends TopInterface1, TopInterface2 {
+    public void midInterfaceMethod();
+}
+
 class Top {
     public String topField = "topField";
 }
 
-class Mid extends Top {
+class Mid extends Top implements MidInterface {
     public String midField = "midField";
 
     public void midMethod() {
+    }
 
+    public void topInterface1Method() {
+    }
+
+    public void topInterface2Method() {
+    }
+
+    public void midInterfaceMethod() {
     }
 }
 

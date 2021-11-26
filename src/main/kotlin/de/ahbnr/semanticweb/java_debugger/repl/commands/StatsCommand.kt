@@ -36,6 +36,7 @@ class StatsCommand(
 
         val toCount = listOf(
             Countable("Classes", URIs.java.Class),
+            Countable("Interfaces", URIs.java.Interface),
             Countable("Methods", URIs.java.Method),
             Countable("Fields", URIs.java.Field),
             Countable("Array Types", URIs.java.Array),

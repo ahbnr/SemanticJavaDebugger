@@ -6,10 +6,7 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.hasPublicSubClass
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.*
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -199,9 +196,9 @@ class ClassMapper : IMapper {
                 variable: LocalVariable,
                 methodSubject: String,
                 method: Method,
-                classType: ClassType
+                referenceType: ReferenceType
             ) {
-                val variableDeclarationURI = URIs.prog.genVariableDeclarationURI(variable, method, classType)
+                val variableDeclarationURI = URIs.prog.genVariableDeclarationURI(variable, method, referenceType)
 
                 // it *is* a VariableDeclaration
                 tripleCollector.addStatement(
@@ -301,13 +298,13 @@ class ClassMapper : IMapper {
                 )
             }
 
-            fun addVariableDeclarations(methodSubject: String, method: Method, classType: ClassType) {
+            fun addVariableDeclarations(methodSubject: String, method: Method, referenceType: ReferenceType) {
                 val variables = (
                         if (!method.isAbstract && !method.isNative)
                             try {
                                 method.variables()
                             } catch (e: AbsentInformationException) {
-                                if (AbsentInformationPackages.none { classType.name().startsWith(it) }) {
+                                if (AbsentInformationPackages.none { referenceType.name().startsWith(it) }) {
                                     logger.debug("Unable to get variables for $method. This can happen for native and abstract methods.")
                                 }
                                 null
@@ -318,7 +315,7 @@ class ClassMapper : IMapper {
                 for (variable in variables) {
                     // FIXME: Deal with scopes
 
-                    addVariableDeclaration(variable, methodSubject, method, classType)
+                    addVariableDeclaration(variable, methodSubject, method, referenceType)
                 }
             }
 
@@ -374,12 +371,12 @@ class ClassMapper : IMapper {
                 }
             }
 
-            fun addMethod(method: Method, classSubject: String, classType: ClassType) {
-                if (!method.isPublic && limiter.isShallow(classType)) {
+            fun addMethod(method: Method, referenceTypeURI: String, referenceType: ReferenceType) {
+                if (!method.isPublic && limiter.isShallow(referenceType)) {
                     return
                 }
 
-                val methodSubject = URIs.prog.genMethodURI(method, classType)
+                val methodSubject = URIs.prog.genMethodURI(method, referenceType)
 
                 // The methodSubject *is* a method
                 tripleCollector.addStatement(
@@ -390,29 +387,29 @@ class ClassMapper : IMapper {
 
                 // ...and the class contains the method
                 tripleCollector.addStatement(
-                    classSubject,
+                    referenceTypeURI,
                     URIs.java.hasMethod,
                     methodSubject
                 )
 
-                if (limiter.isShallow(classType)) {
+                if (limiter.isShallow(referenceType)) {
                     return
                 }
 
                 // ...and the method declares some variables
-                addVariableDeclarations(methodSubject, method, classType)
+                addVariableDeclarations(methodSubject, method, referenceType)
 
                 // Where in the source code is the method?
                 addMethodLocation(method, methodSubject)
             }
 
-            fun addMethods(classSubject: String, classType: ClassType) {
-                for (method in classType.methods()) { // inherited methods are not included!
-                    if (!method.isPublic && limiter.isShallow(classType)) {
+            fun addMethods(referenceTypeURI: String, referenceType: ReferenceType) {
+                for (method in referenceType.methods()) { // inherited methods are not included!
+                    if (!method.isPublic && limiter.isShallow(referenceType)) {
                         continue
                     }
 
-                    addMethod(method, classSubject, classType)
+                    addMethod(method, referenceTypeURI, referenceType)
                 }
             }
 
@@ -461,6 +458,16 @@ class ClassMapper : IMapper {
                     )
                 }
 
+                // https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.2
+                val superInterfaces = classType.interfaces()
+                for (superInterface in superInterfaces) {
+                    tripleCollector.addStatement(
+                        classSubject,
+                        URIs.rdfs.subClassOf,
+                        URIs.prog.genReferenceTypeURI(superInterface)
+                    )
+                }
+
                 // FIXME: why do Kamburjan et. al. use subClassOf and prog:Object here?
                 //  Also: Classes are also objects in Java. However, I moved this to the object mapper
                 // tripleCollector.addStatement(
@@ -483,20 +490,33 @@ class ClassMapper : IMapper {
                     URIs.java.Array
                 )
 
-                // but it is also a class where all member individuals are also
-                // members of the class Object[]
-                // (this one in turn is defined as a subclass of java.lang.Object in the base ontology definition)
-                tripleCollector.addStatement(
-                    arrayTypeURI,
-                    URIs.rdfs.subClassOf,
-                    URIs.prog.`java_lang_Object%5B%5D`
-                )
-
                 // Now we need to clarify the type of the array elements
                 val componentType = try {
                     JavaType.LoadedType(arrayType.componentType())
                 } catch (e: ClassNotLoadedException) {
                     JavaType.UnloadedType(arrayType.componentTypeName())
+                }
+
+                // Arrays are also a class (punning) where all member individuals are
+                // members of
+                //    the class Object[] if the component type is a reference type
+                //    the interfaces Cloneable and Serializable if the component type is a primitive type
+                // and some more supertypes, see https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.3
+                //
+                // We define Object[] and the synthetic PrimitiveArray class in the base ontology.
+                // There, additional appropriate OWL superclasses like the above interfaces are already associated.
+                if (componentType is JavaType.UnloadedType || componentType is JavaType.LoadedType && componentType.type is ReferenceType) {
+                    tripleCollector.addStatement(
+                        arrayTypeURI,
+                        URIs.rdfs.subClassOf,
+                        URIs.prog.`java_lang_Object%5B%5D`
+                    )
+                } else {
+                    tripleCollector.addStatement(
+                        arrayTypeURI,
+                        URIs.rdfs.subClassOf,
+                        URIs.java.PrimitiveArray
+                    )
                 }
 
                 when (componentType) {
@@ -573,23 +593,49 @@ class ClassMapper : IMapper {
                 }
             }
 
+            fun addInterface(interfaceType: InterfaceType) {
+                val interfaceURI = URIs.prog.genReferenceTypeURI(interfaceType)
+
+                // This, as an individual, is a Java Interface
+                tripleCollector.addStatement(
+                    interfaceURI,
+                    URIs.rdf.type,
+                    URIs.java.Interface
+                )
+
+                val superInterfaces = interfaceType.superinterfaces()
+                if (superInterfaces.isEmpty()) {
+                    // If an interface has no direct superinterface, then its java.lang.Object is a direct supertype
+                    // https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.2
+                    tripleCollector.addStatement(
+                        interfaceURI,
+                        URIs.rdfs.subClassOf,
+                        URIs.prog.java_lang_Object
+                    )
+                } else {
+                    for (superInterface in superInterfaces) {
+                        tripleCollector.addStatement(
+                            interfaceURI,
+                            URIs.rdfs.subClassOf,
+                            URIs.prog.genReferenceTypeURI(superInterface)
+                        )
+                    }
+                }
+
+                addMethods(interfaceURI, interfaceType)
+            }
+
             fun addReferenceTypes() {
                 val allReferenceTypes = jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
                     if (
-                        limiter.isExcluded(referenceType)
-                        && (referenceType !is ClassType || !hasPublicSubClass(referenceType))
-                    ) {
-                        continue
-                    }
-
-                    if (
-                        referenceType !is ArrayType
-                        && !referenceType.isPublic
+                        (limiter.isExcluded(referenceType) ||
+                                referenceType !is ArrayType && !referenceType.isPublic)
                         // ^^isPublic can print exception stacktraces for arrays, very annoying. Without this, we could remove the restriction above
                         && limiter.isShallow(referenceType)
                         && (referenceType !is ClassType || !hasPublicSubClass(referenceType))
+                        && (referenceType !is InterfaceType || !hasPublicSubInterface(referenceType))
                     ) {
                         continue
                     }
@@ -597,7 +643,7 @@ class ClassMapper : IMapper {
                     when (referenceType) {
                         is ClassType -> addClass(referenceType)
                         is ArrayType -> addArrayType(referenceType)
-                        // FIXME handle other reference types
+                        is InterfaceType -> addInterface(referenceType)
                     }
                 }
             }

@@ -168,12 +168,9 @@ owl:Class rdf:type owl:Class .
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Array
 java:Array rdf:type owl:Class ;
-           rdfs:subClassOf [ owl:intersectionOf ( java:ReferenceType
-                                                  prog:java.lang.Object
-                                                ) ;
-                             rdf:type owl:Class
-                           ] ;
-           owl:disjointWith java:Class .
+           rdfs:subClassOf java:ReferenceType ;
+           owl:disjointWith java:Class ,
+                            java:Interface .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement
@@ -185,15 +182,17 @@ java:ArrayElement rdf:type owl:Class ;
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Class
 java:Class rdf:type owl:Class ;
-           rdfs:subClassOf [ owl:intersectionOf ( java:ReferenceType
-                                                  prog:java.lang.Object
-                                                ) ;
-                             rdf:type owl:Class
-                           ] .
+           rdfs:subClassOf java:ReferenceType ;
+           owl:disjointWith java:Interface .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Field
 java:Field rdf:type owl:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Interface
+java:Interface rdf:type owl:Class ;
+               rdfs:subClassOf java:ReferenceType .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Location
@@ -211,6 +210,31 @@ java:Object rdf:type owl:Class ;
                               owl:someValuesFrom xsd:long
                             ] ;
             rdfs:comment "TODO: Do we need this, if we have java:ReferenceType?"^^rdfs:Literal .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveArray
+java:PrimitiveArray rdf:type owl:Class ;
+                    rdfs:subClassOf [ owl:intersectionOf ( prog:java.io.Serializable
+                                                           prog:java.lang.Cloneable
+                                                           prog:java.lang.Object
+                                                         ) ;
+                                      rdf:type owl:Class
+                                    ] .
+
+[ rdf:type owl:Axiom ;
+   owl:annotatedSource java:PrimitiveArray ;
+   owl:annotatedProperty rdfs:subClassOf ;
+   owl:annotatedTarget [ owl:intersectionOf ( prog:java.io.Serializable
+                                              prog:java.lang.Cloneable
+                                              prog:java.lang.Object
+                                            ) ;
+                         rdf:type owl:Class
+                       ] ;
+   rdfs:comment """java.io.Serializable is a direct superinterface due to this:
+https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.3"""^^rdfs:Literal ,
+                """java.lang.Cloneable is a dircet superinterface due to this:
+https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.3"""^^rdfs:Literal
+ ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveArrayElement
@@ -242,11 +266,7 @@ java:StackFrame rdf:type owl:Class ;
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#UnloadedType
 java:UnloadedType rdf:type owl:Class ;
-                  rdfs:subClassOf [ owl:intersectionOf ( java:ReferenceType
-                                                         prog:java.lang.Object
-                                                       ) ;
-                                    rdf:type owl:Class
-                                  ] .
+                  rdfs:subClassOf java:ReferenceType .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#VariableDeclaration
@@ -267,6 +287,16 @@ java:VariableDeclaration rdf:type owl:Class ;
                                                                                                                    ) ;
                                                                                                 rdf:type owl:Class
                                                                                               ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.io.Serializable
+prog:java.io.Serializable rdf:type owl:Class ;
+                          rdfs:subClassOf prog:java.lang.Object .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Cloneable
+prog:java.lang.Cloneable rdf:type owl:Class ;
+                         rdfs:subClassOf prog:java.lang.Object .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object
@@ -302,17 +332,52 @@ prog:java.lang.String rdf:type owl:Class ;
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D
 <https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D> rdf:type owl:Class ;
-                                                                               rdfs:subClassOf prog:java.lang.Object .
+                                                                               rdfs:subClassOf [ owl:intersectionOf ( prog:java.io.Serializable
+                                                                                                                      prog:java.lang.Cloneable
+                                                                                                                      prog:java.lang.Object
+                                                                                                                    ) ;
+                                                                                                 rdf:type owl:Class
+                                                                                               ] .
+
+[ rdf:type owl:Axiom ;
+   owl:annotatedSource <https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object%5B%5D> ;
+   owl:annotatedProperty rdfs:subClassOf ;
+   owl:annotatedTarget [ owl:intersectionOf ( prog:java.io.Serializable
+                                              prog:java.lang.Cloneable
+                                              prog:java.lang.Object
+                                            ) ;
+                         rdf:type owl:Class
+                       ] ;
+   rdfs:comment """java.io.Serializable is a direct superinterface due to this:
+https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.3"""^^rdfs:Literal ,
+                """java.lang.Cloneable is a dircet superinterface due to this:
+https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.3"""^^rdfs:Literal
+ ] .
 
 
 #################################################################
 #    Individuals
 #################################################################
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveArray
+java:PrimitiveArray rdf:type owl:NamedIndividual ,
+                             java:Array .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#null
 java:null rdf:type owl:NamedIndividual ,
                    java:Object ;
           java:hasJDWPObjectId "0"^^xsd:long .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.io.Serializable
+prog:java.io.Serializable rdf:type owl:NamedIndividual ,
+                                   java:Interface .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Cloneable
+prog:java.lang.Cloneable rdf:type owl:NamedIndividual ,
+                                  java:Interface .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object
