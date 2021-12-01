@@ -33,12 +33,9 @@ class ObjectMapper : IMapper {
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
 
-            fun addField(field: Field, value: Value?, objectSubject: String) {
+            fun addField(field: Field, value: Value?, parentURI: String) {
                 if (limiter.canFieldBeSkipped(field))
                     return
-
-                if (field.isStatic)
-                    return // FIXME: handle static fields
 
                 val fieldPropertyName = URIs.prog.genFieldURI(field)
                 // we model a field as an instance of the field property of the class.
@@ -50,7 +47,7 @@ class ObjectMapper : IMapper {
 
                 if (valueNode != null) {
                     tripleCollector.addStatement(
-                        objectSubject,
+                        parentURI,
                         fieldPropertyName,
                         valueNode
                     )
@@ -62,6 +59,9 @@ class ObjectMapper : IMapper {
                     objectReference.getValues(classType.allFields()) // allFields does capture the fields of superclasses
 
                 for ((field, value) in fieldValues) {
+                    if (field.isStatic) // Static fields are handled by addStaticClassMembers
+                        continue
+
                     addField(field, value, objectSubject)
                 }
             }
@@ -257,6 +257,18 @@ class ObjectMapper : IMapper {
                 }
             }
 
+            fun addStaticClassMembers() {
+                val classTypes = jvmState.pausedThread.virtualMachine().allClasses().filterIsInstance<ClassType>()
+
+                for (classType in classTypes) {
+                    val fieldValues = classType.getValues(classType.fields().filter { it.isStatic })
+
+                    for ((field, value) in fieldValues) {
+                        addField(field, value, URIs.prog.genReferenceTypeURI(classType))
+                    }
+                }
+            }
+
             fun addObjects() {
                 for (obj in jvmState.allObjects(limiter)) {
                     addObject(obj)
@@ -264,6 +276,7 @@ class ObjectMapper : IMapper {
             }
 
             addObjects()
+            addStaticClassMembers()
 
             return tripleCollector.buildIterator()
         }

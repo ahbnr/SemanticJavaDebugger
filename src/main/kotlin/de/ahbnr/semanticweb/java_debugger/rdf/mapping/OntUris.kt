@@ -92,6 +92,8 @@ class OntURIs(val ns: Namespaces) {
 
         val hasStringValue = ns.java + "hasStringValue"
 
+        val isStatic = ns.java + "isStatic"
+
         fun genPrimitiveTypeURI(type: PrimitiveType): String? = when (type) {
             is BooleanType -> XSDDatatype.XSDboolean
             is ByteType -> XSDDatatype.XSDbyte

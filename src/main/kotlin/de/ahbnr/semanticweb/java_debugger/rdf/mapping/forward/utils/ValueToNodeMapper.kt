@@ -34,8 +34,30 @@ class ValueToNodeMapper : KoinComponent {
                 value.value().code.toString(),
                 XSDDatatype.XSDunsignedShort
             )
-            is DoubleValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDdouble)
-            is FloatValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDfloat)
+            is DoubleValue -> {
+                val plainValue = value.value()
+
+                val stringRepresentation = when {
+                    plainValue.isInfinite() -> "${
+                        if (plainValue < 0) "-" else ""
+                    }INF"
+                    else -> plainValue.toString()
+                }
+
+                NodeFactory.createLiteral(stringRepresentation, XSDDatatype.XSDdouble)
+            }
+            is FloatValue -> {
+                val plainValue = value.value()
+
+                val stringRepresentation = when {
+                    plainValue.isInfinite() -> "${
+                        if (plainValue < 0) "-" else ""
+                    }INF"
+                    else -> plainValue.toString()
+                }
+
+                NodeFactory.createLiteral(stringRepresentation, XSDDatatype.XSDfloat)
+            }
             is IntegerValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDint)
             is LongValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDlong)
             is ShortValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDshort)

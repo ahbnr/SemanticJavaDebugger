@@ -82,13 +82,9 @@ class ClassMapper : IMapper {
                 )
             }
 
-            fun addField(classSubject: String, field: Field) {
+            fun addField(classURI: String, field: Field) {
                 if (limiter.canFieldBeSkipped(field)) {
                     return
-                }
-
-                if (field.isStatic) {
-                    return // FIXME: Handle static fields
                 }
 
                 // A field is a property (of a class instance).
@@ -104,7 +100,7 @@ class ClassMapper : IMapper {
 
                 // and it is part of the class
                 tripleCollector.addStatement(
-                    classSubject,
+                    classURI,
                     URIs.java.hasField,
                     fieldURI
                 )
@@ -141,17 +137,19 @@ class ClassMapper : IMapper {
                                 addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
                             )
 
-                            // We force all individuals of the class to implement these fields
-                            tripleCollector.addStatement(
-                                classSubject,
-                                URIs.rdfs.subClassOf,
-                                tripleCollector.addCollection(
-                                    TripleCollector.CollectionObject.OWLSome(
-                                        fieldURI,
-                                        addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
+                            if (!field.isStatic) {
+                                // We force all individuals of the class to implement the field
+                                tripleCollector.addStatement(
+                                    classURI,
+                                    URIs.rdfs.subClassOf,
+                                    tripleCollector.addCollection(
+                                        TripleCollector.CollectionObject.OWLSome(
+                                            fieldURI,
+                                            addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
+                                        )
                                     )
                                 )
-                            )
+                            }
                         }
                         is PrimitiveType -> {
                             tripleCollector.addStatement(
@@ -172,17 +170,22 @@ class ClassMapper : IMapper {
                                 datatypeURI
                             )
 
-                            // We force all individuals of the class to implement these fields
-                            tripleCollector.addStatement(
-                                classSubject,
-                                URIs.rdfs.subClassOf,
-                                tripleCollector.addCollection(
-                                    TripleCollector.CollectionObject.OWLSome(
-                                        fieldURI,
-                                        NodeFactory.createURI(datatypeURI)
+                            if (!field.isStatic) {
+                                // We force all individuals of the class to implement these fields
+                                tripleCollector.addStatement(
+                                    classURI,
+                                    URIs.rdfs.subClassOf,
+                                    tripleCollector.addCollection(
+                                        TripleCollector.CollectionObject.OWLSome(
+                                            fieldURI,
+                                            NodeFactory.createURI(datatypeURI)
+                                        )
                                     )
                                 )
-                            )
+                            }
+                        }
+                        else -> {
+                            logger.error("Encountered unknown kind of type: ${fieldType.type}.")
                         }
                         // FIXME: Handle the other cases
                     }
@@ -202,16 +205,31 @@ class ClassMapper : IMapper {
                             URIs.prog.genUnloadedTypeURI(fieldType.typeName)
                         )
                     }
-                    // FIXME: Handle the other cases
                 }
 
-                // the field is a thing defined for every object instance of the class concept via rdfs:domain
-                // (this also drives some implications, e.g. if there exists a field, there must also be some class it belongs to etc)
                 tripleCollector.addStatement(
                     fieldURI,
-                    URIs.rdfs.domain,
-                    classSubject
+                    URIs.java.isStatic,
+                    NodeFactory.createLiteral(field.isStatic.toString(), XSDDatatype.XSDboolean)
                 )
+
+                if (field.isStatic) {
+                    // static field instances are defined for the class itself, not the instances
+                    tripleCollector.addStatement(
+                        fieldURI,
+                        URIs.rdfs.domain,
+                        // Punning: We treat the class as an individual
+                        tripleCollector.addCollection(TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(classURI)))
+                    )
+                } else {
+                    // an instance field is a thing defined for every object instance of the class concept via rdfs:domain
+                    // (this also drives some implications, e.g. if there exists a field, there must also be some class it belongs to etc)
+                    tripleCollector.addStatement(
+                        fieldURI,
+                        URIs.rdfs.domain,
+                        classURI
+                    )
+                }
 
                 // Fields are functional properties.
                 // For every instance of the field (there is only one for the object) there is exactly one property value

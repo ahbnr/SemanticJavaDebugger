@@ -145,6 +145,18 @@ java:isAtStackDepth rdf:type owl:DatatypeProperty ,
                     rdfs:range xsd:int .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isStatic
+java:isStatic rdf:type owl:DatatypeProperty ,
+                       owl:FunctionalProperty ;
+              rdfs:domain [ rdf:type owl:Class ;
+                            owl:unionOf ( java:Class
+                                          java:Field
+                                          java:Method
+                                        )
+                          ] ;
+              rdfs:range xsd:boolean .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#storesPrimitive
 java:storesPrimitive rdf:type owl:DatatypeProperty ,
                               owl:FunctionalProperty ;
