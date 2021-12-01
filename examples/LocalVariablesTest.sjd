@@ -1,0 +1,29 @@
+section Prepare Program & Domain
+stop at examples.MyClass:7
+run examples/LocalVariablesTest.java
+
+section Build Knowledge Base
+buildkb --limit-sdk --deep=examples
+dumpkb datatest.ttl
+checkkb --is-consistent
+
+section Are local variables correctly declared?
+
+assert triples <<EOF
+    prog:examples.MyClass_firstMethod java:declaresVariable prog:examples.MyClass_firstMethod_localVariable .
+
+    prog:examples.MyClass_firstMethod_localVariable rdfs:range xsd:int ;
+                                                    rdfs:domain java:StackFrame .
+EOF
+
+section Are values present?
+
+assert sparql-success <<EOF
+    SELECT ?frame
+    WHERE {
+        ?frame a java:StackFrame ;
+               prog:examples.MyClass_firstMethod_localVariable "42"^^xsd:int .
+    }
+EOF
+
+cont

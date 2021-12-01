@@ -48,6 +48,7 @@ class RunCommand(
 
         logger.log("Launching Java program.")
         jvmDebugger.launchVM(className)
+        jvmDebugger.jvm?.resume()
 
         return true
     }

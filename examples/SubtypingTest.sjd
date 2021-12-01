@@ -1,5 +1,5 @@
 section Prepare Program & Domain
-stop at examples/SubtypingTest:65
+stop at examples.SubtypingTest:65
 run examples/SubtypingTest.java
 
 section Build Knowledge Base

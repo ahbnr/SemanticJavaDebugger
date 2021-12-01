@@ -1,5 +1,5 @@
 section Prepare Program & Domain
-stop at examples/DataTest:28
+stop at examples.DataTest:28
 run examples/DataTest.java
 
 section Build Knowledge Base
@@ -78,7 +78,7 @@ inspect string
 # Show the whole DataContainer instance
 inspect container
 
-stop at examples/DataTest:44
+stop at examples.DataTest:44
 cont
 buildkb --limit-sdk --deep=examples
 checkkb --is-consistent

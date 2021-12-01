@@ -16,7 +16,7 @@ class StopCommand(
     override val name = "stop"
 
     private val usage = """
-        Usage: stop at <source path>:<line_number>
+        Usage: stop at <full class name>:<line_number>
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
@@ -34,10 +34,10 @@ class StopCommand(
                     return false
                 }
 
-                val (sourcePath, lineNumber) = split
+                val (className, lineNumber) = split
 
                 try {
-                    jvmDebugger.setBreakpoint(sourcePath, lineNumber.toInt())
+                    jvmDebugger.setBreakpoint(className, lineNumber.toInt())
                 } catch (e: NumberFormatException) {
                     logger.error("Line number must be an integer: $lineNumber")
                     return false

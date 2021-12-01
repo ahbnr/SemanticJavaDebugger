@@ -10,6 +10,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.Closeable
 
+
 class JvmDebugger : Closeable, KoinComponent {
     var jvm: JvmInstance? = null
         private set
@@ -18,14 +19,20 @@ class JvmDebugger : Closeable, KoinComponent {
 
     private val logger: Logger by inject()
 
-    fun setBreakpoint(sourcePath: String, line: Int) {
-        val className = sourcePath.removeSuffix(".java").replace('/', '.')
+    fun setBreakpoint(className: String, line: Int) {
         val classType = jvm?.getClass(className)
         if (classType != null) {
             jvm?.setBreakpointOnReferenceType(classType, line)
         } else {
             val lines = deferredBreakpoints.getOrPut(className, { mutableListOf() })
             lines.add(line)
+
+            val rawVM = jvm?.vm
+            if (rawVM != null) {
+                val prepareReq = rawVM.eventRequestManager().createClassPrepareRequest()
+                prepareReq.addClassFilter(className)
+                prepareReq.enable()
+            }
 
             logger.log("Deferred setting the breakpoint until the class in question is loaded.")
         }
@@ -81,15 +88,16 @@ class JvmDebugger : Closeable, KoinComponent {
 
         val rawVM = launchingConnector.launch(arguments)
 
-        val classPrepareRequest = rawVM.eventRequestManager().createClassPrepareRequest()
-        classPrepareRequest.addClassFilter(mainClass)
-        classPrepareRequest.enable()
+        for (breakpointClass in deferredBreakpoints.keys) {
+            val req = rawVM.eventRequestManager().createClassPrepareRequest()
+            req.addClassFilter(breakpointClass)
+            req.enable()
+        }
 
         jvm = JvmInstance(
             rawVM,
             eventHandler
         )
-        jvm?.resume()
     }
 
     override fun close() {

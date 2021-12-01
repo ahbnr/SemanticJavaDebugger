@@ -187,7 +187,6 @@ class ClassMapper : IMapper {
                         else -> {
                             logger.error("Encountered unknown kind of type: ${fieldType.type}.")
                         }
-                        // FIXME: Handle the other cases
                     }
 
                     is JavaType.UnloadedType -> {
@@ -318,7 +317,7 @@ class ClassMapper : IMapper {
                                     datatypeURI
                                 )
                             }
-                            // FIXME: deal with other cases
+                            else -> logger.error("Encountered unknown kind of type: ${variableType.type}")
                         }
                     }
                     is JavaType.UnloadedType -> {
@@ -369,7 +368,6 @@ class ClassMapper : IMapper {
 
                 for (variable in variables) {
                     // FIXME: Deal with scopes
-
                     addVariableDeclaration(variable, methodSubject, method, referenceType)
                 }
             }
