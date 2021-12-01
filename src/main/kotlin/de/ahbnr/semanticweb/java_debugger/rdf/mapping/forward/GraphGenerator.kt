@@ -46,6 +46,7 @@ class GraphGenerator(
         limiter: MappingLimiter
     ): Ontology {
         // var model = ModelFactory.createDefaultModel()
+
         val ontManager = OntManagers.createManager()
         val ontology = ontManager.createOntology()
 

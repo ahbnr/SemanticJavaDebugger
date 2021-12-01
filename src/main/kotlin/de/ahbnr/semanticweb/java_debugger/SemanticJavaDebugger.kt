@@ -78,7 +78,8 @@ class SemanticJavaDebugger : CliktCommand() {
                     ShaclCommand(graphGen),
                     SparqlCommand(graphGen),
                     StatsCommand(graphGen),
-                    StopCommand(jvmDebugger)
+                    StopCommand(jvmDebugger),
+                    TimeCommand()
                 )
             )
 

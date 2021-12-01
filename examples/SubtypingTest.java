@@ -12,6 +12,20 @@ interface MidInterface extends TopInterface1, TopInterface2 {
     public void midInterfaceMethod();
 }
 
+interface ISameMethodName1 {
+    void method();
+}
+
+interface ISameMethodName2 {
+    void method();
+}
+
+class SameMethodName implements ISameMethodName1, ISameMethodName2 {
+    @java.lang.Override
+    public void method() {
+    }
+}
+
 class Top {
     public String topField = "topField";
 }

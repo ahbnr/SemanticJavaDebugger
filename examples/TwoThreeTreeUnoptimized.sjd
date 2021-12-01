@@ -11,7 +11,7 @@ stats
 # checkkb --is-consistent
 
 section SPARQL Queries
-sparql --optimize <<EOF
+sparql <<EOF
     SELECT ?root ?var
     WHERE {
         [] a java:StackFrame ;
@@ -23,7 +23,6 @@ EOF
 time
 reverse root
 
-# Get all fields of true nodes
 sparql <<EOF
     SELECT ?node ?field
     WHERE {
@@ -35,7 +34,7 @@ EOF
 time
 reverse node
 
-sparql --optimize <<EOF
+sparql <<EOF
   SELECT ?root ?source ?line
   WHERE {
       ?root a domain:Root .

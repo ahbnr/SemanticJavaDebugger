@@ -445,22 +445,17 @@ class ClassMapper : IMapper {
 
                 val classSubject = URIs.prog.genReferenceTypeURI(classType)
 
-                // FIXME: Ensure that we can remove this
-                // FIXME: This should be given by transitivity of subClassOf java.lang.Object
-                //
-                // // classSubject is a java class
-                // tripleCollector.addStatement(
-                //     classSubject,
-                //     URIs.rdf.type,
-                //     URIs.java.Class
-                // )
-                //
-                // // classSubject is an owl class
-                // tripleCollector.addStatement(
-                //     classSubject,
-                //     URIs.rdf.type,
-                //     URIs.owl.Class
-                // )
+                // classSubject is an owl class
+                // FIXME: Shouldnt this be implied by being a subClassOf java.lang.Object?
+                //   either it is not, or some reasoners / frameworks do not recognize this implication because some
+                //   things dont work when this is removed.
+                //   For example: The SyntacticLocalityModuleExtractor does not extract OWL class definitions for
+                //   the java classes.
+                tripleCollector.addStatement(
+                    classSubject,
+                    URIs.rdf.type,
+                    URIs.owl.Class
+                )
 
                 // This, as an individual, is a Java Class
                 tripleCollector.addStatement(
@@ -718,12 +713,36 @@ class ClassMapper : IMapper {
 
                 for (referenceType in allReferenceTypes) {
                     if (
-                        (limiter.isExcluded(referenceType) ||
-                                referenceType !is ArrayType && !referenceType.isPublic)
+                        limiter.isExcluded(referenceType) &&
+                        (referenceType !is ClassType || transitiveSubClasses(referenceType).all {
+                            limiter.isExcluded(
+                                referenceType
+                            )
+                        }) &&
+                        (referenceType !is InterfaceType || transitiveSubInterfaces(referenceType).all {
+                            limiter.isExcluded(
+                                referenceType
+                            )
+                        })
+                    ) {
+                        continue
+                    }
+
+                    if (
+                        limiter.isShallow(referenceType) &&
+                        referenceType !is ArrayType &&
                         // ^^isPublic can print exception stacktraces for arrays, very annoying. Without this, we could remove the restriction above
-                        && limiter.isShallow(referenceType)
-                        && (referenceType !is ClassType || !hasPublicSubClass(referenceType))
-                        && (referenceType !is InterfaceType || !hasPublicSubInterface(referenceType))
+                        !referenceType.isPublic &&
+                        (referenceType !is ClassType || transitiveSubClasses(referenceType).all {
+                            limiter.isShallow(
+                                referenceType
+                            )
+                        }) &&
+                        (referenceType !is InterfaceType || transitiveSubInterfaces(referenceType).all {
+                            limiter.isShallow(
+                                referenceType
+                            )
+                        })
                     ) {
                         continue
                     }

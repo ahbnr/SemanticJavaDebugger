@@ -24,7 +24,6 @@ domain:Node rdf:type owl:Class ;
            owl:equivalentClass prog:Node.
 
 domain:Leaf rdf:type owl:Class ;
-            rdf:type domain:Node ;
             owl:equivalentClass [
                 owl:intersectionOf (
                     [

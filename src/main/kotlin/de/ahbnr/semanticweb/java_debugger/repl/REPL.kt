@@ -16,6 +16,9 @@ import org.jline.utils.AttributedStyle
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.InputStream
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTimedValue
 
 private sealed class Mode {
     object Normal : Mode()
@@ -38,6 +41,9 @@ class REPL(
     var knowledgeBase: Ontology? = null
     val namedNodes: MutableMap<String, RDFNode> = mutableMapOf()
 
+    @OptIn(ExperimentalTime::class)
+    var lastCommandDuration: Duration? = null
+
     private var mode: Mode = Mode.Normal
 
     private val commandMap = commands.map { it.name to it }.toMap()
@@ -57,6 +63,7 @@ class REPL(
 
     private val hereDocRegex = """<<\s*([A-z]+)""".toRegex()
 
+    @OptIn(ExperimentalTime::class)
     private fun interpretLine(line: String): Boolean {
         if (line.isBlank()) {
             return true
@@ -89,15 +96,18 @@ class REPL(
                     return false
                 }
 
-                val returnVal = command.handleInput(
-                    argv.drop(1),
-                    trimmedLine.drop(commandName?.length ?: 0).trimStart(),
-                    this
-                )
+                val (returnValue, duration) = measureTimedValue {
+                    command.handleInput(
+                        argv.drop(1),
+                        trimmedLine.drop(commandName?.length ?: 0).trimStart(),
+                        this
+                    )
+                }
 
+                this.lastCommandDuration = duration
                 terminal.flush()
 
-                returnVal
+                returnValue
             }
 
             is Mode.HereDoc -> {

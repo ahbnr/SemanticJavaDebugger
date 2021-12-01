@@ -5,6 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
@@ -22,16 +23,29 @@ class SparqlCommand(
 
     override val name = "sparql"
 
+    private val nonOptionRegex = """\s[^-\s]""".toRegex()
+
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val ontology = repl.knowledgeBase
-        if (ontology == null) {
+        val baseOntology = repl.knowledgeBase
+        if (baseOntology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
         }
 
-        val model = graphGenerator.buildInferredModel(ontology)
+        var options: List<String> = emptyList()
+        var rawQuery: String = rawInput
+        if (rawInput.startsWith(' ') || rawInput.startsWith('-')) {
+            val nonOptionPosition = nonOptionRegex.find(rawInput)
+            if (nonOptionPosition == null) {
+                logger.error("No query has been specified.")
+                return false
+            }
+            val startOfQuery = nonOptionPosition.range.first
+            options = rawInput.substring(0 until startOfQuery).split(' ')
+            rawQuery = rawInput.substring(startOfQuery)
+        }
 
-        val domainURI = model.getNsPrefixURI("domain")
+        val domainURI = baseOntology.asGraphModel().getNsPrefixURI("domain")
         val sparqlPrefixString = if (domainURI != null) "PREFIX domain: <$domainURI>" else ""
 
         val queryString = """
@@ -43,11 +57,20 @@ class SparqlCommand(
                 PREFIX prog: <${URIs.ns.prog}>
                 PREFIX run: <${URIs.ns.run}>
                 $sparqlPrefixString
-                $rawInput
+                $rawQuery
         """.trimIndent()
 
         try {
             val query = QueryFactory.create(queryString)
+
+            val ontology = if (options.contains("--optimize")) {
+                logger.debug("Axioms before module extraction: ${baseOntology.axiomCount}.")
+                val module = extractSyntacticLocalityModule(baseOntology, query.queryPattern)
+                logger.debug("Axioms after module extraction: ${module.axiomCount}.")
+                module
+            } else baseOntology
+
+            val model = graphGenerator.buildInferredModel(ontology)
 
             QueryExecutionFactory.create(query, model).use { execution ->
                 val results = execution.execSelect().rewindable()

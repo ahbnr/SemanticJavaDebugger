@@ -17,9 +17,11 @@ dependencies {
     // Apache Jena
     implementation("org.apache.jena:apache-jena-libs:4.2.0")
 
-    // HermiT reasoner
-    // implementation("com.hermit-reasoner:org.semanticweb.hermit:1.3.8.4")
+    // HermiT reasoner (OWLAPI 5 compatibility version)
     implementation("net.sourceforge.owlapi:org.semanticweb.hermit:1.4.5.519")
+
+    // JFact reasoner (OWLAPI 5 compatibility version)
+    implementation("net.sourceforge.owlapi:jfact:5.0.3")
 
     // Extended OWL support
     implementation("com.github.owlcs:ontapi:2.1.0")
@@ -37,6 +39,9 @@ dependencies {
     // Dependency injection
     implementation("io.insert-koin:koin-core:3.1.3")
     testImplementation("io.insert-koin:koin-test:3.1.3")
+
+    // Utilities for duration formatting etc
+    implementation("org.apache.commons:commons-lang3:3.12.0")
 
     testImplementation(kotlin("test"))
 }
