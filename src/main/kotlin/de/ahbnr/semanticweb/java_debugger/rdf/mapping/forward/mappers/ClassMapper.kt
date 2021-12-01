@@ -72,6 +72,10 @@ class ClassMapper : IMapper {
             }
 
             fun addField(classSubject: String, field: Field) {
+                if (limiter.canFieldBeSkipped(field)) {
+                    return
+                }
+
                 if (field.isStatic) {
                     return // FIXME: Handle static fields
                 }
@@ -210,10 +214,6 @@ class ClassMapper : IMapper {
             fun addFields(classSubject: String, classType: ClassType) {
                 // Note, that "fields()" gives us the fields of the type in question only, not the fields of superclasses
                 for (field in classType.fields()) {
-                    if (!field.isPublic && limiter.isShallow(classType)) {
-                        continue
-                    }
-
                     addField(classSubject, field)
                 }
             }
@@ -398,9 +398,8 @@ class ClassMapper : IMapper {
             }
 
             fun addMethod(method: Method, referenceTypeURI: String, referenceType: ReferenceType) {
-                if (!method.isPublic && limiter.isShallow(referenceType)) {
+                if (limiter.canMethodBeSkipped(method))
                     return
-                }
 
                 val methodSubject = URIs.prog.genMethodURI(method, referenceType)
 
@@ -418,7 +417,7 @@ class ClassMapper : IMapper {
                     methodSubject
                 )
 
-                if (limiter.isShallow(referenceType)) {
+                if (limiter.canMethodDetailsBeSkipped(method)) {
                     return
                 }
 
@@ -431,19 +430,13 @@ class ClassMapper : IMapper {
 
             fun addMethods(referenceTypeURI: String, referenceType: ReferenceType) {
                 for (method in referenceType.methods()) { // inherited methods are not included!
-                    if (!method.isPublic && limiter.isShallow(referenceType)) {
-                        continue
-                    }
-
                     addMethod(method, referenceTypeURI, referenceType)
                 }
             }
 
             fun addClass(classType: ClassType) {
-                // FIXME: Deal with enums
-                if (classType.isEnum) {
+                if (limiter.canReferenceTypeBeSkipped(classType))
                     return
-                }
 
                 val classSubject = URIs.prog.genReferenceTypeURI(classType)
 
@@ -471,7 +464,7 @@ class ClassMapper : IMapper {
                 //
                 // (btw. prog:java.lang.Object is defined as an OWL class in the base ontology)
                 val superClass: ClassType? = classType.superclass()
-                if (superClass != null && !limiter.isExcluded(superClass) && (!limiter.isShallow(superClass) || superClass.isPublic)) {
+                if (superClass != null && !limiter.canReferenceTypeBeSkipped(superClass)) {
                     tripleCollector.addStatement(
                         classSubject,
                         URIs.rdfs.subClassOf,
@@ -486,15 +479,13 @@ class ClassMapper : IMapper {
                 }
 
                 // https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.2
-                val superInterfaces = classType.interfaces()
+                val superInterfaces = classType.interfaces().filterNot { limiter.canReferenceTypeBeSkipped(it) }
                 for (superInterface in superInterfaces) {
-                    if (!limiter.isExcluded(superInterface) && (!limiter.isShallow(superInterface) || superInterface.isPublic)) {
-                        tripleCollector.addStatement(
-                            classSubject,
-                            URIs.rdfs.subClassOf,
-                            URIs.prog.genReferenceTypeURI(superInterface)
-                        )
-                    }
+                    tripleCollector.addStatement(
+                        classSubject,
+                        URIs.rdfs.subClassOf,
+                        URIs.prog.genReferenceTypeURI(superInterface)
+                    )
                 }
 
                 // FIXME: why do Kamburjan et. al. use subClassOf and prog:Object here?
@@ -510,6 +501,10 @@ class ClassMapper : IMapper {
             }
 
             fun addArrayType(arrayType: ArrayType) {
+                if (limiter.canReferenceTypeBeSkipped(arrayType)) {
+                    return
+                }
+
                 val arrayTypeURI = URIs.prog.genReferenceTypeURI(arrayType)
 
                 // this, as an individual, is an array:
@@ -555,12 +550,15 @@ class ClassMapper : IMapper {
                         }
                     }
 
-                    else ->
+                    is JavaType.UnloadedType -> {
+                        addUnloadedType(componentType.typeName)
+
                         tripleCollector.addStatement(
                             arrayTypeURI,
                             URIs.rdfs.subClassOf,
                             URIs.java.UnloadedTypeArray
                         )
+                    }
                 }
 
                 val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(arrayType)
@@ -687,6 +685,9 @@ class ClassMapper : IMapper {
             }
 
             fun addInterface(interfaceType: InterfaceType) {
+                if (limiter.canReferenceTypeBeSkipped(interfaceType))
+                    return
+
                 val interfaceURI = URIs.prog.genReferenceTypeURI(interfaceType)
 
                 // This, as an individual, is a Java Interface
@@ -696,8 +697,8 @@ class ClassMapper : IMapper {
                     URIs.java.Interface
                 )
 
-                val superInterfaces = interfaceType.superinterfaces().filter {
-                    !limiter.isExcluded(it) && (!limiter.isShallow(it) || it.isPublic)
+                val superInterfaces = interfaceType.superinterfaces().filterNot {
+                    limiter.canReferenceTypeBeSkipped(it)
                 }
 
                 if (superInterfaces.isEmpty()) {
@@ -725,21 +726,6 @@ class ClassMapper : IMapper {
                 val allReferenceTypes = jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
-                    if (
-                        limiter.isExcluded(referenceType)
-                    ) {
-                        continue
-                    }
-
-                    if (
-                        limiter.isShallow(referenceType) &&
-                        referenceType !is ArrayType &&
-                        // ^^isPublic can print exception stacktraces for arrays, very annoying. Without this, we could remove the restriction above
-                        !referenceType.isPublic
-                    ) {
-                        continue
-                    }
-
                     when (referenceType) {
                         is ClassType -> addClass(referenceType)
                         is ArrayType -> addArrayType(referenceType)

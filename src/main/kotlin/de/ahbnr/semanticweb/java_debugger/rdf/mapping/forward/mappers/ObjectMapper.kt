@@ -34,9 +34,11 @@ class ObjectMapper : IMapper {
             val tripleCollector = TripleCollector(triplePattern)
 
             fun addField(field: Field, value: Value?, objectSubject: String) {
-                if (field.isStatic) {
+                if (limiter.canFieldBeSkipped(field))
+                    return
+
+                if (field.isStatic)
                     return // FIXME: handle static fields
-                }
 
                 val fieldPropertyName = URIs.prog.genFieldURI(field)
                 // we model a field as an instance of the field property of the class.
@@ -60,10 +62,6 @@ class ObjectMapper : IMapper {
                     objectReference.getValues(classType.allFields()) // allFields does capture the fields of superclasses
 
                 for ((field, value) in fieldValues) {
-                    if (!field.isPublic && limiter.isShallow(classType)) {
-                        continue
-                    }
-
                     addField(field, value, objectSubject)
                 }
             }

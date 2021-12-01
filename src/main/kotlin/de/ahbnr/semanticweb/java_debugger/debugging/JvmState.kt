@@ -44,14 +44,14 @@ data class JvmState(
 
         val referenceType = objectReference.referenceType()
 
-        if (limiter.isExcluded(referenceType))
+        if (limiter.canReferenceTypeBeSkipped(referenceType))
             return@sequence
 
         for (field in referenceType.fields()) { // FIXME: Also handle inherited fields
             if (field.isStatic)
                 continue
 
-            if (!field.isPublic && limiter.isShallow(referenceType))
+            if (limiter.canFieldBeSkipped(field))
                 continue
 
             val value = objectReference.getValue(field)
@@ -104,14 +104,14 @@ data class JvmState(
 
             // get objects directly referenced by static fields
             for (referenceType in allReferenceTypes) {
-                if (limiter.isExcluded(referenceType))
+                if (limiter.canReferenceTypeBeSkipped(referenceType))
                     continue
 
                 for (field in referenceType.allFields()) {
                     if (!field.isStatic)
                         continue
 
-                    if (!field.isPublic && limiter.isShallow(referenceType))
+                    if (limiter.canFieldBeSkipped(field))
                         continue
 
                     val value = referenceType.getValue(field)
