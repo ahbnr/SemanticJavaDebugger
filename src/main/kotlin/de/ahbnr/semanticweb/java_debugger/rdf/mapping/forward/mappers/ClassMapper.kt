@@ -6,7 +6,9 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.*
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -469,22 +471,30 @@ class ClassMapper : IMapper {
                 //
                 // (btw. prog:java.lang.Object is defined as an OWL class in the base ontology)
                 val superClass: ClassType? = classType.superclass()
-                if (superClass != null) {
+                if (superClass != null && !limiter.isExcluded(superClass) && (!limiter.isShallow(superClass) || superClass.isPublic)) {
                     tripleCollector.addStatement(
                         classSubject,
                         URIs.rdfs.subClassOf,
                         URIs.prog.genReferenceTypeURI(superClass)
+                    )
+                } else if (classType.name() != "java.lang.Object") {
+                    tripleCollector.addStatement(
+                        classSubject,
+                        URIs.rdfs.subClassOf,
+                        URIs.prog.java_lang_Object
                     )
                 }
 
                 // https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.2
                 val superInterfaces = classType.interfaces()
                 for (superInterface in superInterfaces) {
-                    tripleCollector.addStatement(
-                        classSubject,
-                        URIs.rdfs.subClassOf,
-                        URIs.prog.genReferenceTypeURI(superInterface)
-                    )
+                    if (!limiter.isExcluded(superInterface) && (!limiter.isShallow(superInterface) || superInterface.isPublic)) {
+                        tripleCollector.addStatement(
+                            classSubject,
+                            URIs.rdfs.subClassOf,
+                            URIs.prog.genReferenceTypeURI(superInterface)
+                        )
+                    }
                 }
 
                 // FIXME: why do Kamburjan et. al. use subClassOf and prog:Object here?
@@ -686,7 +696,10 @@ class ClassMapper : IMapper {
                     URIs.java.Interface
                 )
 
-                val superInterfaces = interfaceType.superinterfaces()
+                val superInterfaces = interfaceType.superinterfaces().filter {
+                    !limiter.isExcluded(it) && (!limiter.isShallow(it) || it.isPublic)
+                }
+
                 if (superInterfaces.isEmpty()) {
                     // If an interface has no direct superinterface, then its java.lang.Object is a direct supertype
                     // https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.2
@@ -713,17 +726,7 @@ class ClassMapper : IMapper {
 
                 for (referenceType in allReferenceTypes) {
                     if (
-                        limiter.isExcluded(referenceType) &&
-                        (referenceType !is ClassType || transitiveSubClasses(referenceType).all {
-                            limiter.isExcluded(
-                                referenceType
-                            )
-                        }) &&
-                        (referenceType !is InterfaceType || transitiveSubInterfaces(referenceType).all {
-                            limiter.isExcluded(
-                                referenceType
-                            )
-                        })
+                        limiter.isExcluded(referenceType)
                     ) {
                         continue
                     }
@@ -732,17 +735,7 @@ class ClassMapper : IMapper {
                         limiter.isShallow(referenceType) &&
                         referenceType !is ArrayType &&
                         // ^^isPublic can print exception stacktraces for arrays, very annoying. Without this, we could remove the restriction above
-                        !referenceType.isPublic &&
-                        (referenceType !is ClassType || transitiveSubClasses(referenceType).all {
-                            limiter.isShallow(
-                                referenceType
-                            )
-                        }) &&
-                        (referenceType !is InterfaceType || transitiveSubInterfaces(referenceType).all {
-                            limiter.isShallow(
-                                referenceType
-                            )
-                        })
+                        !referenceType.isPublic
                     ) {
                         continue
                     }
