@@ -53,6 +53,9 @@ class ClassMapper : IMapper {
              * See also https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/ClassNotLoadedException.html
              */
             fun addUnloadedType(typeName: String) {
+                if (limiter.canReferenceTypeBeSkipped(typeName))
+                    return
+
                 val subject = URIs.prog.genUnloadedTypeURI(typeName)
 
                 // FIXME: Check if we already added a triple for this unloaded type
@@ -68,6 +71,14 @@ class ClassMapper : IMapper {
                     subject,
                     URIs.rdf.type,
                     URIs.owl.Class
+                )
+
+                // all unloaded types must be reference types
+                // and thus inherit from java.lang.Object
+                tripleCollector.addStatement(
+                    subject,
+                    URIs.rdfs.subClassOf,
+                    URIs.prog.java_lang_Object
                 )
             }
 
