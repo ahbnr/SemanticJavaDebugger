@@ -121,7 +121,11 @@ java:hasVariableName rdf:type owl:DatatypeProperty ,
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isAtLine
 java:isAtLine rdf:type owl:DatatypeProperty ,
                        owl:FunctionalProperty ;
-              rdfs:domain java:Method ;
+              rdfs:domain [ rdf:type owl:Class ;
+                            owl:unionOf ( java:Method
+                                          java:VariableDeclaration
+                                        )
+                          ] ;
               rdfs:range xsd:int ;
               rdfs:comment """Gives the line number in the source file or a java:Location.
 

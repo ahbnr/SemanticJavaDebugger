@@ -16,6 +16,7 @@ import org.jline.utils.AttributedStyle
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.InputStream
+import java.nio.file.Path
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -38,6 +39,7 @@ class REPL(
     commands: List<IREPLCommand>
 ) : KoinComponent {
     var applicationDomainDefFile: String? = null
+    var sourcePath: Path? = null
     var knowledgeBase: Ontology? = null
     val namedNodes: MutableMap<String, RDFNode> = mutableMapOf()
 

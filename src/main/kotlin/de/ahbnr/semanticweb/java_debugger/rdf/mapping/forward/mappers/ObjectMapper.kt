@@ -3,11 +3,10 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.ValueToNodeMapper
 import org.apache.jena.datatypes.xsd.XSDDatatype
@@ -22,8 +21,7 @@ import org.koin.core.component.inject
 
 class ObjectMapper : IMapper {
     private class Graph(
-        private val jvmState: JvmState,
-        private val limiter: MappingLimiter
+        private val buildParameters: BuildParameters
     ) : GraphBase(), KoinComponent {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
@@ -34,7 +32,7 @@ class ObjectMapper : IMapper {
             val tripleCollector = TripleCollector(triplePattern)
 
             fun addField(field: Field, value: Value?, parentURI: String) {
-                if (limiter.canFieldBeSkipped(field))
+                if (buildParameters.limiter.canFieldBeSkipped(field))
                     return
 
                 val fieldPropertyName = URIs.prog.genFieldURI(field)
@@ -75,10 +73,12 @@ class ObjectMapper : IMapper {
             }
 
             fun addArray(objectURI: String, arrayReference: ArrayReference, referenceType: ReferenceType) {
-                if (!limiter.isDeep(referenceType) && !jvmState.isReferencedByVariable(arrayReference) && !arrayReference.referringObjects(
+                if (!buildParameters.limiter.isDeep(referenceType) && !buildParameters.jvmState.isReferencedByVariable(
+                        arrayReference
+                    ) && !arrayReference.referringObjects(
                         Long.MAX_VALUE
                     )
-                        .any { limiter.isDeep(it.referenceType()) } // FIXME: Of course, this is incredibly slow
+                        .any { buildParameters.limiter.isDeep(it.referenceType()) } // FIXME: Of course, this is incredibly slow
                 ) {
                     return
                 }
@@ -258,7 +258,8 @@ class ObjectMapper : IMapper {
             }
 
             fun addStaticClassMembers() {
-                val classTypes = jvmState.pausedThread.virtualMachine().allClasses().filterIsInstance<ClassType>()
+                val classTypes =
+                    buildParameters.jvmState.pausedThread.virtualMachine().allClasses().filterIsInstance<ClassType>()
 
                 for (classType in classTypes) {
                     val fieldValues = classType.getValues(classType.fields().filter { it.isStatic })
@@ -270,7 +271,7 @@ class ObjectMapper : IMapper {
             }
 
             fun addObjects() {
-                for (obj in jvmState.allObjects(limiter)) {
+                for (obj in buildParameters.jvmState.allObjects(buildParameters.limiter)) {
                     addObject(obj)
                 }
             }
@@ -282,8 +283,8 @@ class ObjectMapper : IMapper {
         }
     }
 
-    override fun extendModel(jvmState: JvmState, outputModel: Model, limiter: MappingLimiter) {
-        val graph = Graph(jvmState, limiter)
+    override fun extendModel(buildParameters: BuildParameters, outputModel: Model) {
+        val graph = Graph(buildParameters)
         val graphModel = ModelFactory.createModelForGraph(graph)
 
         outputModel.add(graphModel)

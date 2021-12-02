@@ -4,7 +4,6 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
 import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
@@ -22,11 +21,11 @@ class GraphGenerator(
         model.read(owlInputStream, null, "TURTLE")
     }
 
-    private fun mapProgramState(jvmState: JvmState, model: Model, limiter: MappingLimiter) {
+    private fun mapProgramState(buildParameters: BuildParameters, model: Model) {
         model.setNsPrefix("run", ns.run)
 
         for (mapper in mappers) {
-            mapper.extendModel(jvmState, model, limiter)
+            mapper.extendModel(buildParameters, model)
         }
     }
 
@@ -41,9 +40,8 @@ class GraphGenerator(
     }
 
     fun buildOntology(
-        jvmState: JvmState,
+        buildParameters: BuildParameters,
         applicationDomainRulesPath: String?, /* turtle format file */
-        limiter: MappingLimiter
     ): Ontology {
         // var model = ModelFactory.createDefaultModel()
 
@@ -59,7 +57,7 @@ class GraphGenerator(
         loadApplicationDomain(applicationDomainRulesPath, model)
 
         // Map program state
-        mapProgramState(jvmState, model, limiter)
+        mapProgramState(buildParameters, model)
 
         return ontology
     }

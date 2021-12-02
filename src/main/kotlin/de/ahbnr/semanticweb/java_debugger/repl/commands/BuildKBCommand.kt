@@ -4,11 +4,13 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import spoon.Launcher
 
 class BuildKBCommand(
     val jvmDebugger: JvmDebugger,
@@ -31,6 +33,20 @@ class BuildKBCommand(
             return false
         }
 
+        val sourcePath = repl.sourcePath
+        if (sourcePath == null) {
+            logger.error("No source is available.")
+            return false
+        }
+
+        val spoonLauncher = Launcher()
+
+        spoonLauncher.addInputResource(sourcePath.toString())
+        spoonLauncher.buildModel()
+        logger.success("Source model created.")
+
+        val sourceModel = spoonLauncher.model
+
         val limiter = MappingLimiter(
             excludedPackages = if (argv.contains("--limit-sdk"))
                 setOf(
@@ -52,10 +68,15 @@ class BuildKBCommand(
             reachableOnly = true
         )
 
-        val ontology = graphGenerator.buildOntology(state, repl.applicationDomainDefFile, limiter)
+        val buildParameters = BuildParameters(
+            jvmState = state,
+            sourceModel = sourceModel,
+            limiter = limiter
+        )
+        val ontology = graphGenerator.buildOntology(buildParameters, repl.applicationDomainDefFile)
         repl.knowledgeBase = ontology
 
-        logger.success("Knowledge base created.")
+        logger.success("RDF graph created.")
 
         return true
     }

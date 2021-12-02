@@ -1,13 +1,13 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.AbsentInformationPackages
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocalVariableInfo
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.MethodInfo
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
@@ -21,8 +21,7 @@ import org.koin.core.component.inject
 
 class ClassMapper : IMapper {
     private class Graph(
-        private val jvmState: JvmState,
-        private val limiter: MappingLimiter
+        private val buildParameters: BuildParameters
     ) : GraphBase(), KoinComponent {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
@@ -53,7 +52,7 @@ class ClassMapper : IMapper {
              * See also https://docs.oracle.com/en/java/javase/11/docs/api/jdk.jdi/com/sun/jdi/ClassNotLoadedException.html
              */
             fun addUnloadedType(typeName: String) {
-                if (limiter.canReferenceTypeBeSkipped(typeName))
+                if (buildParameters.limiter.canReferenceTypeBeSkipped(typeName))
                     return
 
                 val subject = URIs.prog.genUnloadedTypeURI(typeName)
@@ -83,7 +82,7 @@ class ClassMapper : IMapper {
             }
 
             fun addField(classURI: String, field: Field) {
-                if (limiter.canFieldBeSkipped(field)) {
+                if (buildParameters.limiter.canFieldBeSkipped(field)) {
                     return
                 }
 
@@ -247,12 +246,12 @@ class ClassMapper : IMapper {
             }
 
             fun addVariableDeclaration(
-                variable: LocalVariable,
-                methodSubject: String,
-                method: Method,
-                referenceType: ReferenceType
+                variable: LocalVariableInfo,
+                methodSubject: String
             ) {
-                val variableDeclarationURI = URIs.prog.genVariableDeclarationURI(variable, method, referenceType)
+                val variableDeclarationURI = URIs.prog.genVariableDeclarationURI(variable)
+
+                // FIXME: Include scope information?
 
                 // it *is* a VariableDeclaration
                 tripleCollector.addStatement(
@@ -268,11 +267,21 @@ class ClassMapper : IMapper {
                     variableDeclarationURI
                 )
 
+                // ...and it is declared at this line:
+                val line = variable.getLine()
+                if (line != null) {
+                    tripleCollector.addStatement(
+                        variableDeclarationURI,
+                        URIs.java.isAtLine,
+                        NodeFactory.createLiteral(line.toString(), XSDDatatype.XSDint)
+                    )
+                }
+
                 // Lets clarify the type of the variable and deal with unloaded types
                 val variableType = try {
-                    JavaType.LoadedType(variable.type())
+                    JavaType.LoadedType(variable.jdiMirror.type())
                 } catch (e: ClassNotLoadedException) {
-                    JavaType.UnloadedType(variable.typeName())
+                    JavaType.UnloadedType(variable.jdiMirror.typeName())
                 }
 
                 // A variable declaration is modeled as a property that relates StackFrames and the variable values.
@@ -352,29 +361,15 @@ class ClassMapper : IMapper {
                 )
             }
 
-            fun addVariableDeclarations(methodSubject: String, method: Method, referenceType: ReferenceType) {
-                val variables = (
-                        if (!method.isAbstract && !method.isNative)
-                            try {
-                                method.variables()
-                            } catch (e: AbsentInformationException) {
-                                if (AbsentInformationPackages.none { referenceType.name().startsWith(it) }) {
-                                    logger.debug("Unable to get variables for $method. This can happen for native and abstract methods.")
-                                }
-                                null
-                            }
-                        else null)
-                    ?: listOf()
-
-                for (variable in variables) {
-                    // FIXME: Deal with scopes
-                    addVariableDeclaration(variable, methodSubject, method, referenceType)
+            fun addVariableDeclarations(methodInfo: MethodInfo, methodSubject: String) {
+                for (variable in methodInfo.variables) {
+                    addVariableDeclaration(variable, methodSubject)
                 }
             }
 
-            fun addMethodLocation(method: Method, methodSubject: String) {
+            fun addMethodLocation(methodInfo: MethodInfo, methodSubject: String) {
                 val location =
-                    method.location() // where is the method executable code defined? May return null for abstract methods
+                    methodInfo.jdiMethod.location() // where is the method executable code defined? May return null for abstract methods
 
                 if (location != null) {
                     val locationSubject = URIs.prog.genLocationURI(location)
@@ -415,17 +410,17 @@ class ClassMapper : IMapper {
                             NodeFactory.createLiteral(lineNumber.toString(), XSDDatatype.XSDint)
                         )
                     }
-                } else if (!method.isAbstract) {
+                } else if (!methodInfo.jdiMethod.isAbstract) {
                     logger.error(
                         "${
-                            method.declaringType().name()
-                        }:${method.name()}: Location of method body could not be determined, even though the method is not abstract."
+                            methodInfo.jdiMethod.declaringType().name()
+                        }:${methodInfo.jdiMethod.name()}: Location of method body could not be determined, even though the method is not abstract."
                     )
                 }
             }
 
             fun addMethod(method: Method, referenceTypeURI: String, referenceType: ReferenceType) {
-                if (limiter.canMethodBeSkipped(method))
+                if (buildParameters.limiter.canMethodBeSkipped(method))
                     return
 
                 val methodSubject = URIs.prog.genMethodURI(method, referenceType)
@@ -444,15 +439,17 @@ class ClassMapper : IMapper {
                     methodSubject
                 )
 
-                if (limiter.canMethodDetailsBeSkipped(method)) {
+                if (buildParameters.limiter.canMethodDetailsBeSkipped(method)) {
                     return
                 }
 
+                val methodInfo = MethodInfo(method, buildParameters)
+
                 // ...and the method declares some variables
-                addVariableDeclarations(methodSubject, method, referenceType)
+                addVariableDeclarations(methodInfo, methodSubject)
 
                 // Where in the source code is the method?
-                addMethodLocation(method, methodSubject)
+                addMethodLocation(methodInfo, methodSubject)
             }
 
             fun addMethods(referenceTypeURI: String, referenceType: ReferenceType) {
@@ -462,7 +459,7 @@ class ClassMapper : IMapper {
             }
 
             fun addClass(classType: ClassType) {
-                if (limiter.canReferenceTypeBeSkipped(classType))
+                if (buildParameters.limiter.canReferenceTypeBeSkipped(classType))
                     return
 
                 val classSubject = URIs.prog.genReferenceTypeURI(classType)
@@ -491,7 +488,7 @@ class ClassMapper : IMapper {
                 //
                 // (btw. prog:java.lang.Object is defined as an OWL class in the base ontology)
                 val superClass: ClassType? = classType.superclass()
-                if (superClass != null && !limiter.canReferenceTypeBeSkipped(superClass)) {
+                if (superClass != null && !buildParameters.limiter.canReferenceTypeBeSkipped(superClass)) {
                     tripleCollector.addStatement(
                         classSubject,
                         URIs.rdfs.subClassOf,
@@ -506,7 +503,8 @@ class ClassMapper : IMapper {
                 }
 
                 // https://docs.oracle.com/javase/specs/jls/se11/html/jls-4.html#jls-4.10.2
-                val superInterfaces = classType.interfaces().filterNot { limiter.canReferenceTypeBeSkipped(it) }
+                val superInterfaces =
+                    classType.interfaces().filterNot { buildParameters.limiter.canReferenceTypeBeSkipped(it) }
                 for (superInterface in superInterfaces) {
                     tripleCollector.addStatement(
                         classSubject,
@@ -528,7 +526,7 @@ class ClassMapper : IMapper {
             }
 
             fun addArrayType(arrayType: ArrayType) {
-                if (limiter.canReferenceTypeBeSkipped(arrayType)) {
+                if (buildParameters.limiter.canReferenceTypeBeSkipped(arrayType)) {
                     return
                 }
 
@@ -712,7 +710,7 @@ class ClassMapper : IMapper {
             }
 
             fun addInterface(interfaceType: InterfaceType) {
-                if (limiter.canReferenceTypeBeSkipped(interfaceType))
+                if (buildParameters.limiter.canReferenceTypeBeSkipped(interfaceType))
                     return
 
                 val interfaceURI = URIs.prog.genReferenceTypeURI(interfaceType)
@@ -725,7 +723,7 @@ class ClassMapper : IMapper {
                 )
 
                 val superInterfaces = interfaceType.superinterfaces().filterNot {
-                    limiter.canReferenceTypeBeSkipped(it)
+                    buildParameters.limiter.canReferenceTypeBeSkipped(it)
                 }
 
                 if (superInterfaces.isEmpty()) {
@@ -750,7 +748,7 @@ class ClassMapper : IMapper {
             }
 
             fun addReferenceTypes() {
-                val allReferenceTypes = jvmState.pausedThread.virtualMachine().allClasses()
+                val allReferenceTypes = buildParameters.jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
                     when (referenceType) {
@@ -767,8 +765,8 @@ class ClassMapper : IMapper {
         }
     }
 
-    override fun extendModel(jvmState: JvmState, outputModel: Model, limiter: MappingLimiter) {
-        val graph = Graph(jvmState, limiter)
+    override fun extendModel(buildParameters: BuildParameters, outputModel: Model) {
+        val graph = Graph(buildParameters)
 
         val graphModel = ModelFactory.createModelForGraph(graph)
 

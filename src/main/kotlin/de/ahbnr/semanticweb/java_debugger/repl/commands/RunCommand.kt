@@ -27,6 +27,8 @@ class RunCommand(
             return false
         }
 
+        repl.sourcePath = null
+
         val className =
             if (classOrSource.endsWith(".java")) {
                 val sourcePath = Paths.get(classOrSource)
@@ -39,6 +41,8 @@ class RunCommand(
                 logger.log("Compiling...")
                 compiler.compile()
                 logger.success("Compiled!")
+
+                repl.sourcePath = sourcePath
 
                 sourcePath
                     .toString()

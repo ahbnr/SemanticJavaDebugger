@@ -1,6 +1,7 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
 import com.sun.jdi.*
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocalVariableInfo
 import org.apache.jena.atlas.lib.IRILib
 import org.apache.jena.datatypes.xsd.XSDDatatype
 
@@ -113,12 +114,15 @@ class OntURIs(val ns: Namespaces) {
         val `java_lang_Object%5B%5D` = ns.prog + IRILib.encodeUriComponent("java.lang.Object[]")
         val java_lang_Object = ns.prog + IRILib.encodeUriComponent("java.lang.Object")
 
-        fun genVariableDeclarationURI(variable: LocalVariable, method: Method, referenceType: ReferenceType): String =
-            "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}_${
+        fun genVariableDeclarationURI(variable: LocalVariableInfo): String {
+            val referenceType = variable.jdiMethod.declaringType()
+
+            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(variable.jdiMethod.name())}_${
                 IRILib.encodeUriComponent(
-                    variable.name()
+                    variable.id
                 )
             }"
+        }
 
         fun genMethodURI(method: Method, referenceType: ReferenceType): String =
             "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}"

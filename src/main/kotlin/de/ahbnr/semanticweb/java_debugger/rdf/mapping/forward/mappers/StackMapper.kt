@@ -3,14 +3,14 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
 import com.sun.jdi.AbsentInformationException
-import com.sun.jdi.LocalVariable
 import com.sun.jdi.StackFrame
 import com.sun.jdi.Value
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocalVariableInfo
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.MethodInfo
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.ValueToNodeMapper
 import org.apache.jena.datatypes.xsd.XSDDatatype
@@ -25,8 +25,7 @@ import org.koin.core.component.inject
 
 class StackMapper : IMapper {
     private class Graph(
-        private val jvmState: JvmState,
-        private val limiter: MappingLimiter
+        private val buildParameters: BuildParameters
     ) : GraphBase(), KoinComponent {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
@@ -39,7 +38,7 @@ class StackMapper : IMapper {
             fun addLocalVariable(
                 stackFrameURI: String,
                 frame: StackFrame,
-                variable: LocalVariable,
+                variable: LocalVariableInfo,
                 value: Value?
             ) {
                 val method = frame.location().method()
@@ -52,13 +51,17 @@ class StackMapper : IMapper {
                 if (valueObject != null) {
                     tripleCollector.addStatement(
                         stackFrameURI,
-                        URIs.prog.genVariableDeclarationURI(variable, method, classType),
+                        URIs.prog.genVariableDeclarationURI(variable),
                         valueObject
                     )
                 }
             }
 
             fun addLocalVariables(frameDepth: Int, frameSubject: String, frame: StackFrame) {
+                val jdiMethod = frame.location().method()
+                val methodInfo = MethodInfo(jdiMethod, buildParameters)
+                val methodVariableDeclarations = methodInfo.variables
+
                 val variables = try {
                     frame.visibleVariables()
                 } catch (e: AbsentInformationException) {
@@ -70,7 +73,19 @@ class StackMapper : IMapper {
                     val values = frame.getValues(variables)
 
                     for ((variable, value) in values) {
-                        addLocalVariable(frameSubject, frame, variable, value)
+                        val variableInfo = methodVariableDeclarations.find { it.jdiMirror == variable }
+
+                        if (variableInfo == null) {
+                            logger.error("Could not retrieve information on a variable declaration for a stack variable.")
+                            continue
+                        }
+
+                        addLocalVariable(
+                            frameSubject,
+                            frame,
+                            variableInfo,
+                            value
+                        )
                     }
                 }
             }
@@ -98,9 +113,9 @@ class StackMapper : IMapper {
 
             fun addStackFrames() {
                 // FIXME: Handle multiple threads?
-                val numFrames = jvmState.pausedThread.frameCount()
+                val numFrames = buildParameters.jvmState.pausedThread.frameCount()
                 for (i in 0 until numFrames) {
-                    addStackFrame(numFrames - i - 1, jvmState.pausedThread.frame(i))
+                    addStackFrame(numFrames - i - 1, buildParameters.jvmState.pausedThread.frame(i))
                 }
             }
 
@@ -110,8 +125,8 @@ class StackMapper : IMapper {
         }
     }
 
-    override fun extendModel(jvmState: JvmState, outputModel: Model, limiter: MappingLimiter) {
-        val graph = Graph(jvmState, limiter)
+    override fun extendModel(buildParameters: BuildParameters, outputModel: Model) {
+        val graph = Graph(buildParameters)
         val graphModel = ModelFactory.createModelForGraph(graph)
 
         outputModel.add(graphModel)
