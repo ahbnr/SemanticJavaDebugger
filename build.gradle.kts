@@ -30,6 +30,9 @@ dependencies {
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("org.slf4j:slf4j-simple:1.7.32")
 
+    // For Java source code analysis
+    implementation("fr.inria.gforge.spoon:spoon-core:10.0.1-beta-1")
+
     // For handling CLI parameters
     implementation("com.github.ajalt.clikt:clikt:3.3.0")
 
@@ -43,12 +46,20 @@ dependencies {
     // Utilities for duration formatting etc
     implementation("org.apache.commons:commons-lang3:3.12.0")
 
+    // Additional data structures / collections
+    implementation("org.apache.commons:commons-collections4:4.4")
+
     testImplementation(kotlin("test"))
 }
 
 // Allow reading from stdin when running the program
 val run: JavaExec by tasks
 run.standardInput = System.`in`
+run.jvmArgs = listOf(
+    // We want to allow reflective accesses to some internals jdk.jdi
+    "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED"
+    // See also https://nipafx.dev/five-command-line-options-hack-java-module-system/
+)
 
 
 tasks.test {
@@ -75,6 +86,17 @@ tasks {
 tasks.withType<JavaCompile>() {
     sourceCompatibility = "11"
     targetCompatibility = "11"
+
+    options.compilerArgs.addAll(
+        listOf(
+            // This should be supplied to javac to tell it that we may access internal package names at compile time.
+            // We circumvent this by using the kotlinc compiler and telling it to ignore these errors by @Suppress annotations in the code
+            //
+            // Due to these two reasons, this line is probably unnecessary, but we add it for good measure
+            "--add-exports", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
+            // See also https://nipafx.dev/five-command-line-options-hack-java-module-system/
+        )
+    )
 }
 
 
@@ -82,14 +104,15 @@ tasks.withType<KotlinCompile>() {
     sourceCompatibility = "11"
     targetCompatibility = "11"
 
-
     kotlinOptions.jvmTarget = "11"
+
+    // kotlinOptions.freeCompilerArgs + listOf("-Xjavac-arguments=--add-exports=jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED")
 }
 
 application {
-    // applicationDefaultJvmArgs = listOf(
-    //     "--add-exports jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
-    // )
+    applicationDefaultJvmArgs = listOf(
+        "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
+    )
 
-    mainClassName = "SemanticJavaDebuggerKt"
+    mainClass.set("SemanticJavaDebuggerKt")
 }
