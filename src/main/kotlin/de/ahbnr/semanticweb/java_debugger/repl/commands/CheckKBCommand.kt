@@ -39,15 +39,22 @@ class CheckKBCommand(
             logger.error("Model is invalid!")
         }
 
-        if (validityReport.isClean) {
-            logger.success("Model is clean.")
-        } else {
-            logger.error("Model is not clean!")
-        }
+        // FIXME: For some reason, Jena does not accept my custom access modifier datatype and outputs this warning:
+        //   Culprit is deduced to be of enumerated type (implicicated class) but is not one of the enumerationsn This may be due to aliasing."
+        //   Culprit = 'public'^^https://github.com/ahbnr/SemanticJavaDebugger/Java#AccessModifier
+        //   Implicated node: *
+        // if (validityReport.isClean) {
+        //     logger.success("Model is clean.")
+        // } else {
+        //     logger.error("Model is not clean!")
+        // }
 
-        if (!validityReport.isValid || !validityReport.isClean) {
+        // if (!validityReport.isValid || !validityReport.isClean) {
+        if (!validityReport.isValid) {
             validityReport.reports.forEachRemaining {
+                logger.log(it.type)
                 logger.log(it.description)
+                logger.log("")
             }
         }
 

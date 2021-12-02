@@ -18,6 +18,29 @@
 xsd:anySimpleType rdf:type rdfs:Datatype .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#AccessModifier
+java:AccessModifier rdf:type rdfs:Datatype ;
+                    rdfs:comment """See also
+https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6
+and
+https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.6"""^^rdfs:Literal ;
+                    owl:equivalentClass [ rdf:type rdfs:Datatype ;
+                                          owl:oneOf [ rdf:type rdf:List ;
+                                                      rdf:first "package-private" ;
+                                                      rdf:rest [ rdf:type rdf:List ;
+                                                                 rdf:first "private" ;
+                                                                 rdf:rest [ rdf:type rdf:List ;
+                                                                            rdf:first "protected" ;
+                                                                            rdf:rest [ rdf:type rdf:List ;
+                                                                                       rdf:first "public" ;
+                                                                                       rdf:rest rdf:nil
+                                                                                     ]
+                                                                          ]
+                                                               ]
+                                                    ]
+                                        ] .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveType
 java:PrimitiveType rdf:type rdfs:Datatype ;
                    owl:equivalentClass [ rdf:type rdfs:Datatype ;
@@ -89,6 +112,17 @@ java:storesReference rdf:type owl:ObjectProperty ,
 #################################################################
 #    Data properties
 #################################################################
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasAccessModifier
+java:hasAccessModifier rdf:type owl:DatatypeProperty ;
+                       rdfs:domain [ rdf:type owl:Class ;
+                                     owl:unionOf ( java:Class
+                                                   java:Field
+                                                   java:Method
+                                                 )
+                                   ] ;
+                       rdfs:range java:AccessModifier .
+
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasIndex
 java:hasIndex rdf:type owl:DatatypeProperty ,

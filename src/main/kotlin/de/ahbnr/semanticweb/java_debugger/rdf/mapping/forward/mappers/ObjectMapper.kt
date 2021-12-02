@@ -207,7 +207,7 @@ class ObjectMapper : IMapper {
 
                 val referenceType = objectReference.referenceType()
 
-                // FIXME: Deal with enums
+                // TODO: Deal with enums
                 if (referenceType is ClassType && referenceType.isEnum) {
                     return
                 }
@@ -240,7 +240,7 @@ class ObjectMapper : IMapper {
                 tripleCollector.addStatement(
                     objectURI,
                     URIs.rdf.type,
-                    URIs.prog.genReferenceTypeURI(referenceType) // FIXME: we model Java classes as owl classes here, instead of being individuals. Not sure what the right design is here
+                    URIs.prog.genReferenceTypeURI(referenceType)
                 )
 
                 when (objectReference) {
@@ -253,7 +253,7 @@ class ObjectMapper : IMapper {
                     is ThreadReference -> Unit
                     // "normal object"
                     else -> addPlainObject(objectURI, objectReference, referenceType)
-                    //FIXME: Other cases
+                    // TODO: Other cases
                 }
             }
 

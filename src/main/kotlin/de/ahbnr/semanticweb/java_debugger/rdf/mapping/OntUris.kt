@@ -95,6 +95,9 @@ class OntURIs(val ns: Namespaces) {
 
         val isStatic = ns.java + "isStatic"
 
+        val hasAccessModifier = ns.java + "hasAccessModifier"
+        val AccessModifier = ns.java + "AccessModifier"
+
         fun genPrimitiveTypeURI(type: PrimitiveType): String? = when (type) {
             is BooleanType -> XSDDatatype.XSDboolean
             is ByteType -> XSDDatatype.XSDbyte

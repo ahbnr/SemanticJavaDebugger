@@ -3,6 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.datatypes.JavaAccessModifierDatatype
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.JavaType
@@ -57,7 +58,7 @@ class ClassMapper : IMapper {
 
                 val subject = URIs.prog.genUnloadedTypeURI(typeName)
 
-                // FIXME: Check if we already added a triple for this unloaded type
+                // TODO: Check if we already added a triple for this unloaded type
                 tripleCollector.addStatement(
                     subject,
                     URIs.rdf.type,
@@ -251,7 +252,7 @@ class ClassMapper : IMapper {
             ) {
                 val variableDeclarationURI = URIs.prog.genVariableDeclarationURI(variable)
 
-                // FIXME: Include scope information?
+                // TODO: Include scope information?
 
                 // it *is* a VariableDeclaration
                 tripleCollector.addStatement(
@@ -520,6 +521,21 @@ class ClassMapper : IMapper {
                 //     URIs.rdfs.subClassOf,
                 //     URIs.prog.Object
                 // )
+
+                // Define accessibility
+                tripleCollector.addStatement(
+                    classSubject,
+                    URIs.java.hasAccessModifier,
+                    NodeFactory.createLiteral(
+                        when {
+                            classType.isPrivate -> JavaAccessModifierDatatype.AccessModifierLiteral.private.value
+                            classType.isProtected -> JavaAccessModifierDatatype.AccessModifierLiteral.protected.value
+                            classType.isPublic -> JavaAccessModifierDatatype.AccessModifierLiteral.public.value
+                            else -> JavaAccessModifierDatatype.AccessModifierLiteral.`package-private`.value
+                        },
+                        JavaAccessModifierDatatype.instance
+                    )
+                )
 
                 addMethods(classSubject, classType)
                 addFields(classSubject, classType)

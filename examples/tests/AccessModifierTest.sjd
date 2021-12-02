@@ -1,0 +1,17 @@
+section Prepare Program & Domain
+stop at examples.tests.AccessModifierTest:12
+run examples/tests/AccessModifierTest.java
+
+section Build Knowledge Base
+buildkb --limit-sdk
+dumpkb datatest.ttl
+checkkb --is-consistent
+
+section Check access modifiers of classes
+
+assert triples <<EOF
+    prog:examples.tests.PackagePrivateClass java:hasAccessModifier "package-private"^^java:AccessModifier .
+    prog:examples.tests.AccessModifierTest java:hasAccessModifier "public"^^java:AccessModifier .
+EOF
+
+cont
