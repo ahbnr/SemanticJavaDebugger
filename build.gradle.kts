@@ -41,7 +41,7 @@ dependencies {
 
     // Dependency injection
     implementation("io.insert-koin:koin-core:3.1.3")
-    testImplementation("io.insert-koin:koin-test:3.1.3")
+    // testImplementation("io.insert-koin:koin-test:3.1.3")
 
     // Utilities for duration formatting etc
     implementation("org.apache.commons:commons-lang3:3.12.0")
@@ -50,6 +50,8 @@ dependencies {
     implementation("org.apache.commons:commons-collections4:4.4")
 
     testImplementation(kotlin("test"))
+    testImplementation(platform("org.junit:junit-bom:5.8.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 // Allow reading from stdin when running the program
@@ -63,7 +65,10 @@ run.jvmArgs = listOf(
 
 
 tasks.test {
-    useTestNG()
+    useJUnitPlatform()
+    jvmArgs = listOf(
+        "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED"
+    )
 }
 
 tasks {

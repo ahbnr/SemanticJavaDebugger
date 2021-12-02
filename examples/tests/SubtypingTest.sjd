@@ -1,6 +1,6 @@
 section Prepare Program & Domain
-stop at examples.SubtypingTest:65
-run examples/SubtypingTest.java
+stop at examples.tests.SubtypingTest:65
+run examples/tests/SubtypingTest.java
 
 section Build Knowledge Base
 buildkb --limit-sdk --deep=examples
@@ -115,43 +115,43 @@ section Checking Local Class Inheritance Hierarchy
 assert sparql-success <<EOF
     SELECT ?bot1
     WHERE {
-        ?bot1 a prog:examples.Bot1 ;
-              prog:examples.Bot1_bot1Field [] ;
-              prog:examples.Mid_midField [] ;
-              prog:examples.Top_topField [] .
+        ?bot1 a prog:examples.tests.Bot1 ;
+              prog:examples.tests.Bot1_bot1Field [] ;
+              prog:examples.tests.Mid_midField [] ;
+              prog:examples.tests.Top_topField [] .
     }
 EOF
 
 assert sparql-fail <<EOF
     SELECT ?bot1
     WHERE {
-        ?bot1 a prog:examples.Bot1 ;
-              prog:examples.Bot1_bot2Field [] .
+        ?bot1 a prog:examples.tests.Bot1 ;
+              prog:examples.tests.Bot1_bot2Field [] .
     }
 EOF
 
 assert sparql-success <<EOF
     SELECT ?mid
     WHERE {
-        ?mid a prog:examples.Mid ;
-             prog:examples.Mid_midField [] ;
-             prog:examples.Top_topField [] .
+        ?mid a prog:examples.tests.Mid ;
+             prog:examples.tests.Mid_midField [] ;
+             prog:examples.tests.Top_topField [] .
     }
 EOF
 
 assert sparql-fail <<EOF
     SELECT ?mid
     WHERE {
-        ?mid a prog:examples.Mid ;
-             prog:examples.Bot1_botField [] .
+        ?mid a prog:examples.tests.Mid ;
+             prog:examples.tests.Bot1_botField [] .
     }
 EOF
 
 assert sparql-fail <<EOF
     SELECT ?notMid
     WHERE {
-        ?notMid java:hasMethod prog:examples.Mid_midMethod .
-        FILTER (?notMid != prog:examples.Mid)
+        ?notMid java:hasMethod prog:examples.tests.Mid_midMethod .
+        FILTER (?notMid != prog:examples.tests.Mid)
     }
 EOF
 
@@ -161,15 +161,15 @@ section Checking Local Interface Hierarchy
 assert sparql-success <<EOF
     SELECT  ?midInterface
     WHERE {
-        FILTER (?midInterface = prog:examples.MidInterface) .
-        ?midInterface java:hasMethod prog:examples.MidInterface_midInterfaceMethod ;
+        FILTER (?midInterface = prog:examples.tests.MidInterface) .
+        ?midInterface java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod ;
                       rdfs:subClassOf [
                         a java:Interface ;
-                        java:hasMethod prog:examples.TopInterface1_topInterface1Method
+                        java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method
                       ] ;
                       rdfs:subClassOf [
                         a java:Interface ;
-                        java:hasMethod prog:examples.TopInterface2_topInterface2Method
+                        java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method
                       ] .
     }
 EOF
@@ -178,18 +178,18 @@ EOF
 assert sparql-success <<EOF
     SELECT  ?midClass
     WHERE {
-        FILTER (?midClass = prog:examples.Mid) .
+        FILTER (?midClass = prog:examples.tests.Mid) .
         ?midClass rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.MidInterface_midInterfaceMethod ;
+                    java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod ;
                   ] ;
                   rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.TopInterface1_topInterface1Method
+                    java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method
                   ] ;
                   rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.TopInterface2_topInterface2Method
+                    java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method
                   ] .
     }
 EOF
@@ -198,7 +198,7 @@ EOF
 assert sparql-success <<EOF
     SELECT ?topInterface1
     WHERE {
-        FILTER (?topInterface1 = prog:examples.TopInterface1)
+        FILTER (?topInterface1 = prog:examples.tests.TopInterface1)
         ?topInterface1 rdfs:subClassOf prog:java.lang.Object .
     }
 EOF

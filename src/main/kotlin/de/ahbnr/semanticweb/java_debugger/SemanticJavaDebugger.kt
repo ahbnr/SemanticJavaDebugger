@@ -19,6 +19,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import de.ahbnr.semanticweb.java_debugger.repl.commands.*
 import org.jline.terminal.TerminalBuilder
 import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import java.io.FileInputStream
 import kotlin.system.exitProcess
@@ -30,6 +31,9 @@ class SemanticJavaDebugger : CliktCommand() {
         "--color" to "color",
         "--no-color" to "no-color"
     ).default("unknown")
+
+    var returnCode: Int = 0
+        private set
 
     override fun run() {
         val terminalBuilder = TerminalBuilder.builder()
@@ -51,54 +55,60 @@ class SemanticJavaDebugger : CliktCommand() {
             )
         }
 
-        JvmDebugger().use { jvmDebugger ->
-            val graphGen = GraphGenerator(
-                ns,
-                listOf(
-                    ClassMapper(),
-                    ObjectMapper(),
-                    StackMapper()
+        try {
+            JvmDebugger().use { jvmDebugger ->
+                val graphGen = GraphGenerator(
+                    ns,
+                    listOf(
+                        ClassMapper(),
+                        ObjectMapper(),
+                        StackMapper()
+                    )
                 )
-            )
 
-            val repl = REPL(
-                terminal,
-                listOf(
-                    AssertCommand(graphGen),
-                    BuildKBCommand(jvmDebugger, graphGen),
-                    CheckKBCommand(graphGen),
-                    ContCommand(jvmDebugger),
-                    DomainCommand(),
-                    DumpKBCommand(),
-                    InspectCommand(ns),
-                    ReverseCommand(jvmDebugger, ns),
-                    LocalsCommand(jvmDebugger),
-                    OwlClassCommand(),
-                    RunCommand(jvmDebugger),
-                    SectionCommand(),
-                    ShaclCommand(graphGen),
-                    SparqlCommand(graphGen),
-                    StatsCommand(graphGen),
-                    StopCommand(jvmDebugger),
-                    TimeCommand()
+                val repl = REPL(
+                    terminal,
+                    listOf(
+                        AssertCommand(graphGen),
+                        BuildKBCommand(jvmDebugger, graphGen),
+                        CheckKBCommand(graphGen),
+                        ContCommand(jvmDebugger),
+                        DomainCommand(),
+                        DumpKBCommand(),
+                        InspectCommand(ns),
+                        ReverseCommand(jvmDebugger, ns),
+                        LocalsCommand(jvmDebugger),
+                        OwlClassCommand(),
+                        RunCommand(jvmDebugger),
+                        SectionCommand(),
+                        ShaclCommand(graphGen),
+                        SparqlCommand(graphGen),
+                        StatsCommand(graphGen),
+                        StopCommand(jvmDebugger),
+                        TimeCommand()
+                    )
                 )
-            )
 
-            val wasSuccessful = if (commandFile != null) {
-                val fileInputStream = FileInputStream(commandFile!!)
+                val wasSuccessful = if (commandFile != null) {
+                    val fileInputStream = FileInputStream(commandFile!!)
 
-                repl.interpretStream(fileInputStream)
-            } else {
-                repl.main()
+                    repl.interpretStream(fileInputStream)
+                } else {
+                    repl.main()
+                }
+
+                returnCode = if (wasSuccessful) 0 else -1
             }
-
-            if (!wasSuccessful) {
-                exitProcess(1)
-            }
+        } finally {
+            stopKoin()
         }
     }
 }
 
 fun main(args: Array<String>) {
-    SemanticJavaDebugger().main(args)
+    val debugger = SemanticJavaDebugger()
+
+    debugger.main(args)
+
+    exitProcess(debugger.returnCode)
 }

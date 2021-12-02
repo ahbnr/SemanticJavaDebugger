@@ -1,4 +1,4 @@
-package examples;
+package examples.tests;
 
 class MyClass {
     public static int staticIntField = 42;

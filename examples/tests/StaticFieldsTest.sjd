@@ -1,0 +1,42 @@
+section Prepare Program & Domain
+stop at examples.tests.StaticFieldsTest:14
+run examples/tests/StaticFieldsTest.java
+
+section Build Knowledge Base
+buildkb --limit-sdk --deep=examples
+checkkb --is-consistent
+
+section Are the fields correctly declared?
+
+assert triples <<EOF
+    prog:examples.tests.MyClass java:hasField prog:examples.tests.MyClass_staticIntField ;
+                          java:hasField prog:examples.tests.MyClass_staticStringField ;
+                          java:hasField prog:examples.tests.MyClass_nonStaticField .
+
+    prog:examples.tests.MyClass_staticIntField java:isStatic "true"^^xsd:boolean .
+    prog:examples.tests.MyClass_staticStringField java:isStatic "true"^^xsd:boolean .
+    prog:examples.tests.MyClass_nonStaticField java:isStatic "false"^^xsd:boolean .
+EOF
+
+section Are the static values present?
+
+assert sparql-success <<EOF
+    SELECT ?string
+    WHERE {
+        prog:examples.tests.MyClass prog:examples.tests.MyClass_staticIntField "42"^^xsd:int ;
+                              prog:examples.tests.MyClass_staticStringField ?string .
+        ?string java:hasStringValue "Lorem Ipsum"^^xsd:string .
+    }
+EOF
+
+section Object instances do not implement static fields
+
+assert sparql-fail <<EOF
+    SELECT ?something
+    WHERE {
+        [] a prog:examples.tests.Myclass ;
+           prog:examples.tests.MyClass_staticIntField ?something .
+    }
+EOF
+
+cont

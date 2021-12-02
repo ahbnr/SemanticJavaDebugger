@@ -1,6 +1,6 @@
 section Prepare Program & Domain
-stop at examples.DataTest:28
-run examples/DataTest.java
+stop at examples.tests.DataTest:28
+run examples/tests/DataTest.java
 
 section Build Knowledge Base
 buildkb --limit-sdk --deep=examples
@@ -14,7 +14,7 @@ section SPARQL Queries
 sparql <<EOF
     SELECT ?field
     WHERE {
-        prog:examples.DataContainer java:hasField ?field .
+        prog:examples.tests.DataContainer java:hasField ?field .
     }
 EOF
 
@@ -22,8 +22,8 @@ EOF
 sparql <<EOF
     SELECT ?container ?boolVal
     WHERE {
-        ?container a prog:examples.DataContainer ;
-                   prog:examples.DataContainer_booleanField ?boolVal .
+        ?container a prog:examples.tests.DataContainer ;
+                   prog:examples.tests.DataContainer_booleanField ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
@@ -33,8 +33,8 @@ inspect boolVal
 sparql <<EOF
     SELECT ?second
     WHERE {
-        ?container a prog:examples.DataContainer ;
-                   prog:examples.DataContainer_intArrayField [
+        ?container a prog:examples.tests.DataContainer ;
+                   prog:examples.tests.DataContainer_intArrayField [
                      a java:Array ;
                      java:hasElement [
                          java:hasIndex 1 ;
@@ -49,8 +49,8 @@ inspect second
 sparql <<EOF
     SELECT ?first
     WHERE {
-        [] a prog:examples.DataContainer ;
-           prog:examples.DataContainer_stringArrayField [
+        [] a prog:examples.tests.DataContainer ;
+           prog:examples.tests.DataContainer_stringArrayField [
              a java:Array ;
              java:hasElement [
                  java:hasIndex 0 ;
@@ -67,8 +67,8 @@ inspect first
 sparql <<EOF
     SELECT ?string
     WHERE {
-        [] a prog:examples.DataContainer ;
-           prog:examples.DataContainer_stringField [
+        [] a prog:examples.tests.DataContainer ;
+           prog:examples.tests.DataContainer_stringField [
              java:hasStringValue ?string
            ] .
     }
@@ -78,7 +78,7 @@ inspect string
 # Show the whole DataContainer instance
 inspect container
 
-stop at examples.DataTest:44
+stop at examples.tests.DataTest:44
 cont
 buildkb --limit-sdk --deep=examples
 checkkb --is-consistent
@@ -89,7 +89,7 @@ sparql <<EOF
     SELECT ?boolVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.DataTest_varsTest_booleanVar ?boolVal .
+           prog:examples.tests.DataTest_varsTest_booleanVar ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
@@ -100,7 +100,7 @@ sparql <<EOF
     SELECT ?intArrayVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.DataTest_varsTest_intArrayVar [
+           prog:examples.tests.DataTest_varsTest_intArrayVar [
              java:hasElement [
                java:hasIndex 2 ;
                java:storesPrimitive ?intArrayVal

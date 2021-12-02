@@ -1,4 +1,4 @@
-package examples;
+package examples.tests;
 
 interface TopInterface1 {
     public void topInterface1Method();
