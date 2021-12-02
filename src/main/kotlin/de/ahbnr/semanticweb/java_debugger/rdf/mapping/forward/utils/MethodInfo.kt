@@ -5,6 +5,7 @@ import com.sun.jdi.LocalVariable
 import com.sun.jdi.Method
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
+import org.apache.commons.collections4.MultiValuedMap
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -50,60 +51,40 @@ class MethodInfo(
             .firstOrNull()
     }
 
-    private var _jdiToSourceCache: ArrayListValuedHashMap<LocalVariable, CtLocalVariable<*>>? = null
-    private var _sourceToJdiCache: ArrayListValuedHashMap<CtLocalVariable<*>, LocalVariable>? = null
-    private fun computeVariableMappings() {
-        val jdiToSource = ArrayListValuedHashMap<LocalVariable, CtLocalVariable<*>>()
-        val sourceToJdi = ArrayListValuedHashMap<CtLocalVariable<*>, LocalVariable>()
+    private val sourceVariables: List<CtLocalVariable<*>> by lazy {
+        body?.getElements(TypeFilter(CtLocalVariable::class.java)) ?: listOf()
+    }
 
-        val sourceVariables = body?.getElements(TypeFilter(CtLocalVariable::class.java)) ?: listOf()
+    private val jdiToSource: MultiValuedMap<LocalVariable, CtLocalVariable<*>> by lazy {
+        val jdiToSource = ArrayListValuedHashMap<LocalVariable, CtLocalVariable<*>>()
+
+        val sourceVarToScope = sourceVariables.associateWith { sourceVariable ->
+            val scopeElements = sourceVariable
+                .map(LocalVariableScopeFunction())
+                .list<CtElement>()
+                .filter { it.position !is NoSourcePosition }
+            val sourceMinScopeLine = sourceVariable.position.line
+            val sourceMaxScopeLine = scopeElements.maxOf { it.position.endLine }
+
+            sourceMinScopeLine..sourceMaxScopeLine
+        }
 
         for (jdiVariable in jdiVariables) {
             for (sourceVariable in sourceVariables) {
                 val jdiMinScopeLine = InternalJDIUtils.getScopeStart(jdiVariable).lineNumber()
+                val sourceScope = sourceVarToScope[sourceVariable]!!
 
-                val scopeElements = sourceVariable
-                    .map(LocalVariableScopeFunction())
-                    .list<CtElement>()
-                    .filter { it.position !is NoSourcePosition }
-                val sourceMinScopeLine = sourceVariable.position.line
-                val sourceMaxScopeLine = scopeElements.maxOf { it.position.endLine }
-
-                if (jdiMinScopeLine >= 0 && jdiVariable.name() == sourceVariable.simpleName && (sourceMinScopeLine..sourceMaxScopeLine).contains(
+                if (jdiMinScopeLine >= 0 && jdiVariable.name() == sourceVariable.simpleName && sourceScope.contains(
                         jdiMinScopeLine
                     )
                 ) {
-                    // FIXME: I am probably overdoing it here.
-                    //   A JDI line position for a variable whose name is shared by variables in disjoint scopes can fall
-                    //   onto the scope of multiple source variables (all in one line) and vice versa
-                    //   (when the disjoint scopes are on one line)
-                    //   -
-                    //   However, in the one line case, we can not differentiate them anyway
                     jdiToSource.put(jdiVariable, sourceVariable)
-                    sourceToJdi.put(sourceVariable, jdiVariable)
+                    break
                 }
             }
         }
 
-        _jdiToSourceCache = jdiToSource
-        _sourceToJdiCache = sourceToJdi
-    }
-
-    private val jdiToSource: ArrayListValuedHashMap<LocalVariable, CtLocalVariable<*>> by lazy {
-        val cache = _jdiToSourceCache
-        if (cache != null) cache
-        else {
-            computeVariableMappings()
-            _jdiToSourceCache!!
-        }
-    }
-    private val sourceToJdi: ArrayListValuedHashMap<CtLocalVariable<*>, LocalVariable> by lazy {
-        val cache = _sourceToJdiCache
-        if (cache != null) cache
-        else {
-            computeVariableMappings()
-            _sourceToJdiCache!!
-        }
+        jdiToSource
     }
 
     private fun findSources(
@@ -130,23 +111,14 @@ class MethodInfo(
             return groupedJdiVars.associateWith {
                 val sourceCandidates = jdiToSource[it]!!
 
-                val associatedSource =
-                    if (sourceCandidates.size == 1) {
-                        val sourceCandidate = sourceCandidates.first()
-
-                        val jdiCandidates = sourceToJdi[sourceCandidate]!!
-                        if (jdiCandidates.size == 1) sourceCandidate
-                        else null
-                    } else null
-
-                associatedSource
+                if (sourceCandidates.size == 1)
+                    sourceCandidates.first()
+                else null
             }
         }
     }
 
     val variables: List<LocalVariableInfo> by lazy {
-        val sourceVariables = body?.getElements(TypeFilter(CtLocalVariable::class.java)) ?: listOf()
-
         jdiVariables
             .groupBy { it.name() }
             .flatMap { (variableName, groupedVariables) ->

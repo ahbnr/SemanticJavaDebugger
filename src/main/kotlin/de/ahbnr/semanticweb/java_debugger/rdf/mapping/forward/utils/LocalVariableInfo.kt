@@ -16,14 +16,9 @@ data class LocalVariableInfo(
         return if (sourceInfo == null) {
             val jdiInfo = InternalJDIUtils.getScopeStart(jdiMirror).lineNumber()
 
-            if (jdiInfo >= 0) {
-                println(
-                    "FALLBACK of $id TO $jdiInfo which is at code index ${
-                        InternalJDIUtils.getScopeStart(jdiMirror).codeIndex()
-                    } and at slot ${InternalJDIUtils.getSlot(jdiMirror)}"
-                )
+            if (jdiInfo >= 0)
                 jdiInfo
-            } else null
+            else null
         } else sourceInfo
     }
 }
