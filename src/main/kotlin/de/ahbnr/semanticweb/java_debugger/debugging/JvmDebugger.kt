@@ -74,7 +74,7 @@ class JvmDebugger : Closeable, KoinComponent {
         }
     }
 
-    fun launchVM(mainClass: String) {
+    fun launchVM(mainClass: String, classpath: String? = null) {
         if (jvm != null) {
             logger.error("There is a VM already running.")
         }
@@ -85,6 +85,9 @@ class JvmDebugger : Closeable, KoinComponent {
 
         val arguments = launchingConnector.defaultArguments()
         arguments["main"]!!.setValue(mainClass)
+        if (classpath != null) {
+            arguments["options"]!!.setValue("-cp $classpath")
+        }
 
         val rawVM = launchingConnector.launch(arguments)
 

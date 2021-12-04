@@ -17,6 +17,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.InputStream
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -36,7 +37,8 @@ private sealed class Mode {
 
 class REPL(
     private val terminal: Terminal,
-    commands: List<IREPLCommand>
+    commands: List<IREPLCommand>,
+    var compilerTmpDir: Path = Paths.get("") // CWD
 ) : KoinComponent {
     var applicationDomainDefFile: String? = null
     var sourcePath: Path? = null

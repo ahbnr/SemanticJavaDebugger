@@ -2,6 +2,8 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocalVariableInfo
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocationInfo
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.MethodInfo
 import org.apache.jena.atlas.lib.IRILib
 import org.apache.jena.datatypes.xsd.XSDDatatype
 
@@ -80,6 +82,7 @@ class OntURIs(val ns: Namespaces) {
         val hasField = ns.java + "hasField"
         val declaresVariable = ns.java + "declaresVariable"
         val isDefinedAt = ns.java + "isDefinedAt"
+        val isDeclaredAt = ns.java + "isDeclaredAt"
         val isAtSourcePath = ns.java + "isAtSourcePath"
         val isAtLine = ns.java + "isAtLine"
 
@@ -118,17 +121,22 @@ class OntURIs(val ns: Namespaces) {
         val java_lang_Object = ns.prog + IRILib.encodeUriComponent("java.lang.Object")
 
         fun genVariableDeclarationURI(variable: LocalVariableInfo): String {
-            val referenceType = variable.jdiMethod.declaringType()
+            val referenceType = variable.methodInfo.jdiMethod.declaringType()
 
-            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(variable.jdiMethod.name())}_${
+            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(variable.methodInfo.id)}_${
                 IRILib.encodeUriComponent(
                     variable.id
                 )
             }"
         }
 
-        fun genMethodURI(method: Method, referenceType: ReferenceType): String =
-            "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(method.name())}"
+        fun genMethodURI(methodInfo: MethodInfo): String {
+            val referenceType = methodInfo.jdiMethod.declaringType()
+
+            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${
+                IRILib.encodeUriComponent(methodInfo.id)
+            }"
+        }
 
         fun genReferenceTypeURI(referenceType: ReferenceType): String {
             return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}"
@@ -145,8 +153,8 @@ class OntURIs(val ns: Namespaces) {
             return ns.prog + IRILib.encodeUriComponent(typeName)
         }
 
-        fun genLocationURI(location: Location): String =
-            "${ns.prog}location_${location.hashCode()}" // FIXME: unsure if hash is sufficient... should be when looking at JDI source code if JDWP Method IDs are unique. Are they?
+        fun genLocationURI(locationInfo: LocationInfo): String =
+            "${ns.prog}location_${IRILib.encodeUriComponent(locationInfo.id)}"
 
         fun genTypedHasElementURI(arrayType: ArrayType): String =
             "${ns.prog}hasElement${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"

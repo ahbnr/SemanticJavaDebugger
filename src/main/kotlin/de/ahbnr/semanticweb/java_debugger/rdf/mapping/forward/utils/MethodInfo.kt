@@ -13,6 +13,7 @@ import spoon.reflect.code.CtBlock
 import spoon.reflect.code.CtLocalVariable
 import spoon.reflect.cu.position.NoSourcePosition
 import spoon.reflect.declaration.CtElement
+import spoon.reflect.declaration.CtMethod
 import spoon.reflect.path.CtPathStringBuilder
 import spoon.reflect.visitor.filter.LocalVariableScopeFunction
 import spoon.reflect.visitor.filter.TypeFilter
@@ -21,7 +22,50 @@ class MethodInfo(
     val jdiMethod: Method,
     private val buildParameters: BuildParameters
 ) : KoinComponent {
-    val logger: Logger by inject()
+    private val logger: Logger by inject()
+
+    val id = "${jdiMethod.name()}(${jdiMethod.argumentTypeNames().joinToString(",")})"
+
+    val declarationLocation: LocationInfo?
+        get() {
+            val sourcePosition = methodSource?.position
+            return if (sourcePosition != null) {
+                LocationInfo.fromSourcePosition(sourcePosition)
+            } else null
+        }
+
+    val definitionLocation: LocationInfo?
+        get() {
+            val jdiLocation = jdiMethod.location()
+            return if (jdiLocation != null) {
+                LocationInfo.fromJdiLocation(jdiLocation)
+            } else null
+        }
+
+    val variables: List<LocalVariableInfo> by lazy {
+        jdiVariables
+            .groupBy { it.name() }
+            .flatMap { (variableName, groupedVariables) ->
+                val sourceAssociation = findSources(sourceVariables, variableName, groupedVariables)
+
+                if (groupedVariables.size == 1) {
+                    val variable = groupedVariables.first()
+                    val association = sourceAssociation[variable]
+
+                    listOf(LocalVariableInfo(variableName, variable, this, association))
+                } else {
+                    groupedVariables
+                        .mapIndexed { variableIndex, variable ->
+                            LocalVariableInfo(
+                                "${variableName}_$variableIndex",
+                                variable,
+                                this,
+                                sourceAssociation[variable]
+                            )
+                        }
+                }
+            }
+    }
 
     private val jdiVariables: List<LocalVariable> by lazy {
         (if (!jdiMethod.isAbstract && !jdiMethod.isNative)
@@ -37,19 +81,22 @@ class MethodInfo(
             ?: listOf()
     }
 
-    private val body: CtBlock<*>? by lazy {
+    private val methodSource: CtMethod<*>? by lazy {
         val referenceType = jdiMethod.declaringType()
 
         val path = CtPathStringBuilder().fromString(
             ".${referenceType.name()}#method[signature=${jdiMethod.name()}(${
                 jdiMethod.argumentTypeNames().joinToString(",")
-            })]#body"
+            })]"
         )
 
         path
-            .evaluateOn<CtBlock<*>>(buildParameters.sourceModel.rootPackage)
+            .evaluateOn<CtMethod<*>>(buildParameters.sourceModel.rootPackage)
             .firstOrNull()
     }
+
+    private val body: CtBlock<*>?
+        get() = methodSource?.body
 
     private val sourceVariables: List<CtLocalVariable<*>> by lazy {
         body?.getElements(TypeFilter(CtLocalVariable::class.java)) ?: listOf()
@@ -116,30 +163,5 @@ class MethodInfo(
                 else null
             }
         }
-    }
-
-    val variables: List<LocalVariableInfo> by lazy {
-        jdiVariables
-            .groupBy { it.name() }
-            .flatMap { (variableName, groupedVariables) ->
-                val sourceAssociation = findSources(sourceVariables, variableName, groupedVariables)
-
-                if (groupedVariables.size == 1) {
-                    val variable = groupedVariables.first()
-                    val association = sourceAssociation[variable]
-
-                    listOf(LocalVariableInfo(variableName, variable, jdiMethod, association))
-                } else {
-                    groupedVariables
-                        .mapIndexed { variableIndex, variable ->
-                            LocalVariableInfo(
-                                "${variableName}_$variableIndex",
-                                variable,
-                                jdiMethod,
-                                sourceAssociation[variable]
-                            )
-                        }
-                }
-            }
     }
 }

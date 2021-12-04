@@ -17,11 +17,14 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.genDefaultNs
 import de.ahbnr.semanticweb.java_debugger.repl.JLineLogger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import de.ahbnr.semanticweb.java_debugger.repl.commands.*
+import org.apache.commons.io.FilenameUtils
 import org.jline.terminal.TerminalBuilder
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import java.io.FileInputStream
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.system.exitProcess
 
 
@@ -66,9 +69,27 @@ class SemanticJavaDebugger : CliktCommand() {
                     )
                 )
 
+                val systemTmpDir = System.getProperty("java.io.tmpdir")
+                val applicationTmpDir = Path.of(systemTmpDir, "SemanticJavaDebugger")
+
+                val compilerTmpDir =
+                    applicationTmpDir.resolve(
+                        if (commandFile != null) {
+                            if (Path.of(commandFile).isAbsolute) {
+                                Path.of(FilenameUtils.getBaseName(commandFile))
+                            } else {
+                                Path.of(
+                                    FilenameUtils.getPath(commandFile),
+                                    FilenameUtils.getBaseName(commandFile)
+                                )
+                            }
+                        } else Path.of("repl")
+                    )
+                compilerTmpDir.createDirectories()
+
                 val repl = REPL(
-                    terminal,
-                    listOf(
+                    terminal = terminal,
+                    commands = listOf(
                         AssertCommand(graphGen),
                         BuildKBCommand(jvmDebugger, graphGen),
                         CheckKBCommand(graphGen),
@@ -86,7 +107,8 @@ class SemanticJavaDebugger : CliktCommand() {
                         StatsCommand(graphGen),
                         StopCommand(jvmDebugger),
                         TimeCommand()
-                    )
+                    ),
+                    compilerTmpDir = compilerTmpDir
                 )
 
                 val wasSuccessful = if (commandFile != null) {

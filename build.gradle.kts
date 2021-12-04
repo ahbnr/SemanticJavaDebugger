@@ -111,7 +111,8 @@ tasks.withType<KotlinCompile>() {
 
     kotlinOptions.jvmTarget = "11"
 
-    // kotlinOptions.freeCompilerArgs + listOf("-Xjavac-arguments=--add-exports=jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED")
+    // kotlinOptions.freeCompilerArgs += listOf("-Xjavac-arguments=--add-exports=jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED")
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
 }
 
 application {

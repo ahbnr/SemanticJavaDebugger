@@ -8,6 +8,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Paths
+import kotlin.io.path.pathString
 
 class RunCommand(
     val jvmDebugger: JvmDebugger
@@ -29,20 +30,23 @@ class RunCommand(
 
         repl.sourcePath = null
 
+        var classpath = Paths.get("") // CWD
+
         val className =
             if (classOrSource.endsWith(".java")) {
                 val sourcePath = Paths.get(classOrSource)
 
                 val compiler = de.ahbnr.semanticweb.java_debugger.utils.Compiler(
                     listOf(sourcePath),
-                    Paths.get("") // CWD
+                    repl.compilerTmpDir
                 )
 
-                logger.log("Compiling...")
+                logger.log("Compiling to ${repl.compilerTmpDir}.")
                 compiler.compile()
                 logger.success("Compiled!")
 
                 repl.sourcePath = sourcePath
+                classpath = repl.compilerTmpDir
 
                 sourcePath
                     .toString()
@@ -51,7 +55,7 @@ class RunCommand(
             } else classOrSource
 
         logger.log("Launching Java program.")
-        jvmDebugger.launchVM(className)
+        jvmDebugger.launchVM(className, classpath.pathString)
         jvmDebugger.jvm?.resume()
 
         return true

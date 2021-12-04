@@ -73,7 +73,7 @@ class StackMapper : IMapper {
                     val values = frame.getValues(variables)
 
                     for ((variable, value) in values) {
-                        val variableInfo = methodVariableDeclarations.find { it.jdiMirror == variable }
+                        val variableInfo = methodVariableDeclarations.find { it.jdiLocalVariable == variable }
 
                         if (variableInfo == null) {
                             logger.error("Could not retrieve information on a variable declaration for a stack variable.")

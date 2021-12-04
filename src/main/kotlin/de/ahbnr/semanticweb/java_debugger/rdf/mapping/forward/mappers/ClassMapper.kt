@@ -280,9 +280,9 @@ class ClassMapper : IMapper {
 
                 // Lets clarify the type of the variable and deal with unloaded types
                 val variableType = try {
-                    JavaType.LoadedType(variable.jdiMirror.type())
+                    JavaType.LoadedType(variable.jdiLocalVariable.type())
                 } catch (e: ClassNotLoadedException) {
-                    JavaType.UnloadedType(variable.jdiMirror.typeName())
+                    JavaType.UnloadedType(variable.jdiLocalVariable.typeName())
                 }
 
                 // A variable declaration is modeled as a property that relates StackFrames and the variable values.
@@ -369,53 +369,70 @@ class ClassMapper : IMapper {
             }
 
             fun addMethodLocation(methodInfo: MethodInfo, methodSubject: String) {
-                val location =
-                    methodInfo.jdiMethod.location() // where is the method executable code defined? May return null for abstract methods
-
-                if (location != null) {
-                    val locationSubject = URIs.prog.genLocationURI(location)
+                // add declaration location
+                val declarationLocation = methodInfo.declarationLocation
+                if (declarationLocation != null) {
+                    val locationURI = URIs.prog.genLocationURI(declarationLocation)
 
                     // it *is* a java:Location
                     tripleCollector.addStatement(
-                        locationSubject,
+                        locationURI,
                         URIs.rdf.type,
                         URIs.java.Location
                     )
 
-                    // its the location of a method
+                    // its a location of a method
+                    tripleCollector.addStatement(
+                        methodSubject,
+                        URIs.java.isDeclaredAt,
+                        locationURI
+                    )
+
+                    // set source path
+                    tripleCollector.addStatement(
+                        locationURI,
+                        URIs.java.isAtSourcePath,
+                        NodeFactory.createLiteral(declarationLocation.sourcePath, XSDDatatype.XSDstring)
+                    )
+
+                    // set line
+                    tripleCollector.addStatement(
+                        locationURI,
+                        URIs.java.isAtLine,
+                        NodeFactory.createLiteral(declarationLocation.line.toString(), XSDDatatype.XSDint)
+                    )
+                }
+
+                // add body definition location
+                val definitionLocation = methodInfo.definitionLocation
+                if (definitionLocation != null) {
+                    val locationURI = URIs.prog.genLocationURI(definitionLocation)
+
+                    // it *is* a java:Location
+                    tripleCollector.addStatement(
+                        locationURI,
+                        URIs.rdf.type,
+                        URIs.java.Location
+                    )
+
                     tripleCollector.addStatement(
                         methodSubject,
                         URIs.java.isDefinedAt,
-                        locationSubject
+                        locationURI
                     )
 
-                    // set source path, if it is known
-                    val sourcePath = try {
-                        location.sourcePath()
-                    } catch (e: AbsentInformationException) {
-                        null
-                    }
-                    if (sourcePath != null) {
-                        tripleCollector.addStatement(
-                            locationSubject,
-                            URIs.java.isAtSourcePath,
-                            NodeFactory.createLiteral(sourcePath, XSDDatatype.XSDstring)
-                        )
-                    }
+                    // set source path
+                    tripleCollector.addStatement(
+                        locationURI,
+                        URIs.java.isAtSourcePath,
+                        NodeFactory.createLiteral(definitionLocation.sourcePath, XSDDatatype.XSDstring)
+                    )
 
-                    val lineNumber = location.lineNumber()
-                    if (lineNumber >= 0) { // -1 indicates that the number is not known
-                        tripleCollector.addStatement(
-                            locationSubject,
-                            URIs.java.isAtLine,
-                            NodeFactory.createLiteral(lineNumber.toString(), XSDDatatype.XSDint)
-                        )
-                    }
-                } else if (!methodInfo.jdiMethod.isAbstract) {
-                    logger.error(
-                        "${
-                            methodInfo.jdiMethod.declaringType().name()
-                        }:${methodInfo.jdiMethod.name()}: Location of method body could not be determined, even though the method is not abstract."
+                    // set line
+                    tripleCollector.addStatement(
+                        locationURI,
+                        URIs.java.isAtLine,
+                        NodeFactory.createLiteral(definitionLocation.line.toString(), XSDDatatype.XSDint)
                     )
                 }
             }
@@ -424,7 +441,8 @@ class ClassMapper : IMapper {
                 if (buildParameters.limiter.canMethodBeSkipped(method))
                     return
 
-                val methodSubject = URIs.prog.genMethodURI(method, referenceType)
+                val methodInfo = MethodInfo(method, buildParameters)
+                val methodSubject = URIs.prog.genMethodURI(methodInfo)
 
                 // The methodSubject *is* a method
                 tripleCollector.addStatement(
@@ -443,8 +461,6 @@ class ClassMapper : IMapper {
                 if (buildParameters.limiter.canMethodDetailsBeSkipped(method)) {
                     return
                 }
-
-                val methodInfo = MethodInfo(method, buildParameters)
 
                 // ...and the method declares some variables
                 addVariableDeclarations(methodInfo, methodSubject)

@@ -92,10 +92,14 @@ class AssertCommand(
 
                     QueryExecutionFactory.create(query, model).use { execution ->
                         val results = execution.execSelect()
+                        // Need to ensure all variables are present in at least one result
+                        val result =
+                            results.asSequence().find { result -> query.resultVars.all { result.contains(it) } }
+                        val wasSuccessful = result != null
 
                         return when (assertionKind) {
                             is AssertionKind.SparqlSuccess -> {
-                                if (results.hasNext()) {
+                                if (wasSuccessful) {
                                     logger.success("PASSED.")
                                     true
                                 } else {
@@ -104,9 +108,9 @@ class AssertCommand(
                                 }
                             }
                             is AssertionKind.SparqlFail -> {
-                                if (results.hasNext()) {
+                                if (wasSuccessful) {
                                     logger.error("FAILED!")
-                                    logger.error("Found the following result: ${results.next()}")
+                                    logger.error("Found the following result: ${result}")
 
                                     false
                                 } else {

@@ -89,7 +89,7 @@ sparql <<EOF
     SELECT ?boolVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.tests.DataTest_varsTest_booleanVar ?boolVal .
+           prog:examples.tests.DataTest_varsTest%28%29_booleanVar ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
@@ -100,7 +100,7 @@ sparql <<EOF
     SELECT ?intArrayVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.tests.DataTest_varsTest_intArrayVar [
+           prog:examples.tests.DataTest_varsTest%28%29_intArrayVar [
              java:hasElement [
                java:hasIndex 2 ;
                java:storesPrimitive ?intArrayVal

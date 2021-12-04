@@ -1,0 +1,48 @@
+section Prepare Program & Domain
+stop at examples.tests.MethodDeclarationTest:14
+run examples/tests/MethodDeclarationTest.java
+
+section Build Knowledge Base
+buildkb --limit-sdk
+dumpkb datatest.ttl
+checkkb --is-consistent
+
+section Check presence of simple method & attributes
+
+assert triples <<EOF
+    prog:examples.tests.MethodDeclarationTest java:hasMethod prog:examples.tests.MethodDeclarationTest_simpleMethod%28%29 .
+EOF
+
+assert sparql-success <<EOF
+    SELECT ?declLocation ?defLocation
+    WHERE {
+        prog:examples.tests.MethodDeclarationTest_simpleMethod%28%29 java:isDeclaredAt ?declLocation ;
+                                                                     java:isDefinedAt ?defLocation .
+
+        ?declLocation java:isAtLine "4"^^xsd:int ;
+                      java:isAtSourcePath [] .
+
+        ?defLocation java:isAtLine "5"^^xsd:int ;
+                      java:isAtSourcePath [] .
+    }
+EOF
+
+section Check if all instances of overloaded method are present
+
+assert triples <<EOF
+    prog:examples.tests.MethodDeclarationTest java:hasMethod prog:examples.tests.MethodDeclarationTest_overloadedMethod%28%29 ;
+                                              java:hasMethod prog:examples.tests.MethodDeclarationTest_overloadedMethod%28int%29 .
+EOF
+
+assert sparql-success <<EOF
+    SELECT ?declLocation1 ?declLocation2
+    WHERE {
+        prog:examples.tests.MethodDeclarationTest_overloadedMethod%28%29 java:isDeclaredAt ?declLocation1 .
+        prog:examples.tests.MethodDeclarationTest_overloadedMethod%28int%29 java:isDeclaredAt ?declLocation2 .
+
+        ?declLocation1 java:isAtLine "7"^^xsd:int .
+        ?declLocation2 java:isAtLine "10"^^xsd:int .
+    }
+EOF
+
+cont

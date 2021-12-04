@@ -150,7 +150,7 @@ EOF
 assert sparql-fail <<EOF
     SELECT ?notMid
     WHERE {
-        ?notMid java:hasMethod prog:examples.tests.Mid_midMethod .
+        ?notMid java:hasMethod prog:examples.tests.Mid_midMethod%28%29 .
         FILTER (?notMid != prog:examples.tests.Mid)
     }
 EOF
@@ -162,14 +162,14 @@ assert sparql-success <<EOF
     SELECT  ?midInterface
     WHERE {
         FILTER (?midInterface = prog:examples.tests.MidInterface) .
-        ?midInterface java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod ;
+        ?midInterface java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod%28%29 ;
                       rdfs:subClassOf [
                         a java:Interface ;
-                        java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method
+                        java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method%28%29
                       ] ;
                       rdfs:subClassOf [
                         a java:Interface ;
-                        java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method
+                        java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method%28%29
                       ] .
     }
 EOF
@@ -181,15 +181,15 @@ assert sparql-success <<EOF
         FILTER (?midClass = prog:examples.tests.Mid) .
         ?midClass rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod ;
+                    java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod%28%29 ;
                   ] ;
                   rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method
+                    java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method%28%29
                   ] ;
                   rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method
+                    java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method%28%29
                   ] .
     }
 EOF
