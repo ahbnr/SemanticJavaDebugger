@@ -1,7 +1,7 @@
 section Prepare Program & Domain
 domain examples/TwoThreeTree.ttl
-stop at TwoThreeTree:64
-run TwoThreeTree
+stop at examples.TwoThreeTree:66
+run examples/TwoThreeTree.java
 
 section Build Knowledge Base
 buildkb --limit-sdk
@@ -22,7 +22,7 @@ section Detection by SPARQL Negation
 sparql <<EOF
   SELECT ?faulty
   WHERE {
-      ?faulty a prog:Node .
+      ?faulty a prog:examples.Node .
       ?faulty a owl:NamedIndividual .
       FILTER NOT EXISTS {
           ?faulty a domain:TrueNode .

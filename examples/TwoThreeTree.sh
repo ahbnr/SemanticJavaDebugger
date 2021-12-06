@@ -10,7 +10,4 @@ then
   exit
 fi
 
-javac -g examples/TwoThreeTree.java
-cp examples/*.class .
-
 ./gradlew run --args="--color examples/TwoThreeTree.sjd"

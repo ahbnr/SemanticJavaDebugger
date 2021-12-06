@@ -1,7 +1,7 @@
 section Prepare Program & Domain
 domain examples/TwoThreeTree.ttl
-stop at TwoThreeTree:39
-run TwoThreeTree
+stop at examples.TwoThreeTree:41
+run examples/TwoThreeTree.java
 locals
 
 section Build Knowledge Base
