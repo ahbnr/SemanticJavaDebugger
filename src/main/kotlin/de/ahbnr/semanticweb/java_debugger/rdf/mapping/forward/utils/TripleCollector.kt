@@ -125,6 +125,13 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             addListStatements(objectList)
         )
 
+        // Protege will not recognize the oneOf relation if we dont add this "is a class" declaration
+        addStatement(
+            oneOfNode,
+            URIs.rdf.type,
+            URIs.owl.Class
+        )
+
         return oneOfNode
     }
 

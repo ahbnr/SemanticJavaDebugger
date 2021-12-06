@@ -788,6 +788,8 @@ class ClassMapper : IMapper {
                 val allReferenceTypes = buildParameters.jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
+                    val referenceTypeURI = URIs.prog.genReferenceTypeURI(referenceType)
+
                     when (referenceType) {
                         is ClassType -> addClass(referenceType)
                         is ArrayType -> addArrayType(referenceType)

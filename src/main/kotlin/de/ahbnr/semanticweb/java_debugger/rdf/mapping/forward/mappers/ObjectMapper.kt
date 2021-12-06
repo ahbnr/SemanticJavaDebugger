@@ -207,11 +207,6 @@ class ObjectMapper : IMapper {
 
                 val referenceType = objectReference.referenceType()
 
-                // TODO: Deal with enums
-                if (referenceType is ClassType && referenceType.isEnum) {
-                    return
-                }
-
                 // The object is a particular individual (not a class/concept)
                 tripleCollector.addStatement(
                     objectURI,
