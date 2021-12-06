@@ -1,5 +1,5 @@
 section Prepare Program & Domain
-stop at examples.tests.MethodDeclarationTest:14
+stop at examples.tests.MethodDeclarationTest:26
 run examples/tests/MethodDeclarationTest.java
 
 section Build Knowledge Base
@@ -43,6 +43,15 @@ assert sparql-success <<EOF
         ?declLocation1 java:isAtLine "7"^^xsd:int .
         ?declLocation2 java:isAtLine "10"^^xsd:int .
     }
+EOF
+
+section Check access modifiers of methods
+
+assert triples <<EOF
+    prog:examples.tests.MethodDeclarationTest_publicMethod%28%29 java:hasAccessModifier "public"^^java:AccessModifier .
+    prog:examples.tests.MethodDeclarationTest_protectedMethod%28%29 java:hasAccessModifier "protected"^^java:AccessModifier .
+    prog:examples.tests.MethodDeclarationTest_privateMethod%28%29 java:hasAccessModifier "private"^^java:AccessModifier .
+    prog:examples.tests.MethodDeclarationTest_packagePrivateMethod%28%29 java:hasAccessModifier "package-private"^^java:AccessModifier .
 EOF
 
 cont

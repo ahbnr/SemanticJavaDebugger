@@ -458,6 +458,16 @@ class ClassMapper : IMapper {
                     methodSubject
                 )
 
+                // access modifiers
+                tripleCollector.addStatement(
+                    methodSubject,
+                    URIs.java.hasAccessModifier,
+                    JavaAccessModifierDatatype
+                        .AccessModifierLiteral
+                        .fromJdiAccessible(methodInfo.jdiMethod)
+                        .toNode()
+                )
+
                 if (buildParameters.limiter.canMethodDetailsBeSkipped(method)) {
                     return
                 }
@@ -542,15 +552,10 @@ class ClassMapper : IMapper {
                 tripleCollector.addStatement(
                     classSubject,
                     URIs.java.hasAccessModifier,
-                    NodeFactory.createLiteral(
-                        when {
-                            classType.isPrivate -> JavaAccessModifierDatatype.AccessModifierLiteral.private.value
-                            classType.isProtected -> JavaAccessModifierDatatype.AccessModifierLiteral.protected.value
-                            classType.isPublic -> JavaAccessModifierDatatype.AccessModifierLiteral.public.value
-                            else -> JavaAccessModifierDatatype.AccessModifierLiteral.`package-private`.value
-                        },
-                        JavaAccessModifierDatatype.instance
-                    )
+                    JavaAccessModifierDatatype
+                        .AccessModifierLiteral
+                        .fromJdiAccessible(classType)
+                        .toNode()
                 )
 
                 addMethods(classSubject, classType)

@@ -1,9 +1,11 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.datatypes
 
+import com.sun.jdi.Accessible
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import org.apache.jena.datatypes.BaseDatatype
 import org.apache.jena.datatypes.DatatypeFormatException
 import org.apache.jena.datatypes.TypeMapper
+import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.impl.LiteralLabel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -24,7 +26,19 @@ class JavaAccessModifierDatatype : BaseDatatype {
         `package-private`("package-private"),
         `private`("private"),
         `protected`("protected"),
-        `public`("public"),
+        `public`("public");
+
+        companion object {
+            fun fromJdiAccessible(accessible: Accessible) =
+                when {
+                    accessible.isPrivate -> `private`
+                    accessible.isProtected -> `protected`
+                    accessible.isPublic -> `public`
+                    else -> `package-private`
+                }
+        }
+
+        fun toNode() = NodeFactory.createLiteral(this.value, JavaAccessModifierDatatype.instance)
     }
 
     private val allowedLiterals = enumValues<AccessModifierLiteral>().map { it.value }.toSet()
