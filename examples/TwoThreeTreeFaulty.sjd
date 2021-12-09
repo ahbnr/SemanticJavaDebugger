@@ -16,7 +16,7 @@ sparql <<EOF
       ?var a java:VariableDeclaration .
   }
 EOF
-reverse faulty
+reverse ?faulty
 
 section Detection by SPARQL Negation
 sparql <<EOF
@@ -29,10 +29,10 @@ sparql <<EOF
       }
   }
 EOF
-reverse faulty
+reverse ?faulty
 
 section Detection by SHACL
 shacl examples/TwoThreeTreeShapes.ttl
-reverse focus0
+reverse ?focus0
 
 cont

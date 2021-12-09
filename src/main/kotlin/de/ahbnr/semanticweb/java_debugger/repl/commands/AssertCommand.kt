@@ -45,7 +45,7 @@ class AssertCommand(
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val ontology = repl.knowledgeBase
+        val ontology = repl.knowledgeBase.ontology
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
@@ -72,17 +72,8 @@ class AssertCommand(
                 )
 
                 try {
-                    queryString.setNsPrefix("rdf", URIs.ns.rdf)
-                    queryString.setNsPrefix("rdfs", URIs.ns.rdfs)
-                    queryString.setNsPrefix("owl", URIs.ns.owl)
-                    queryString.setNsPrefix("xsd", URIs.ns.xsd)
-                    queryString.setNsPrefix("java", URIs.ns.java)
-                    queryString.setNsPrefix("prog", URIs.ns.prog)
-                    queryString.setNsPrefix("run", URIs.ns.run)
-
-                    val domainURI = model.getNsPrefixURI("domain")
-                    if (domainURI != null) {
-                        queryString.setNsPrefix("domain", domainURI)
+                    for ((prefixName, prefixUri) in repl.knowledgeBase.prefixNameToUri) {
+                        queryString.setNsPrefix(prefixName, prefixUri)
                     }
 
                     queryString.append("LIMIT ")
@@ -126,18 +117,11 @@ class AssertCommand(
                 }
             }
             is AssertionKind.Triples -> {
-                val domainURI = model.getNsPrefixURI("domain")
-
-                val prefixes = """
-                    PREFIX rdf: <${URIs.ns.rdf}>
-                    PREFIX rdfs: <${URIs.ns.rdfs}>
-                    PREFIX owl: <${URIs.ns.owl}>
-                    PREFIX xsd: <${URIs.ns.xsd}>
-                    PREFIX java: <${URIs.ns.java}>
-                    PREFIX prog: <${URIs.ns.prog}>
-                    PREFIX run: <${URIs.ns.run}>
-                    ${if (domainURI != null) "PREFIX domain: <$domainURI>" else ""}
-                """.trimIndent()
+                val prefixes = repl
+                    .knowledgeBase
+                    .prefixNameToUri
+                    .entries
+                    .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
 
                 val targetModel = ModelFactory.createDefaultModel()
 

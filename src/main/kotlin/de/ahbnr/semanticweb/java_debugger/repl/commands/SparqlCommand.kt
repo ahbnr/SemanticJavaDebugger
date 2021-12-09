@@ -26,7 +26,7 @@ class SparqlCommand(
     private val nonOptionRegex = """\s[^-\s]""".toRegex()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val baseOntology = repl.knowledgeBase
+        val baseOntology = repl.knowledgeBase.ontology
         if (baseOntology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
@@ -45,18 +45,14 @@ class SparqlCommand(
             rawQuery = rawInput.substring(startOfQuery)
         }
 
-        val domainURI = baseOntology.asGraphModel().getNsPrefixURI("domain")
-        val sparqlPrefixString = if (domainURI != null) "PREFIX domain: <$domainURI>" else ""
+        val prefixes = repl
+            .knowledgeBase
+            .prefixNameToUri
+            .entries
+            .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
 
         val queryString = """
-                PREFIX rdf: <${URIs.ns.rdf}>
-                PREFIX rdfs: <${URIs.ns.rdfs}>
-                PREFIX owl: <${URIs.ns.owl}>
-                PREFIX xsd: <${URIs.ns.xsd}>
-                PREFIX java: <${URIs.ns.java}>
-                PREFIX prog: <${URIs.ns.prog}>
-                PREFIX run: <${URIs.ns.run}>
-                $sparqlPrefixString
+                $prefixes
                 $rawQuery
         """.trimIndent()
 
@@ -78,20 +74,20 @@ class SparqlCommand(
                 results.reset()
 
                 for (variable in query.resultVars) {
-                    repl.namedNodes.remove(variable)
+                    repl.knowledgeBase.removeVariable("?$variable")
                 }
 
                 var idx = 0;
                 val nameMap = mutableMapOf<String, RDFNode>()
                 results.forEachRemaining { solution ->
                     solution.varNames().forEachRemaining { variableName ->
-                        val indexedName = if (idx == 0) variableName else "$variableName$idx"
+                        val indexedName = if (idx == 0) "?$variableName" else "?$variableName$idx"
 
                         nameMap[indexedName] = solution.get(variableName)
                     }
                     ++idx
                 }
-                repl.namedNodes.putAll(nameMap)
+                nameMap.forEach { (name, value) -> repl.knowledgeBase.setVariable(name, value) }
 
                 if (nameMap.isNotEmpty()) {
                     logger.log("The solution variables are available under the following names:")

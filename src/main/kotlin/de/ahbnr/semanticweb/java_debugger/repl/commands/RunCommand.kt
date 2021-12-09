@@ -11,7 +11,7 @@ import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 class RunCommand(
-    val jvmDebugger: JvmDebugger
+    private val jvmDebugger: JvmDebugger
 ) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 

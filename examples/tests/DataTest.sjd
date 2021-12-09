@@ -27,7 +27,7 @@ sparql <<EOF
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
-inspect boolVal
+inspect ?boolVal
 
 # Try to extract the second int array element
 sparql <<EOF
@@ -43,7 +43,7 @@ sparql <<EOF
                    ] .
     }
 EOF
-inspect second
+inspect ?second
 
 # Try to extract the first String array element
 sparql <<EOF
@@ -61,7 +61,7 @@ sparql <<EOF
            ] .
     }
 EOF
-inspect first
+inspect ?first
 
 # Show value of the string field
 sparql <<EOF
@@ -73,10 +73,10 @@ sparql <<EOF
            ] .
     }
 EOF
-inspect string
+inspect ?string
 
 # Show the whole DataContainer instance
-inspect container
+inspect ?container
 
 stop at examples.tests.DataTest:44
 cont
@@ -93,7 +93,7 @@ sparql <<EOF
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
-inspect boolVal
+inspect ?boolVal
 
 # Extracting an array value
 sparql <<EOF
@@ -108,6 +108,6 @@ sparql <<EOF
            ] .
     }
 EOF
-inspect intArrayVal
+inspect ?intArrayVal
 
 cont

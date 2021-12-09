@@ -20,7 +20,7 @@ class StatsCommand(
     override val name = "stats"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val ontology = repl.knowledgeBase
+        val ontology = repl.knowledgeBase.ontology
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false

@@ -36,7 +36,7 @@ class ShaclCommand(
             return false
         }
 
-        val ontology = repl.knowledgeBase
+        val ontology = repl.knowledgeBase.ontology
         if (ontology == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
@@ -68,20 +68,20 @@ class ShaclCommand(
             logger.log("")
 
             repl
-                .namedNodes
-                .keys
-                .filter { it.startsWith("focus") }
-                .forEach { repl.namedNodes.remove(it) }
+                .knowledgeBase
+                .variables
+                .filter { it.startsWith("?focus") }
+                .forEach { repl.knowledgeBase.removeVariable(it) }
 
             val nameMap = mutableMapOf<String, RDFNode>()
             report.entries.forEachIndexed { idx, entry ->
                 val rdfNode = infModel.asRDFNode(entry.focusNode())
 
-                val name = "focus$idx"
+                val name = "?focus$idx"
 
                 nameMap[name] = rdfNode
             }
-            repl.namedNodes.putAll(nameMap)
+            nameMap.forEach { (name, value) -> repl.knowledgeBase.setVariable(name, value) }
 
             logger.log("The focus nodes have been made available under the following names: ")
             logger.log(nameMap.keys.joinToString(", "))

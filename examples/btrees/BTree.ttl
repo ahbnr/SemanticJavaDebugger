@@ -7,18 +7,48 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/BTrees#> .
 
-domain:BTreeNode owl:equivalentClass [
-        owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+domain:Node rdf:type owl:Class ;
+            owl:equivalentClass
             [
-                rdfs:comment """Every node can have at most 2M children, where M is the order of the tree."""^^rdfs:Literal ;
-                rdf:type owl:Restriction ;
-                owl:onProperty prog:examples.btrees.BTreeNode_children ;
-                owl:allValuesFrom [
-                    rdf:type owl:Restriction ;
-                    owl:onProperty prog:hasElement ;
-                    owl:maxCardinality "4"^^xsd:nonNegativeInteger
-                ]
-            ]
-        )
-    ] .
+                a owl:Class ;
+                owl:intersectionOf (
+                    prog:examples.btrees.BTreeNode
+                    [
+                        rdfs:comment """Every node can have at most 2M children, where M is the order of the tree."""^^rdfs:Literal ;
+                        rdf:type owl:Restriction ;
+                        owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                        owl:allValuesFrom [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty prog:hasElement ;
+                            owl:maxCardinality "4"^^xsd:nonNegativeInteger
+                        ]
+                    ]
+                    # [
+                    #     rdfs:comment """Every non-root node must have at least M children, where M is the order of the tree."""^^rdfs:Literal ;
+                    #     rdf:type owl:Restriction ;
+                    #     owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                    #     owl:allValuesFrom [
+                    #         rdf:type owl:Restriction ;
+                    #         owl:onProperty prog:hasElement ;
+                    #         owl:minCardinality "2"^^xsd:nonNegativeInteger
+                    #     ]
+                    # ]
+                )
+            ] .
+
+domain:Leaf a owl:Class ;
+            owl:equivalentClass [
+                a owl:Class ;
+                owl:intersectionOf (
+                    domain:Node
+                    [
+                        a owl:Restriction ;
+                        owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                        owl:allValuesFrom [
+                            a owl:Restricion ;
+                            owl:onProperty prog:hasElement ;
+                            owl:cardinality "0"^^xsd:nonNegativeInteger
+                        ]
+                    ]
+                )
+            ] .

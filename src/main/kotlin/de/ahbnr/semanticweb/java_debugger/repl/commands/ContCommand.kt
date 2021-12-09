@@ -9,7 +9,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ContCommand(
-    val jvmDebugger: JvmDebugger
+    private val jvmDebugger: JvmDebugger
 ) : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
 

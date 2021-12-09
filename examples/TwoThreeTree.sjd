@@ -21,7 +21,7 @@ sparql --optimize <<EOF
     }
 EOF
 time
-reverse root
+reverse ?root
 
 # Get all fields of true nodes
 sparql <<EOF
@@ -33,7 +33,7 @@ sparql <<EOF
     }
 EOF
 time
-reverse node
+reverse ?node
 
 sparql --optimize <<EOF
   SELECT ?root ?source ?line
@@ -49,8 +49,8 @@ sparql --optimize <<EOF
   }
 EOF
 time
-inspect root
-reverse root
+inspect ?root
+reverse ?root
 
 section SHACL Validation
 shacl examples/TwoThreeTreeShapes.ttl

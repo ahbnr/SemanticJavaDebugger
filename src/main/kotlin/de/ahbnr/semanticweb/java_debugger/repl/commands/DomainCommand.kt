@@ -31,7 +31,7 @@ class DomainCommand : IREPLCommand, KoinComponent {
         }
 
         repl.applicationDomainDefFile = domainFile
-        logger.log("Will load application domain from $domainFile.")
+        logger.log("Will load application domain from $domainFile next time buildkb is called.")
 
         return true
     }

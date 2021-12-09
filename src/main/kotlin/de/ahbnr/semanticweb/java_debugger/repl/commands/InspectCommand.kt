@@ -18,17 +18,17 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
     override val name = "inspect"
 
     private val usage = """
-        Usage: inspect <variable name>
+        Usage: inspect <variable or IRI>
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val variableName = argv.firstOrNull()
-        if (variableName == null) {
+        val variableOrIRI = argv.firstOrNull()
+        if (variableOrIRI == null) {
             logger.error(usage)
             return false
         }
 
-        val ontology = repl.knowledgeBase
+        val ontology = repl.knowledgeBase.ontology
         if (ontology == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
             return false
@@ -36,7 +36,7 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
 
         val model = ontology.asGraphModel()
 
-        val node = repl.namedNodes.getOrDefault(variableName, null)
+        val node = repl.knowledgeBase.resolveVariableOrUri(variableOrIRI)
         if (node == null) {
             logger.error("No node is known under this name.")
             return false

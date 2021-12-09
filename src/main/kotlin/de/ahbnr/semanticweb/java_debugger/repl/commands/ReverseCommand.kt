@@ -20,12 +20,12 @@ class ReverseCommand(
     override val name = "reverse"
 
     private val usage = """
-        Usage: reverse <variable name>
+        Usage: reverse <variable or IRI>
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val variableName = argv.firstOrNull()
-        if (variableName == null) {
+        val variableOrUri = argv.firstOrNull()
+        if (variableOrUri == null) {
             logger.error(usage)
             return false
         }
@@ -42,17 +42,17 @@ class ReverseCommand(
             return false
         }
 
-        val ontology = repl.knowledgeBase
+        val ontology = repl.knowledgeBase.ontology
         if (ontology == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
             return false
         }
 
         val model = ontology.asGraphModel()
+        val node = repl.knowledgeBase.resolveVariableOrUri(variableOrUri)
 
-        val node = repl.namedNodes.getOrDefault(variableName, null)
         if (node == null) {
-            logger.error("No node is known under this name.")
+            logger.error("No such node is known.")
             return false
         }
 

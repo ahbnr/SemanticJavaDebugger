@@ -73,7 +73,7 @@ class BuildKBCommand(
             limiter = limiter
         )
         val ontology = graphGenerator.buildOntology(buildParameters, repl.applicationDomainDefFile)
-        repl.knowledgeBase = ontology
+        repl.knowledgeBase.ontology = ontology
 
         logger.success("RDF graph created.")
 

@@ -2,11 +2,9 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl
 
-import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
 import net.harawata.appdirs.AppDirsFactory
-import org.apache.jena.rdf.model.RDFNode
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
@@ -46,8 +44,7 @@ class REPL(
 ) : KoinComponent {
     var applicationDomainDefFile: String? = null
     var sourcePath: Path? = null
-    var knowledgeBase: Ontology? = null
-    val namedNodes: MutableMap<String, RDFNode> = mutableMapOf()
+    var knowledgeBase = KnowledgeBase()
 
     @OptIn(ExperimentalTime::class)
     var lastCommandDuration: Duration? = null
