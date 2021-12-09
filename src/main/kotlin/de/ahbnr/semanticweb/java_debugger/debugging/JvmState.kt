@@ -107,6 +107,9 @@ data class JvmState(
                 if (limiter.canReferenceTypeBeSkipped(referenceType))
                     continue
 
+                if (!referenceType.isPrepared)
+                    continue // skip details if this class has not been fully prepared in the VM state
+
                 for (field in referenceType.allFields()) {
                     if (!field.isStatic)
                         continue

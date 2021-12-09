@@ -257,6 +257,9 @@ class ObjectMapper : IMapper {
                     buildParameters.jvmState.pausedThread.virtualMachine().allClasses().filterIsInstance<ClassType>()
 
                 for (classType in classTypes) {
+                    if (!classType.isPrepared)
+                        continue // skip those class types which have not been fully prepared in the vm state yet
+
                     val fieldValues = classType.getValues(classType.fields().filter { it.isStatic })
 
                     for ((field, value) in fieldValues) {
