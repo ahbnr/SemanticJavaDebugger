@@ -5,11 +5,14 @@ package de.ahbnr.semanticweb.java_debugger.repl
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
+import net.harawata.appdirs.AppDirsFactory
 import org.apache.jena.rdf.model.RDFNode
 import org.jline.reader.EndOfFileException
+import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.reader.impl.DefaultParser
+import org.jline.reader.impl.history.DefaultHistory
 import org.jline.terminal.Terminal
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -18,6 +21,7 @@ import org.koin.core.component.inject
 import java.io.InputStream
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.createDirectories
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
@@ -52,10 +56,19 @@ class REPL(
 
     private val commandMap = commands.map { it.name to it }.toMap()
     private val parser = DefaultParser()
-    private val reader = LineReaderBuilder.builder()
-        .terminal(terminal)
-        .parser(parser)
-        .build()
+    private val reader: LineReader
+
+    init {
+        val cacheDir = Path.of(AppDirsFactory.getInstance().getUserCacheDir("SemanticJavaDebugger", null, null) ?: ".")
+        cacheDir.createDirectories()
+
+        reader = LineReaderBuilder.builder()
+            .terminal(terminal)
+            .parser(parser)
+            .variable(LineReader.HISTORY_FILE, cacheDir.resolve("history"))
+            .history(DefaultHistory())
+            .build()
+    }
 
     private val prompt = AttributedStringBuilder()
         .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
@@ -147,22 +160,18 @@ class REPL(
         return true
     }
 
-    fun main(): Boolean {
+    fun main() {
         var readInput = true
         while (readInput) {
             try {
                 val line = reader.readLine(prompt)
 
-                if (!interpretLine(line)) {
-                    return false
-                }
+                interpretLine(line)
             } catch (e: UserInterruptException) {
                 readInput = false
             } catch (e: EndOfFileException) {
                 readInput = false
             }
         }
-
-        return true
     }
 }

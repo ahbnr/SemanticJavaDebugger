@@ -49,6 +49,9 @@ dependencies {
     // Additional data structures / collections
     implementation("org.apache.commons:commons-collections4:4.4")
 
+    // Query platform dependent special directories, e.g. XDG cache directory etc
+    implementation("net.harawata:appdirs:1.2.1")
+
     testImplementation(kotlin("test"))
     testImplementation(platform("org.junit:junit-bom:5.8.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -112,7 +115,7 @@ tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "11"
 
     // kotlinOptions.freeCompilerArgs += listOf("-Xjavac-arguments=--add-exports=jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED")
-    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
+    kotlinOptions.freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime -Xopt-in=kotlin.RequiresOptIn"
 }
 
 application {
@@ -120,5 +123,15 @@ application {
         "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
     )
 
-    mainClass.set("SemanticJavaDebuggerKt")
+    mainClass.set("de.ahbnr.semanticweb.java_debugger.SemanticJavaDebuggerKt")
+}
+
+
+task("runInfo") {
+    doFirst {
+        val classpath = sourceSets.main.get().runtimeClasspath
+
+        println("CLASSPATH=${classpath.joinToString(System.getProperty("path.separator"))}")
+        println("MAINCLASS=${application.mainClass.get()}")
+    }
 }

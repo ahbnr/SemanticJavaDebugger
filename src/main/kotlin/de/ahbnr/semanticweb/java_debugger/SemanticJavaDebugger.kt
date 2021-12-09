@@ -1,5 +1,7 @@
 @file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE", "JAVA_MODULE_DOES_NOT_DEPEND_ON_MODULE")
 
+package de.ahbnr.semanticweb.java_debugger;
+
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
@@ -117,6 +119,7 @@ class SemanticJavaDebugger : CliktCommand() {
                     repl.interpretStream(fileInputStream)
                 } else {
                     repl.main()
+                    true
                 }
 
                 returnCode = if (wasSuccessful) 0 else -1
