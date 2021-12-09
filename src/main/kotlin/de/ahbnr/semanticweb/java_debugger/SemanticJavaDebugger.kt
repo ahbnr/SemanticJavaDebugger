@@ -102,6 +102,7 @@ class SemanticJavaDebugger : CliktCommand() {
                         ReverseCommand(jvmDebugger, ns),
                         LocalsCommand(jvmDebugger),
                         OwlClassCommand(),
+                        ReadCommand(),
                         RunCommand(jvmDebugger),
                         SectionCommand(),
                         ShaclCommand(graphGen),
