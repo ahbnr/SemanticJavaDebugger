@@ -8,7 +8,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Paths
-import kotlin.io.path.pathString
+import kotlin.io.path.absolutePathString
 
 class RunCommand(
     val jvmDebugger: JvmDebugger
@@ -55,7 +55,7 @@ class RunCommand(
             } else classOrSource
 
         logger.log("Launching Java program.")
-        jvmDebugger.launchVM(className, classpath.pathString)
+        jvmDebugger.launchVM(className, classpath.absolutePathString())
         jvmDebugger.jvm?.resume()
 
         return true
