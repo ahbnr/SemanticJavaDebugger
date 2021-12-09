@@ -116,9 +116,9 @@ assert sparql-success <<EOF
     SELECT ?bot1
     WHERE {
         ?bot1 a prog:examples.tests.Bot1 ;
-              prog:examples.tests.Bot1_bot1Field [] ;
-              prog:examples.tests.Mid_midField [] ;
-              prog:examples.tests.Top_topField [] .
+              prog:examples.tests.Bot1.bot1Field [] ;
+              prog:examples.tests.Mid.midField [] ;
+              prog:examples.tests.Top.topField [] .
     }
 EOF
 
@@ -126,7 +126,7 @@ assert sparql-fail <<EOF
     SELECT ?bot1
     WHERE {
         ?bot1 a prog:examples.tests.Bot1 ;
-              prog:examples.tests.Bot1_bot2Field [] .
+              prog:examples.tests.Bot1.bot2Field [] .
     }
 EOF
 
@@ -134,8 +134,8 @@ assert sparql-success <<EOF
     SELECT ?mid
     WHERE {
         ?mid a prog:examples.tests.Mid ;
-             prog:examples.tests.Mid_midField [] ;
-             prog:examples.tests.Top_topField [] .
+             prog:examples.tests.Mid.midField [] ;
+             prog:examples.tests.Top.topField [] .
     }
 EOF
 
@@ -143,14 +143,14 @@ assert sparql-fail <<EOF
     SELECT ?mid
     WHERE {
         ?mid a prog:examples.tests.Mid ;
-             prog:examples.tests.Bot1_botField [] .
+             prog:examples.tests.Bot1.botField [] .
     }
 EOF
 
 assert sparql-fail <<EOF
     SELECT ?notMid
     WHERE {
-        ?notMid java:hasMethod prog:examples.tests.Mid_midMethod%28%29 .
+        ?notMid java:hasMethod prog:examples.tests.Mid.void_midMethod%28%29 .
         FILTER (?notMid != prog:examples.tests.Mid)
     }
 EOF
@@ -162,14 +162,14 @@ assert sparql-success <<EOF
     SELECT  ?midInterface
     WHERE {
         FILTER (?midInterface = prog:examples.tests.MidInterface) .
-        ?midInterface java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod%28%29 ;
+        ?midInterface java:hasMethod prog:examples.tests.MidInterface.void_midInterfaceMethod%28%29 ;
                       rdfs:subClassOf [
                         a java:Interface ;
-                        java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method%28%29
+                        java:hasMethod prog:examples.tests.TopInterface1.void_topInterface1Method%28%29
                       ] ;
                       rdfs:subClassOf [
                         a java:Interface ;
-                        java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method%28%29
+                        java:hasMethod prog:examples.tests.TopInterface2.void_topInterface2Method%28%29
                       ] .
     }
 EOF
@@ -181,15 +181,15 @@ assert sparql-success <<EOF
         FILTER (?midClass = prog:examples.tests.Mid) .
         ?midClass rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.tests.MidInterface_midInterfaceMethod%28%29 ;
+                    java:hasMethod prog:examples.tests.MidInterface.void_midInterfaceMethod%28%29 ;
                   ] ;
                   rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.tests.TopInterface1_topInterface1Method%28%29
+                    java:hasMethod prog:examples.tests.TopInterface1.void_topInterface1Method%28%29
                   ] ;
                   rdfs:subClassOf [
                     a java:Interface ;
-                    java:hasMethod prog:examples.tests.TopInterface2_topInterface2Method%28%29
+                    java:hasMethod prog:examples.tests.TopInterface2.void_topInterface2Method%28%29
                   ] .
     }
 EOF

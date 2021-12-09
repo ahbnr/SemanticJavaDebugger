@@ -29,7 +29,7 @@ class ScriptTests {
             javaBin,
             "-cp", classpath,
             "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
-            "SemanticJavaDebuggerKt",
+            "de.ahbnr.semanticweb.java_debugger.SemanticJavaDebuggerKt",
             "--color",
             scriptPath.toString()
         )

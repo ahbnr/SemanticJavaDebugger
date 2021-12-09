@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 ./gradlew -q compileKotlin
 
 # Based on https://stackoverflow.com/a/45858448
@@ -12,4 +14,4 @@ while read line; do
      fi
 done < <( ./gradlew runInfo )
 
-java -cp "$CLASSPATH" $MAINCLASS
+java -cp "$CLASSPATH" --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED $MAINCLASS

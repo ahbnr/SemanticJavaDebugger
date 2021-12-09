@@ -24,7 +24,8 @@ class MethodInfo(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    val id = "${jdiMethod.name()}(${jdiMethod.argumentTypeNames().joinToString(",")})"
+    // we have to encode the return type to deal with bridge methods which can violate the overloading rules
+    val id = "${jdiMethod.returnTypeName()}_${jdiMethod.name()}(${jdiMethod.argumentTypeNames().joinToString(",")})"
 
     val declarationLocation: LocationInfo?
         get() {

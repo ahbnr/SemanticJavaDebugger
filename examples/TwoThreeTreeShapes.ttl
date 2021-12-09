@@ -12,80 +12,80 @@
 #    rdf:type sh:NodeShape ;
 #    sh:targetClass prog:examples.Pair .
     # sh:property [
-    #     sh:path prog:examples.Pair_key ;
+    #     sh:path prog:examples.Pair.key ;
     #     sh:datatype java:int ;
     # ] ;
     # sh:property [
-    #     sh:path prog:examples.Pair_value ;
+    #     sh:path prog:examples.Pair.value ;
     #     sh:datatype java:string ;
     # ] .
 
 domain:LeafShape
     rdf:type sh:NodeShape ;
     sh:property [
-        sh:path prog:examples.Node_childL ;
+        sh:path prog:examples.Node.childL ;
         sh:hasValue java:null ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_dataL ;
+        sh:path prog:examples.Node.dataL ;
         sh:node prog:examples.Pair ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_childM ;
+        sh:path prog:examples.Node.childM ;
         sh:hasValue java:null ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_dataR ;
+        sh:path prog:examples.Node.dataR ;
         sh:hasValue java:null ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_childR ;
+        sh:path prog:examples.Node.childR ;
         sh:hasValue java:null ;
     ] .
 
 domain:TwoNodeShape
     rdf:type sh:NodeShape ;
     sh:property [
-        sh:path prog:examples.Node_childL ;
+        sh:path prog:examples.Node.childL ;
         sh:class prog:examples.Node ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_dataL ;
+        sh:path prog:examples.Node.dataL ;
         sh:class prog:examples.Pair ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_childM ;
+        sh:path prog:examples.Node.childM ;
         sh:class prog:examples.Node ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_dataR ;
+        sh:path prog:examples.Node.dataR ;
         sh:hasValue java:null ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_childR ;
+        sh:path prog:examples.Node.childR ;
         sh:hasValue java:null ;
     ] .
 
 domain:ThreeNodeShape
     rdf:type sh:NodeShape ;
     sh:property [
-        sh:path prog:examples.Node_childL ;
+        sh:path prog:examples.Node.childL ;
         sh:class prog:examples.Node ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_dataL ;
+        sh:path prog:examples.Node.dataL ;
         sh:class prog:examples.Pair ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_childM ;
+        sh:path prog:examples.Node.childM ;
         sh:class prog:examples.Node ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_dataR ;
+        sh:path prog:examples.Node.dataR ;
         sh:class prog:examples.Pair ;
     ] ;
     sh:property [
-        sh:path prog:examples.Node_childR ;
+        sh:path prog:examples.Node.childR ;
         sh:class prog:examples.Node ;
     ] .
 

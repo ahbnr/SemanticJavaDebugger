@@ -23,7 +23,7 @@ sparql <<EOF
     SELECT ?container ?boolVal
     WHERE {
         ?container a prog:examples.tests.DataContainer ;
-                   prog:examples.tests.DataContainer_booleanField ?boolVal .
+                   prog:examples.tests.DataContainer.booleanField ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
@@ -34,7 +34,7 @@ sparql <<EOF
     SELECT ?second
     WHERE {
         ?container a prog:examples.tests.DataContainer ;
-                   prog:examples.tests.DataContainer_intArrayField [
+                   prog:examples.tests.DataContainer.intArrayField [
                      a java:Array ;
                      java:hasElement [
                          java:hasIndex 1 ;
@@ -50,7 +50,7 @@ sparql <<EOF
     SELECT ?first
     WHERE {
         [] a prog:examples.tests.DataContainer ;
-           prog:examples.tests.DataContainer_stringArrayField [
+           prog:examples.tests.DataContainer.stringArrayField [
              a java:Array ;
              java:hasElement [
                  java:hasIndex 0 ;
@@ -68,7 +68,7 @@ sparql <<EOF
     SELECT ?string
     WHERE {
         [] a prog:examples.tests.DataContainer ;
-           prog:examples.tests.DataContainer_stringField [
+           prog:examples.tests.DataContainer.stringField [
              java:hasStringValue ?string
            ] .
     }
@@ -89,7 +89,7 @@ sparql <<EOF
     SELECT ?boolVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.tests.DataTest_varsTest%28%29_booleanVar ?boolVal .
+           prog:examples.tests.DataTest.void_varsTest%28%29.booleanVar ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 EOF
@@ -100,7 +100,7 @@ sparql <<EOF
     SELECT ?intArrayVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.tests.DataTest_varsTest%28%29_intArrayVar [
+           prog:examples.tests.DataTest.void_varsTest%28%29.intArrayVar [
              java:hasElement [
                java:hasIndex 2 ;
                java:storesPrimitive ?intArrayVal

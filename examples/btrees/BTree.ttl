@@ -1,0 +1,24 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/BTrees#> .
+
+domain:BTreeNode owl:equivalentClass [
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                rdfs:comment """Every node can have at most 2M children, where M is the order of the tree."""^^rdfs:Literal ;
+                rdf:type owl:Restriction ;
+                owl:onProperty prog:examples.btrees.BTreeNode_children ;
+                owl:allValuesFrom [
+                    rdf:type owl:Restriction ;
+                    owl:onProperty prog:hasElement ;
+                    owl:maxCardinality "4"^^xsd:nonNegativeInteger
+                ]
+            ]
+        )
+    ] .

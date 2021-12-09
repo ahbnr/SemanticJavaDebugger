@@ -9,10 +9,10 @@ checkkb --is-consistent
 section Are local variables correctly declared?
 
 assert triples <<EOF
-    prog:examples.tests.MyClass_basic%28%29 java:declaresVariable prog:examples.tests.MyClass_basic%28%29_localVariable .
+    prog:examples.tests.MyClass.void_basic%28%29 java:declaresVariable prog:examples.tests.MyClass.void_basic%28%29.localVariable .
 
-    prog:examples.tests.MyClass_basic%28%29_localVariable rdfs:range xsd:int ;
-                                                          rdfs:domain java:StackFrame .
+    prog:examples.tests.MyClass.void_basic%28%29.localVariable rdfs:range xsd:int ;
+                                                               rdfs:domain java:StackFrame .
 EOF
 
 section Are values present?
@@ -21,7 +21,7 @@ assert sparql-success <<EOF
     SELECT ?frame
     WHERE {
         ?frame a java:StackFrame ;
-               prog:examples.tests.MyClass_basic%28%29_localVariable "42"^^xsd:int .
+               prog:examples.tests.MyClass.void_basic%28%29.localVariable "42"^^xsd:int .
     }
 EOF
 
@@ -32,23 +32,23 @@ buildkb --limit-sdk
 section Are local variables with same name recognized?
 
 assert triples <<EOF
-    prog:examples.tests.MyClass_scopes%28%29 java:declaresVariable prog:examples.tests.MyClass_scopes%28%29_localVariable_0 ;
-                                             java:declaresVariable prog:examples.tests.MyClass_scopes%28%29_localVariable_1 .
+    prog:examples.tests.MyClass.void_scopes%28%29 java:declaresVariable prog:examples.tests.MyClass.void_scopes%28%29.localVariable_0 ;
+                                                  java:declaresVariable prog:examples.tests.MyClass.void_scopes%28%29.localVariable_1 .
 EOF
 
 assert sparql-success <<EOF
     SELECT ?frame
     WHERE {
         ?frame a java:StackFrame ;
-               prog:examples.tests.MyClass_scopes%28%29_localVariable_1 "1337"^^xsd:int .
+               prog:examples.tests.MyClass.void_scopes%28%29.localVariable_1 "1337"^^xsd:int .
     }
 EOF
 
 section Are variable source code locations available?
 
 assert triples <<EOF
-    prog:examples.tests.MyClass_scopes%28%29_localVariable_0 java:isAtLine "12"^^xsd:int .
-    prog:examples.tests.MyClass_scopes%28%29_localVariable_1 java:isAtLine "16"^^xsd:int .
+    prog:examples.tests.MyClass.void_scopes%28%29.localVariable_0 java:isAtLine "12"^^xsd:int .
+    prog:examples.tests.MyClass.void_scopes%28%29.localVariable_1 java:isAtLine "16"^^xsd:int .
 EOF
 
 stop at examples.tests.MyClass:30
@@ -58,16 +58,16 @@ buildkb --limit-sdk
 section Are variables removed by compile-time optimizations ignored?
 
 assert triples <<EOF
-    prog:examples.tests.MyClass_removedVar%28%29 java:declaresVariable prog:examples.tests.MyClass_removedVar%28%29_localVariable .
+    prog:examples.tests.MyClass.void_removedVar%28%29 java:declaresVariable prog:examples.tests.MyClass.void_removedVar%28%29.localVariable .
 
-    prog:examples.tests.MyClass_removedVar%28%29_localVariable java:isAtLine "28"^^xsd:int .
+    prog:examples.tests.MyClass.void_removedVar%28%29.localVariable java:isAtLine "28"^^xsd:int .
 EOF
 
 assert sparql-success <<EOF
     SELECT ?frame
     WHERE {
         ?frame a java:StackFrame ;
-               prog:examples.tests.MyClass_removedVar%28%29_localVariable "12"^^xsd:int .
+               prog:examples.tests.MyClass.void_removedVar%28%29.localVariable "12"^^xsd:int .
     }
 EOF
 

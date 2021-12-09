@@ -123,7 +123,7 @@ class OntURIs(val ns: Namespaces) {
         fun genVariableDeclarationURI(variable: LocalVariableInfo): String {
             val referenceType = variable.methodInfo.jdiMethod.declaringType()
 
-            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${IRILib.encodeUriComponent(variable.methodInfo.id)}_${
+            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}.${IRILib.encodeUriComponent(variable.methodInfo.id)}.${
                 IRILib.encodeUriComponent(
                     variable.id
                 )
@@ -133,7 +133,7 @@ class OntURIs(val ns: Namespaces) {
         fun genMethodURI(methodInfo: MethodInfo): String {
             val referenceType = methodInfo.jdiMethod.declaringType()
 
-            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}_${
+            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}.${
                 IRILib.encodeUriComponent(methodInfo.id)
             }"
         }
@@ -147,7 +147,7 @@ class OntURIs(val ns: Namespaces) {
                 IRILib.encodeUriComponent(
                     field.declaringType().name()
                 )
-            }_${IRILib.encodeUriComponent(field.name())}"
+            }.${IRILib.encodeUriComponent(field.name())}"
 
         fun genUnloadedTypeURI(typeName: String): String {
             return ns.prog + IRILib.encodeUriComponent(typeName)
@@ -176,10 +176,10 @@ class OntURIs(val ns: Namespaces) {
             "${ns.run}frame$frameDepth"
 
         fun genObjectURI(objectReference: ObjectReference): String =
-            "${ns.run}object_${objectReference.uniqueID()}"
+            "${ns.run}object${objectReference.uniqueID()}"
 
         fun genSizedHasElementURI(arrayReference: ArrayReference): String =
-            "${ns.run}hasElement_object_${arrayReference.uniqueID()}"
+            "${ns.run}hasElement_object${arrayReference.uniqueID()}"
 
         fun genArrayElementInstanceURI(arrayReference: ArrayReference, index: Int) =
             "${ns.run}element${index}_of_${arrayReference.uniqueID()}"
