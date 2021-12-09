@@ -11,6 +11,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import spoon.Launcher
+import kotlin.io.path.absolutePathString
 
 class BuildKBCommand(
     val jvmDebugger: JvmDebugger,
@@ -34,14 +35,12 @@ class BuildKBCommand(
         }
 
         val sourcePath = repl.sourcePath
-        if (sourcePath == null) {
-            logger.error("No source is available.")
-            return false
-        }
 
         val spoonLauncher = Launcher()
 
-        spoonLauncher.addInputResource(sourcePath.toString())
+        if (sourcePath != null) {
+            spoonLauncher.addInputResource(sourcePath.absolutePathString())
+        }
         spoonLauncher.buildModel()
         logger.success("Source model created.")
 
