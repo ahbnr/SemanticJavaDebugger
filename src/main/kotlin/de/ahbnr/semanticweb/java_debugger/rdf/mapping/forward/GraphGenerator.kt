@@ -4,18 +4,25 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
+import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
 import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.reasoner.ReasonerRegistry
+import org.apache.jena.riot.RiotException
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.BufferedReader
 import java.io.FileReader
+import java.io.PrintStream
 
 class GraphGenerator(
     private val ns: Namespaces,
     private val mappers: List<IMapper>
-) {
+) : KoinComponent {
+    private val logger: Logger by inject()
+
     private fun loadJavaOntology(model: Model) {
         val owlInputStream = javaClass.getResourceAsStream("/ontologies/java.owl")
         model.read(owlInputStream, null, "TURTLE")
@@ -35,7 +42,15 @@ class GraphGenerator(
     ) {
         if (applicationDomainRulesPath != null) {
             val fileReader = BufferedReader(FileReader(applicationDomainRulesPath))
-            model.read(fileReader, null, "TURTLE")
+
+            try {
+                model.read(fileReader, null, "TURTLE")
+            } catch (e: RiotException) {
+                val printStream = PrintStream(logger.logStream())
+                e.printStackTrace(printStream)
+                printStream.flush()
+                logger.error("Failed to parse domain specification from ${applicationDomainRulesPath}.")
+            }
         }
     }
 

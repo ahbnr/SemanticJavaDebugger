@@ -9,6 +9,9 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.semanticweb.HermiT.ReasonerFactory
 import org.semanticweb.owlapi.manchestersyntax.parser.ManchesterOWLSyntaxParserImpl
+import org.semanticweb.owlapi.manchestersyntax.renderer.ParserException
+import org.semanticweb.owlapi.reasoner.InconsistentOntologyException
+import java.io.PrintStream
 
 class OwlClassCommand : IREPLCommand, KoinComponent {
     private val logger: Logger by inject()
@@ -40,10 +43,25 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
         }
         manchesterParser.setDefaultOntology(baseOntology)
 
-        val classExpression = manchesterParser.parseClassExpression(rawInput)
+        val classExpression = try {
+            manchesterParser.parseClassExpression(rawInput)
+        } catch (e: ParserException) {
+            val printStream = PrintStream(logger.logStream())
+            e.printStackTrace(printStream)
+            printStream.flush()
+            logger.error("Could not parse Manchester class expression.")
+            return false
+        }
+
         val reasoner = ReasonerFactory().createReasoner(baseOntology)
 
-        val instances = reasoner.getInstances(classExpression)
+        val instances = try {
+            reasoner.getInstances(classExpression)
+        } catch (e: InconsistentOntologyException) {
+            logger.error("The ontology is not consistent.")
+            return false
+        }
+
         if (instances.isEmpty) {
             logger.log("Found no instances for this class.")
         } else {
