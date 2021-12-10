@@ -133,6 +133,8 @@ class SemanticJavaDebugger : CliktCommand() {
 }
 
 fun main(args: Array<String>) {
+    println("Initializing sjdb...")
+
     val debugger = SemanticJavaDebugger()
 
     debugger.main(args)
