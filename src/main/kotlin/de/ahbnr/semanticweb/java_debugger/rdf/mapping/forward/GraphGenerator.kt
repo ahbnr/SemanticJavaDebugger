@@ -6,10 +6,7 @@ import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
-import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
-import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.reasoner.ReasonerRegistry
 import org.apache.jena.riot.RiotException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -75,20 +72,5 @@ class GraphGenerator(
         mapProgramState(buildParameters, model)
 
         return ontology
-    }
-
-    fun buildInferredModel(ontology: Ontology): InfModel {
-        val model = ontology.asGraphModel()
-
-        /**
-         * Maybe try out forward vs. backward chaining by selecting and configuring reasoner manually.
-         * See slide 66, lecture 6
-         */
-        // val reasoner = ReasonerRegistry.getOWLReasoner(); // sloooooow
-        // val reasoner = ReasonerRegistry.getOWLMiniReasoner() // also not fast enough
-        val reasoner = ReasonerRegistry.getOWLMicroReasoner() // much faster!
-        // val reasoner = ReasonerRegistry.getRDFSReasoner() // fast, but not powerful enough for our purposes.
-
-        return ModelFactory.createInfModel(reasoner, model)
     }
 }

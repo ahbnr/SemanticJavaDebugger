@@ -7,6 +7,7 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
+import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -73,9 +74,9 @@ class BuildKBCommand(
             limiter = limiter
         )
         val ontology = graphGenerator.buildOntology(buildParameters, repl.applicationDomainDefFile)
-        repl.knowledgeBase.ontology = ontology
+        repl.knowledgeBase = KnowledgeBase(ontology, repl)
 
-        logger.success("RDF graph created.")
+        logger.success("Knowledge base created.")
 
         return true
     }

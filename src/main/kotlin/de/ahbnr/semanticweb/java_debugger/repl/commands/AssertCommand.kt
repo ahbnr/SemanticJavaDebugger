@@ -45,8 +45,8 @@ class AssertCommand(
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val ontology = repl.knowledgeBase.ontology
-        if (ontology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
         }
@@ -63,16 +63,16 @@ class AssertCommand(
             return false
         }
 
-        val model = graphGenerator.buildInferredModel(ontology)
-
         when (assertionKind) {
             is AssertionKind.SparqlAssertion -> {
+                val model = knowledgeBase.getSparqlModel()
+
                 val queryString = ParameterizedSparqlString(
                     rawInput.drop(subCommand.length)
                 )
 
                 try {
-                    for ((prefixName, prefixUri) in repl.knowledgeBase.prefixNameToUri) {
+                    for ((prefixName, prefixUri) in knowledgeBase.prefixNameToUri) {
                         queryString.setNsPrefix(prefixName, prefixUri)
                     }
 
@@ -117,8 +117,9 @@ class AssertCommand(
                 }
             }
             is AssertionKind.Triples -> {
-                val prefixes = repl
-                    .knowledgeBase
+                val model = knowledgeBase.getTripleListingModel()
+
+                val prefixes = knowledgeBase
                     .prefixNameToUri
                     .entries
                     .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }

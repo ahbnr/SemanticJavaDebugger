@@ -7,8 +7,6 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.rdf.model.RDFNode
-import org.apache.jena.reasoner.ReasonerRegistry
-import org.apache.jena.reasoner.rulesys.OWLMicroReasoner
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import org.apache.jena.shacl.ShaclValidator
@@ -36,22 +34,14 @@ class ShaclCommand(
             return false
         }
 
-        val ontology = repl.knowledgeBase.ontology
-        if (ontology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
         }
 
-
-        val reasoner = ReasonerRegistry.getOWLMicroReasoner() as OWLMicroReasoner
-        // No pure forward reasoning :/
-        // https://lists.apache.org/thread/7xsvbvlhyydnk0tcsntwbtsdcvw9q4rx
-        reasoner.setMode(OWLMicroReasoner.HYBRID)
-
-        val baseModel = ontology.asGraphModel()
-        val infModel = baseModel.getInferenceModel(reasoner)
-        infModel.prepare()
-        val graph = infModel.graph
+        val model = knowledgeBase.getShaclModel()
+        val graph = model.graph
 
         val shapesGraph = RDFDataMgr.loadGraph(shapesFile)
         val shapes = Shapes.parse(shapesGraph)
@@ -67,21 +57,20 @@ class ShaclCommand(
             RDFDataMgr.write(logger.logStream(), report.model, Lang.TTL)
             logger.log("")
 
-            repl
-                .knowledgeBase
+            knowledgeBase
                 .variables
                 .filter { it.startsWith("?focus") }
-                .forEach { repl.knowledgeBase.removeVariable(it) }
+                .forEach { knowledgeBase.removeVariable(it) }
 
             val nameMap = mutableMapOf<String, RDFNode>()
             report.entries.forEachIndexed { idx, entry ->
-                val rdfNode = infModel.asRDFNode(entry.focusNode())
+                val rdfNode = model.asRDFNode(entry.focusNode())
 
                 val name = "?focus$idx"
 
                 nameMap[name] = rdfNode
             }
-            nameMap.forEach { (name, value) -> repl.knowledgeBase.setVariable(name, value) }
+            nameMap.forEach { (name, value) -> knowledgeBase.setVariable(name, value) }
 
             logger.log("The focus nodes have been made available under the following names: ")
             logger.log(nameMap.keys.joinToString(", "))

@@ -7,7 +7,6 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.semanticweb.HermiT.ReasonerFactory
 import org.semanticweb.owlapi.manchestersyntax.parser.ManchesterOWLSyntaxParserImpl
 import org.semanticweb.owlapi.manchestersyntax.renderer.ParserException
 import org.semanticweb.owlapi.reasoner.InconsistentOntologyException
@@ -21,20 +20,20 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
     override val name = "owlclass"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val baseOntology = repl.knowledgeBase.ontology
-        if (baseOntology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
         }
 
         val manchesterParser = ManchesterOWLSyntaxParserImpl(
-            baseOntology.owlOntologyManager.ontologyConfigurator,
-            baseOntology.owlOntologyManager.owlDataFactory
+            knowledgeBase.ontology.owlOntologyManager.ontologyConfigurator,
+            knowledgeBase.ontology.owlOntologyManager.owlDataFactory
         )
-        for ((prefixName, prefixUri) in repl.knowledgeBase.prefixNameToUri) {
+        for ((prefixName, prefixUri) in knowledgeBase.prefixNameToUri) {
             manchesterParser.prefixManager.setPrefix(prefixName, prefixUri)
         }
-        manchesterParser.setDefaultOntology(baseOntology)
+        manchesterParser.setDefaultOntology(knowledgeBase.ontology)
 
         val classExpression = try {
             manchesterParser.parseClassExpression(rawInput)
@@ -46,7 +45,7 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
             return false
         }
 
-        val reasoner = ReasonerFactory().createReasoner(baseOntology)
+        val reasoner = knowledgeBase.getOwlClassExpressionReasoner()
 
         val instances = try {
             reasoner.getInstances(classExpression)
@@ -65,7 +64,7 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
                         .asSequence()
                         .joinToString(", ") {
                             val prefixUriAndName =
-                                repl.knowledgeBase.uriToPrefixName.entries.find { (uri, prefixName) ->
+                                knowledgeBase.uriToPrefixName.entries.find { (uri, prefixName) ->
                                     it.iri.startsWith(uri)
                                 }
                             if (prefixUriAndName != null) {

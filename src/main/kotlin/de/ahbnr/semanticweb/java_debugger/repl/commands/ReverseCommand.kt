@@ -42,14 +42,14 @@ class ReverseCommand(
             return false
         }
 
-        val ontology = repl.knowledgeBase.ontology
-        if (ontology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
             return false
         }
 
-        val model = ontology.asGraphModel()
-        val node = repl.knowledgeBase.resolveVariableOrUri(variableOrUri)
+        val model = knowledgeBase.ontology.asGraphModel()
+        val node = knowledgeBase.resolveVariableOrUri(variableOrUri)
 
         if (node == null) {
             logger.error("No such node is known.")

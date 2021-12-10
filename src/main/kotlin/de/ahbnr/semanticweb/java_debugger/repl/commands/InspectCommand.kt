@@ -28,15 +28,15 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
             return false
         }
 
-        val ontology = repl.knowledgeBase.ontology
-        if (ontology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
             return false
         }
 
-        val model = ontology.asGraphModel()
+        val model = knowledgeBase.ontology.asGraphModel()
 
-        val node = repl.knowledgeBase.resolveVariableOrUri(variableOrIRI)
+        val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)
         if (node == null) {
             logger.error("No node is known under this name.")
             return false

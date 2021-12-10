@@ -20,8 +20,8 @@ class DumpKBCommand : IREPLCommand, KoinComponent {
     """.trimIndent()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val ontology = repl.knowledgeBase.ontology
-        if (ontology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("No knowledge base is available. Run `buildkb` first.")
             return false
         }
@@ -33,7 +33,7 @@ class DumpKBCommand : IREPLCommand, KoinComponent {
         }
 
         File(file).outputStream().use { stream ->
-            RDFDataMgr.write(stream, ontology.asGraphModel(), Lang.TTL)
+            RDFDataMgr.write(stream, knowledgeBase.ontology.asGraphModel(), Lang.TTL)
             logger.success("Knowledge base saved to $file.")
         }
 

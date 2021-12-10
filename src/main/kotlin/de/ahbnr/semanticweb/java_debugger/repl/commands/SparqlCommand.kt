@@ -26,8 +26,8 @@ class SparqlCommand(
     private val nonOptionRegex = """\s[^-\s]""".toRegex()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val baseOntology = repl.knowledgeBase.ontology
-        if (baseOntology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
             return false
         }
@@ -45,8 +45,7 @@ class SparqlCommand(
             rawQuery = rawInput.substring(startOfQuery)
         }
 
-        val prefixes = repl
-            .knowledgeBase
+        val prefixes = knowledgeBase
             .prefixNameToUri
             .entries
             .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
@@ -60,13 +59,13 @@ class SparqlCommand(
             val query = QueryFactory.create(queryString)
 
             val ontology = if (options.contains("--optimize")) {
-                logger.debug("Axioms before module extraction: ${baseOntology.axiomCount}.")
-                val module = extractSyntacticLocalityModule(baseOntology, query.queryPattern)
+                logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
+                val module = extractSyntacticLocalityModule(knowledgeBase.ontology, query.queryPattern)
                 logger.debug("Axioms after module extraction: ${module.axiomCount}.")
                 module
-            } else baseOntology
+            } else knowledgeBase.ontology
 
-            val model = graphGenerator.buildInferredModel(ontology)
+            val model = knowledgeBase.getSparqlModel(ontology)
 
             QueryExecutionFactory.create(query, model).use { execution ->
                 val results = execution.execSelect().rewindable()
@@ -74,7 +73,7 @@ class SparqlCommand(
                 results.reset()
 
                 for (variable in query.resultVars) {
-                    repl.knowledgeBase.removeVariable("?$variable")
+                    knowledgeBase.removeVariable("?$variable")
                 }
 
                 var idx = 0;
@@ -87,7 +86,7 @@ class SparqlCommand(
                     }
                     ++idx
                 }
-                nameMap.forEach { (name, value) -> repl.knowledgeBase.setVariable(name, value) }
+                nameMap.forEach { (name, value) -> knowledgeBase.setVariable(name, value) }
 
                 if (nameMap.isNotEmpty()) {
                     logger.log("The solution variables are available under the following names:")

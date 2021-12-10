@@ -16,9 +16,12 @@ import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import sun.misc.Signal
+import sun.misc.SignalHandler
 import java.io.InputStream
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.concurrent.thread
 import kotlin.io.path.createDirectories
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -44,7 +47,8 @@ class REPL(
 ) : KoinComponent {
     var applicationDomainDefFile: String? = null
     var sourcePath: Path? = null
-    var knowledgeBase = KnowledgeBase()
+    var knowledgeBase: KnowledgeBase? = null
+    var targetReasoner: ReasonerId = ReasonerId.JenaReasoner.JenaOwlMicro
 
     @OptIn(ExperimentalTime::class)
     var lastCommandDuration: Duration? = null
@@ -163,7 +167,23 @@ class REPL(
             try {
                 val line = reader.readLine(prompt)
 
-                interpretLine(line)
+                class Handler(private val commandThread: Thread) : SignalHandler {
+                    override fun handle(p0: Signal?) {
+                        @Suppress("DEPRECATION")
+                        commandThread.stop()
+                    }
+                }
+
+                val commandThread = thread(false) {
+                    interpretLine(line)
+                }
+
+                val oldSignalHandler = Signal.handle(Signal("INT"), Handler(commandThread))
+                commandThread.start()
+                commandThread.join()
+
+                Signal.handle(Signal("INT"), oldSignalHandler)
+
             } catch (e: UserInterruptException) {
                 readInput = false
             } catch (e: EndOfFileException) {

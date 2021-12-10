@@ -1,38 +1,97 @@
 package de.ahbnr.semanticweb.java_debugger.repl
 
 import com.github.owlcs.ontapi.Ontology
+import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import org.apache.jena.rdf.model.InfModel
+import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.RDFNode
+import org.apache.jena.reasoner.rulesys.GenericRuleReasoner
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.semanticweb.owlapi.reasoner.OWLReasoner
 
-class KnowledgeBase : KoinComponent {
+
+class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinComponent {
     private val URIs: OntURIs by inject()
+    private val logger: Logger by inject()
 
-    var ontology: Ontology? = null
-        set(value) {
-            field = value
-            variableStore.clear()
-            buildPrefixMaps(value)
+    private val sparqlReasoner: ReasonerId
+        get() = repl.targetReasoner
+    private val shaclReasoner: ReasonerId
+        get() = repl.targetReasoner
+    private val tripleListingReasoner: ReasonerId
+        get() = repl.targetReasoner
+    private val jenaValidationReasoner: ReasonerId.JenaReasoner
+        get() = with(repl.targetReasoner) {
+            when (this) {
+                is ReasonerId.JenaReasoner -> this
+                is ReasonerId.OwlApiReasoner -> {
+                    val fallback = ReasonerId.JenaReasoner.JenaOwl
+                    logger.debug("Can not use ${this.name} for Jena RDF validation. Falling back to ${fallback.name}.")
+                    fallback
+                }
+            }
         }
-
-    var prefixNameToUri = emptyMap<String, String>()
-        private set
-    var uriToPrefixName = emptyMap<String, String>()
-        private set
-
-    private val variableStore: MutableMap<String, RDFNode> = mutableMapOf()
-    val variables: Set<String>
-        get() = variableStore.keys
-
-    private fun buildPrefixMaps(ontology: Ontology?) {
-        if (ontology == null) {
-            prefixNameToUri = emptyMap()
-            uriToPrefixName = emptyMap()
-            return
+    private val owlClassExpressionReasoner: ReasonerId.OwlApiReasoner
+        get() = with(repl.targetReasoner) {
+            when (this) {
+                is ReasonerId.JenaReasoner -> {
+                    val fallback = ReasonerId.OwlApiReasoner.HermiT
+                    logger.debug("Can not use ${this.name} for owl class expression evaluation. Falling back to ${fallback.name}.")
+                    fallback
+                }
+                is ReasonerId.OwlApiReasoner -> this
+            }
         }
+    private val consistencyReasoner: ReasonerId.OwlApiReasoner
+        get() = owlClassExpressionReasoner
 
-        val prefixNameToIRI = mutableMapOf(
+    private fun getJenaModel(reasoner: ReasonerId): Model =
+        reasoner.inferJenaModel(ontology)
+
+    fun getSparqlModel(customBaseOntology: Ontology? = null): Model =
+        sparqlReasoner.inferJenaModel(customBaseOntology ?: ontology)
+
+    fun getShaclModel(): Model {
+        val reasonerId = shaclReasoner
+
+        // For SHACL, we have to infer all triples beforehand...
+        return when (reasonerId) {
+            is ReasonerId.JenaReasoner -> {
+                val reasoner = reasonerId.getReasoner()
+
+                if (reasoner is GenericRuleReasoner) {
+                    // No pure forward reasoning :/
+                    // https://lists.apache.org/thread/7xsvbvlhyydnk0tcsntwbtsdcvw9q4rx
+                    reasoner.setMode(GenericRuleReasoner.HYBRID)
+                }
+
+                val baseModel = ontology.asGraphModel()
+                val infModel = baseModel.getInferenceModel(reasoner)
+                infModel.prepare()
+
+                infModel
+            }
+
+            is ReasonerId.OwlApiReasoner -> reasonerId.inferJenaModel(ontology)
+        }
+    }
+
+    fun getTripleListingModel(): Model = getJenaModel(tripleListingReasoner)
+    fun getJenaValidationModel(): InfModel =
+        jenaValidationReasoner.inferJenaModel(ontology)
+
+    private fun getOwlApiReasoner(reasonerId: ReasonerId.OwlApiReasoner): OWLReasoner =
+        reasonerId.getReasoner(ontology)
+
+    fun getConsistencyReasoner(): OWLReasoner = getOwlApiReasoner(consistencyReasoner)
+    fun getOwlClassExpressionReasoner(): OWLReasoner = getOwlApiReasoner(owlClassExpressionReasoner)
+
+    val prefixNameToUri: Map<String, String>
+
+    init {
+        val prefixNameToUri = mutableMapOf(
             "rdf" to URIs.ns.rdf,
             "rdfs" to URIs.ns.rdfs,
             "owl" to URIs.ns.owl,
@@ -44,14 +103,19 @@ class KnowledgeBase : KoinComponent {
 
         val domainURI = ontology.asGraphModel().getNsPrefixURI("domain")
         if (domainURI != null) {
-            prefixNameToIRI["domain"] = domainURI
+            prefixNameToUri["domain"] = domainURI
         }
 
-        this.prefixNameToUri = prefixNameToIRI
-        this.uriToPrefixName = prefixNameToIRI
-            .entries
-            .associate { (prefixName, prefix) -> prefix to prefixName }
+        this.prefixNameToUri = prefixNameToUri
     }
+
+    val uriToPrefixName: Map<String, String> = prefixNameToUri
+        .entries
+        .associate { (prefixName, prefix) -> prefix to prefixName }
+
+    private val variableStore: MutableMap<String, RDFNode> = mutableMapOf()
+    val variables: Set<String>
+        get() = variableStore.keys
 
     private fun assertIsVariableName(name: String) {
         if (name.isBlank()) {

@@ -5,10 +5,8 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import org.apache.jena.reasoner.ReasonerRegistry
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.semanticweb.HermiT.ReasonerFactory
 
 class CheckKBCommand(
     private val graphGenerator: GraphGenerator
@@ -18,19 +16,16 @@ class CheckKBCommand(
     override val name = "checkkb"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val ontology = repl.knowledgeBase.ontology
-        if (ontology == null) {
+        val knowledgeBase = repl.knowledgeBase
+        if (knowledgeBase == null) {
             logger.error("No knowledge base is available. Run `buildkb` first.")
             return false
         }
 
-        logger.log("${ontology.axiomCount} axioms.")
+        logger.log("${knowledgeBase.ontology.axiomCount} axioms.")
 
         logger.log("Performing basic validation on inference model...")
-        // val reasoner = ReasonerRegistry.getOWLReasoner()
-        // val reasoner = ReasonerRegistry.getOWLMiniReasoner()
-        val reasoner = ReasonerRegistry.getOWLMicroReasoner()
-        val infModel = ontology.asGraphModel().getInferenceModel(reasoner)
+        val infModel = knowledgeBase.getJenaValidationModel()
 
         val validityReport = infModel.validate()
         if (validityReport.isValid) {
@@ -59,10 +54,10 @@ class CheckKBCommand(
         }
 
         var isConsistent = true
-        val hermit = ReasonerFactory().createReasoner(ontology)
+        val reasoner = knowledgeBase.getConsistencyReasoner()
         if (argv.contains("--is-consistent")) {
             logger.log("Performing consistency check with HermiT...")
-            isConsistent = hermit.isConsistent
+            isConsistent = reasoner.isConsistent
             if (isConsistent) {
                 logger.success("Knowledge base is consistent.")
             } else {
@@ -77,7 +72,7 @@ class CheckKBCommand(
             }
 
             // FIXME: Am I using Hermit correctly here?
-            val unsat = hermit.unsatisfiableClasses.entitiesMinusBottom
+            val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom
             if (unsat.isEmpty()) {
                 logger.success("No unsatisfiable concepts except the default bottom concepts.")
             } else {
