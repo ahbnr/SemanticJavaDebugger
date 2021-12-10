@@ -48,7 +48,7 @@ class REPL(
     var applicationDomainDefFile: String? = null
     var sourcePath: Path? = null
     var knowledgeBase: KnowledgeBase? = null
-    var targetReasoner: ReasonerId = ReasonerId.JenaReasoner.JenaOwlMicro
+    var targetReasoner: ReasonerId = ReasonerId.PureJenaReasoner.JenaOwlMicro
 
     @OptIn(ExperimentalTime::class)
     var lastCommandDuration: Duration? = null

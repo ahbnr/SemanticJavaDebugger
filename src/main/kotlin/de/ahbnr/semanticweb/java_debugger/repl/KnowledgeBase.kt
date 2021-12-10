@@ -22,29 +22,31 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
         get() = repl.targetReasoner
     private val tripleListingReasoner: ReasonerId
         get() = repl.targetReasoner
-    private val jenaValidationReasoner: ReasonerId.JenaReasoner
+    private val jenaValidationReasoner: JenaReasonerProvider
         get() = with(repl.targetReasoner) {
             when (this) {
-                is ReasonerId.JenaReasoner -> this
-                is ReasonerId.OwlApiReasoner -> {
-                    val fallback = ReasonerId.JenaReasoner.JenaOwl
+                is ReasonerId.PureJenaReasoner -> this
+                is ReasonerId.PureOwlApiReasoner -> {
+                    val fallback = ReasonerId.PureJenaReasoner.JenaOwlMicro
                     logger.debug("Can not use ${this.name} for Jena RDF validation. Falling back to ${fallback.name}.")
                     fallback
                 }
+                is ReasonerId.Openllet -> this
             }
         }
-    private val owlClassExpressionReasoner: ReasonerId.OwlApiReasoner
+    private val owlClassExpressionReasoner: OwlApiReasonerProvider
         get() = with(repl.targetReasoner) {
             when (this) {
-                is ReasonerId.JenaReasoner -> {
-                    val fallback = ReasonerId.OwlApiReasoner.HermiT
+                is ReasonerId.PureJenaReasoner -> {
+                    val fallback = ReasonerId.PureOwlApiReasoner.HermiT
                     logger.debug("Can not use ${this.name} for owl class expression evaluation. Falling back to ${fallback.name}.")
                     fallback
                 }
-                is ReasonerId.OwlApiReasoner -> this
+                is ReasonerId.PureOwlApiReasoner -> this
+                is ReasonerId.Openllet -> this
             }
         }
-    private val consistencyReasoner: ReasonerId.OwlApiReasoner
+    private val consistencyReasoner: OwlApiReasonerProvider
         get() = owlClassExpressionReasoner
 
     private fun getJenaModel(reasoner: ReasonerId): Model =
@@ -58,8 +60,8 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
 
         // For SHACL, we have to infer all triples beforehand...
         return when (reasonerId) {
-            is ReasonerId.JenaReasoner -> {
-                val reasoner = reasonerId.getReasoner()
+            is ReasonerId.PureJenaReasoner -> {
+                val reasoner = reasonerId.getJenaReasoner()
 
                 if (reasoner is GenericRuleReasoner) {
                     // No pure forward reasoning :/
@@ -74,7 +76,7 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
                 infModel
             }
 
-            is ReasonerId.OwlApiReasoner -> reasonerId.inferJenaModel(ontology)
+            else -> reasonerId.inferJenaModel(ontology)
         }
     }
 
@@ -82,8 +84,8 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
     fun getJenaValidationModel(): InfModel =
         jenaValidationReasoner.inferJenaModel(ontology)
 
-    private fun getOwlApiReasoner(reasonerId: ReasonerId.OwlApiReasoner): OWLReasoner =
-        reasonerId.getReasoner(ontology)
+    private fun getOwlApiReasoner(reasonerId: OwlApiReasonerProvider): OWLReasoner =
+        reasonerId.getOwlApiReasoner(ontology)
 
     fun getConsistencyReasoner(): OWLReasoner = getOwlApiReasoner(consistencyReasoner)
     fun getOwlClassExpressionReasoner(): OWLReasoner = getOwlApiReasoner(owlClassExpressionReasoner)

@@ -49,6 +49,9 @@ class CheckKBCommand(
             validityReport.reports.forEachRemaining {
                 logger.log(it.type)
                 logger.log(it.description)
+                if (it.extension != null) {
+                    logger.log(it.extension.toString())
+                }
                 logger.log("")
             }
         }
@@ -56,7 +59,7 @@ class CheckKBCommand(
         var isConsistent = true
         val reasoner = knowledgeBase.getConsistencyReasoner()
         if (argv.contains("--is-consistent")) {
-            logger.log("Performing consistency check with HermiT...")
+            logger.log("Performing consistency check with ${reasoner.reasonerName}...")
             isConsistent = reasoner.isConsistent
             if (isConsistent) {
                 logger.success("Knowledge base is consistent.")

@@ -74,6 +74,11 @@ class BuildKBCommand(
             limiter = limiter
         )
         val ontology = graphGenerator.buildOntology(buildParameters, repl.applicationDomainDefFile)
+        if (ontology == null) {
+            logger.error("Could not create knowledge base.")
+            return false
+        }
+
         repl.knowledgeBase = KnowledgeBase(ontology, repl)
 
         logger.success("Knowledge base created.")

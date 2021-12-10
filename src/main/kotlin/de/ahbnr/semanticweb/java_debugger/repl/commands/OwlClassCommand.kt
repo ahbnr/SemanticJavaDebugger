@@ -50,7 +50,11 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
         val instances = try {
             reasoner.getInstances(classExpression)
         } catch (e: InconsistentOntologyException) {
+            val printStream = PrintStream(logger.logStream())
+            e.printStackTrace(printStream)
+            printStream.flush()
             logger.error("The ontology is not consistent.")
+
             return false
         }
 
