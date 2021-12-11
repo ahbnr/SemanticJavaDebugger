@@ -90,8 +90,13 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
      *  * http://webont.org/owled/2007/PapersPDF/submission_23.pdf
      */
     object Openllet : ReasonerId("Openllet"), JenaReasonerProvider, OwlApiReasonerProvider {
-        override fun getOwlApiReasoner(baseOntology: OWLOntology): OpenlletReasoner =
-            OpenlletReasonerFactory.getInstance().createReasoner(baseOntology)
+        override fun getOwlApiReasoner(baseOntology: OWLOntology): OpenlletReasoner {
+            val reasoner = OpenlletReasonerFactory.getInstance().createReasoner(baseOntology)
+            // TODO: Not sure if this is necessary
+            reasoner.prepareReasoner()
+
+            return reasoner
+        }
 
         override fun getJenaReasoner(): PelletReasoner =
             openllet.jena.PelletReasonerFactory.theInstance().create()
@@ -100,6 +105,11 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             val reasoner = getJenaReasoner()
             val baseModel = baseOntology.asGraphModel()
 
+            // TODO: Not sure if using any of these alternatives makes a difference
+            // val ontModel = ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC, baseModel)
+            // // ontModel.setStrictMode(false)
+            // // return ontModel
+            // return baseModel.getInferenceModel(reasoner)
             return ModelFactory.createInfModel(reasoner, baseModel)
         }
     }

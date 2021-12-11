@@ -28,6 +28,8 @@ dependencies {
     implementation("com.github.galigator.openllet:openllet-owlapi:2.6.5")
     // Jena support
     implementation("com.github.galigator.openllet:openllet-jena:2.6.5")
+    // Explanation support
+    implementation("com.github.galigator.openllet:openllet-explanation:2.6.5")
 
     // Extended OWL support
     implementation("com.github.owlcs:ontapi:2.1.0")

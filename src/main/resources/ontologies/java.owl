@@ -26,13 +26,13 @@ and
 https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.6"""^^rdfs:Literal ;
                     owl:equivalentClass [ rdf:type rdfs:Datatype ;
                                           owl:oneOf [ rdf:type rdf:List ;
-                                                      rdf:first "package-private" ;
+                                                      rdf:first "package-private"^^java:AccessModifier ;
                                                       rdf:rest [ rdf:type rdf:List ;
-                                                                 rdf:first "private" ;
+                                                                 rdf:first "private"^^java:AccessModifier ;
                                                                  rdf:rest [ rdf:type rdf:List ;
-                                                                            rdf:first "protected" ;
+                                                                            rdf:first "protected"^^java:AccessModifier ;
                                                                             rdf:rest [ rdf:type rdf:List ;
-                                                                                       rdf:first "public" ;
+                                                                                       rdf:first "public"^^java:AccessModifier ;
                                                                                        rdf:rest rdf:nil
                                                                                      ]
                                                                           ]
