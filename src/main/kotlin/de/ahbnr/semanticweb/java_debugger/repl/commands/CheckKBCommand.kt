@@ -22,9 +22,21 @@ class CheckKBCommand(
             return false
         }
 
+        val checkIfConsistent = argv.contains("--is-consistent")
+        val checkForUnsatisfiableClasses = argv.contains("--has-unsatisfiable-classes")
+        if (checkForUnsatisfiableClasses && !checkIfConsistent) {
+            logger.error("Can only check for unsatisfiable classes if we also check for consistency with --is-consistent.")
+            return false
+        }
+
         logger.log("${knowledgeBase.ontology.axiomCount} axioms.")
 
         logger.log("Performing basic validation on inference model...")
+        org.apache.jena.shared.impl.JenaParameters.enableEagerLiteralValidation = true
+        org.apache.jena.shared.impl.JenaParameters.enableSilentAcceptanceOfUnknownDatatypes = false
+        org.apache.jena.shared.impl.JenaParameters.enableOWLRuleOverOWLRuleWarnings = true
+        org.apache.jena.shared.impl.JenaParameters.enablePlainLiteralSameAsString = true
+        org.apache.jena.shared.impl.JenaParameters.enableWhitespaceCheckingOfTypedLiterals = false
         val infModel = knowledgeBase.getJenaValidationModel()
 
         val validityReport = infModel.validate()
@@ -56,31 +68,31 @@ class CheckKBCommand(
             }
         }
 
-        var isConsistent = true
-        val reasoner = knowledgeBase.getConsistencyReasoner()
-        if (argv.contains("--is-consistent")) {
+        if (checkIfConsistent) {
+            val reasoner = knowledgeBase.getConsistencyReasoner()
+
             logger.log("Performing consistency check with ${reasoner.reasonerName}...")
-            isConsistent = reasoner.isConsistent
+            val isConsistent = reasoner.isConsistent
             if (isConsistent) {
                 logger.success("Knowledge base is consistent.")
             } else {
                 logger.error("Knowledge base is inconsistent!")
             }
-        }
 
-        if (argv.contains("--has-unsatisfiable-classes")) {
-            if (!isConsistent) {
-                logger.error("Can only do a full check if Ontology is consistent.")
-                return false
-            }
+            if (checkForUnsatisfiableClasses) {
+                if (!isConsistent) {
+                    logger.error("Can only do a full check if Ontology is consistent.")
+                    return false
+                }
 
-            // FIXME: Am I using Hermit correctly here?
-            val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom
-            if (unsat.isEmpty()) {
-                logger.success("No unsatisfiable concepts except the default bottom concepts.")
-            } else {
-                logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
-                logger.error(unsat.toString())
+                // FIXME: Am I using Hermit correctly here?
+                val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom
+                if (unsat.isEmpty()) {
+                    logger.success("No unsatisfiable concepts except the default bottom concepts.")
+                } else {
+                    logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
+                    logger.error(unsat.toString())
+                }
             }
         }
 

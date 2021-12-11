@@ -47,7 +47,17 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
             }
         }
     private val consistencyReasoner: OwlApiReasonerProvider
-        get() = owlClassExpressionReasoner
+        get() = with(repl.targetReasoner) {
+            when (this) {
+                is ReasonerId.PureJenaReasoner -> {
+                    val fallback = ReasonerId.PureOwlApiReasoner.HermiT
+                    logger.debug("Can not use ${this.name} for consistency checking. Falling back to ${fallback.name}.")
+                    fallback
+                }
+                is ReasonerId.PureOwlApiReasoner -> this
+                is ReasonerId.Openllet -> this
+            }
+        }
 
     private fun getJenaModel(reasoner: ReasonerId): Model =
         reasoner.inferJenaModel(ontology)
