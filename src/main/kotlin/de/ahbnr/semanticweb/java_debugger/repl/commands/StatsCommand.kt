@@ -6,7 +6,6 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -79,7 +78,7 @@ class StatsCommand(
             """.trimIndent()
 
             val deepArrayQuery = QueryFactory.create(deepArrayQueryString)
-            QueryExecutionFactory.create(deepArrayQuery, infModel).use { execution ->
+            knowledgeBase.buildSparqlExecution(deepArrayQuery, infModel).use { execution ->
                 val results = execution.execSelect()
 
                 logger.log("Deep Arrays: ${results.nextSolution().get("count").asLiteral().int}")

@@ -7,7 +7,6 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.query.ParameterizedSparqlString
-import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
 import org.apache.jena.rdf.model.ModelFactory
@@ -81,7 +80,7 @@ class AssertCommand(
 
                     val query = QueryFactory.create(queryString.toString())
 
-                    QueryExecutionFactory.create(query, model).use { execution ->
+                    knowledgeBase.buildSparqlExecution(query, model).use { execution ->
                         val results = execution.execSelect()
                         // Need to ensure all variables are present in at least one result
                         val result =

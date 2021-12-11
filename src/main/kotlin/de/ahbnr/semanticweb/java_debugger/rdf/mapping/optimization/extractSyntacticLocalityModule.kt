@@ -2,10 +2,10 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization
 
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
+import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.apache.jena.graph.Node
 import org.apache.jena.graph.Node_URI
 import org.apache.jena.sparql.syntax.*
-import org.semanticweb.HermiT.ReasonerFactory
 import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.model.OWLOntology
 import uk.ac.manchester.cs.owlapi.modularity.ModuleType
@@ -110,13 +110,17 @@ private fun computeQuerySignature(ontology: OWLOntology, pattern: Element): Set<
 
 // https://www.javatips.net/api/Owl-master/owlapi-master/contract/src/test/java/org/semanticweb/owlapi/examples/Examples.java
 
-fun extractSyntacticLocalityModule(ontology: Ontology, pattern: Element): Ontology {
-    val querySignature = computeQuerySignature(ontology, pattern)
+fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, pattern: Element): Ontology {
+    val querySignature = computeQuerySignature(knowledgeBase.ontology, pattern)
 
     // ontology.saveOntology(TurtleDocumentFormat(), File("original.ttl").outputStream())
-    val extractor = SyntacticLocalityModuleExtractor(ontology.owlOntologyManager, ontology, ModuleType.TOP)
+    val extractor = SyntacticLocalityModuleExtractor(
+        knowledgeBase.ontology.owlOntologyManager,
+        knowledgeBase.ontology,
+        ModuleType.TOP
+    )
 
-    val reasoner = ReasonerFactory().createReasoner(ontology)
+    val reasoner = knowledgeBase.getSyntacticModuleExtractionReasoner()
     // val reasoner = JFactFactory().createReasoner(ontology)
     val reducedAxioms = extractor.extract(querySignature, -1, -1, reasoner)
 

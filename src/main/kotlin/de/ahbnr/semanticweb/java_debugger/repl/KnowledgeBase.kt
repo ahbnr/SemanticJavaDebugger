@@ -3,6 +3,8 @@ package de.ahbnr.semanticweb.java_debugger.repl
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import org.apache.jena.query.Query
+import org.apache.jena.query.QueryExecution
 import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.RDFNode
@@ -58,9 +60,25 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
                 is ReasonerId.Openllet -> this
             }
         }
+    private val syntacticModuleExtractionReasoner: OwlApiReasonerProvider
+        get() = with(repl.targetReasoner) {
+            when (this) {
+                is ReasonerId.PureJenaReasoner -> {
+                    val fallback = ReasonerId.PureOwlApiReasoner.HermiT
+                    logger.debug("Can not use ${this.name} for syntactic module extraction. Falling back to ${fallback.name}.")
+                    fallback
+                }
+                is ReasonerId.PureOwlApiReasoner -> this
+                is ReasonerId.Openllet -> this
+            }
+        }
+
 
     private fun getJenaModel(reasoner: ReasonerId): Model =
         reasoner.inferJenaModel(ontology)
+
+    fun buildSparqlExecution(query: Query, model: Model): QueryExecution =
+        sparqlReasoner.buildSparqlExecution(query, model)
 
     fun getSparqlModel(customBaseOntology: Ontology? = null): Model =
         sparqlReasoner.inferJenaModel(customBaseOntology ?: ontology)
@@ -99,6 +117,7 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
 
     fun getConsistencyReasoner(): OWLReasoner = getOwlApiReasoner(consistencyReasoner)
     fun getOwlClassExpressionReasoner(): OWLReasoner = getOwlApiReasoner(owlClassExpressionReasoner)
+    fun getSyntacticModuleExtractionReasoner(): OWLReasoner = getOwlApiReasoner(syntacticModuleExtractionReasoner)
 
     val prefixNameToUri: Map<String, String>
 

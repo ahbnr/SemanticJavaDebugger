@@ -3,11 +3,8 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
-import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
 import org.apache.jena.query.ResultSetFormatter
@@ -15,11 +12,8 @@ import org.apache.jena.rdf.model.RDFNode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class SparqlCommand(
-    private val graphGenerator: GraphGenerator
-) : IREPLCommand, KoinComponent {
+class SparqlCommand : IREPLCommand, KoinComponent {
     private val logger: Logger by inject()
-    private val URIs: OntURIs by inject()
 
     override val name = "sparql"
 
@@ -60,14 +54,14 @@ class SparqlCommand(
 
             val ontology = if (options.contains("--optimize")) {
                 logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
-                val module = extractSyntacticLocalityModule(knowledgeBase.ontology, query.queryPattern)
+                val module = extractSyntacticLocalityModule(knowledgeBase, query.queryPattern)
                 logger.debug("Axioms after module extraction: ${module.axiomCount}.")
                 module
             } else knowledgeBase.ontology
 
             val model = knowledgeBase.getSparqlModel(ontology)
 
-            QueryExecutionFactory.create(query, model).use { execution ->
+            knowledgeBase.buildSparqlExecution(query, model).use { execution ->
                 val results = execution.execSelect().rewindable()
                 ResultSetFormatter.out(logger.logStream(), results, query)
                 results.reset()

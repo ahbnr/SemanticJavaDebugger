@@ -2,14 +2,21 @@ package de.ahbnr.semanticweb.java_debugger.repl
 
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
+import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import openllet.jena.PelletReasoner
 import openllet.owlapi.OpenlletReasoner
 import openllet.owlapi.OpenlletReasonerFactory
+import openllet.query.sparqldl.jena.SparqlDLExecutionFactory
+import org.apache.jena.query.Query
+import org.apache.jena.query.QueryExecution
+import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.reasoner.Reasoner
 import org.apache.jena.reasoner.ReasonerRegistry
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.semanticweb.HermiT.ReasonerFactory
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.parameters.OntologyCopy
@@ -105,17 +112,30 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             val reasoner = getJenaReasoner()
             val baseModel = baseOntology.asGraphModel()
 
-            // TODO: Not sure if using any of these alternatives makes a difference
+            // TODO: Not sure if using any of these alternatives makes a difference.
+            //   It doesnt seem so: https://github.com/Galigator/openllet/blob/670227cb108a13fa0abc5249a625dc79b106ae4e/examples/src/main/java/openllet/examples/JenaReasoner.java#L23
+            //
             // val ontModel = ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC, baseModel)
-            // // ontModel.setStrictMode(false)
-            // // return ontModel
+            // ontModel.setStrictMode(false)
+            // return ontModel
             // return baseModel.getInferenceModel(reasoner)
             return ModelFactory.createInfModel(reasoner, baseModel)
         }
+
+        override fun buildSparqlExecution(query: Query, model: Model): QueryExecution {
+            // TODO: Test the performance and result differences between using
+            //   a Openllet inference model with ARQ VS using the Openllet SPARQL-DL engine
+            logger.debug("Using SPARQL-DL engine of Openllet instead of default Jena ARQ execution engine.")
+            return SparqlDLExecutionFactory.create(query, model)
+        }
     }
 
+    open fun buildSparqlExecution(query: Query, model: Model): QueryExecution =
+        QueryExecutionFactory.create(query, model)
 
-    companion object {
+    companion object : KoinComponent {
+        protected val logger: Logger by inject()
+
         val availableReasoners = listOf(
             PureJenaReasoner.JenaOwlMicro,
             PureJenaReasoner.JenaOwlMini,
