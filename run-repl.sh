@@ -2,7 +2,7 @@
 
 set -e
 
-./gradlew -q compileKotlin
+./gradlew -q classes
 
 # Based on https://stackoverflow.com/a/45858448
 while read line; do
