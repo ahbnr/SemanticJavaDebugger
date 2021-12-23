@@ -1,0 +1,10 @@
+section Prepare Program & Domain
+stop at examples.HelloWorld:5
+run examples/HelloWorld.java
+
+section Build Knowledge Base
+buildkb --limit-sdk
+dumpkb datatest.ttl
+checkkb --is-consistent
+
+cont

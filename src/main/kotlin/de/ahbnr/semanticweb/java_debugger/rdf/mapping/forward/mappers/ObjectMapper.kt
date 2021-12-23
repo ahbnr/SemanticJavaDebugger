@@ -95,6 +95,12 @@ class ObjectMapper : IMapper {
                 val sizedHasElementURI = URIs.run.genSizedHasElementURI(arrayReference)
                 tripleCollector.addStatement(
                     sizedHasElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.ObjectProperty
+                )
+
+                tripleCollector.addStatement(
+                    sizedHasElementURI,
                     URIs.rdfs.subPropertyOf,
                     typedHasElementURI
                 )

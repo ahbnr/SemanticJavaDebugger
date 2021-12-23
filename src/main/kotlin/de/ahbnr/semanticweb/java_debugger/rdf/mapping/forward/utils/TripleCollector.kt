@@ -140,6 +140,12 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
 
         addStatement(
             unionNode,
+            URIs.rdf.type,
+            URIs.owl.Class
+        )
+
+        addStatement(
+            unionNode,
             NodeFactory.createURI(URIs.owl.unionOf),
             addListStatements(objectList)
         )

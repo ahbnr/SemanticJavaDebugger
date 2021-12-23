@@ -1,0 +1,12 @@
+stop at examples.btrees.tests.InsertTest:24
+run examples.btrees.tests.InsertTest
+domain examples/btrees/BTree.ttl
+buildkb --limit-sdk
+dumpkb datatest.ttl
+reasoner set Openllet
+# reasoner set HermiT
+# checkkb --is-consistent
+
+owlclass domain:Node
+sparql SELECT ?node WHERE { ?node a domain:Node }
+# sparql SELECT ?node WHERE { ?node a prog:examples.btrees.BTreeNode }

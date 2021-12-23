@@ -569,6 +569,12 @@ class ClassMapper : IMapper {
 
                 val arrayTypeURI = URIs.prog.genReferenceTypeURI(arrayType)
 
+                tripleCollector.addStatement(
+                    arrayTypeURI,
+                    URIs.rdf.type,
+                    URIs.owl.Class
+                )
+
                 // this, as an individual, is an array:
                 tripleCollector.addStatement(
                     arrayTypeURI,
@@ -627,6 +633,19 @@ class ClassMapper : IMapper {
 
                 // hasElement<type> Relation
                 val typedHasElementURI = URIs.prog.genTypedHasElementURI(arrayType)
+
+                tripleCollector.addStatement(
+                    typedHasElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.ObjectProperty
+                )
+
+                tripleCollector.addStatement(
+                    typedHasElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.InverseFunctionalProperty
+                )
+
                 tripleCollector.addStatement(
                     typedHasElementURI,
                     URIs.rdfs.subPropertyOf,
@@ -645,6 +664,12 @@ class ClassMapper : IMapper {
                     typedArrayElementURI
                 )
 
+                tripleCollector.addStatement(
+                    typedArrayElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.Class
+                )
+
                 when (componentType) {
                     is JavaType.LoadedType -> {
                         when (componentType.type) {
@@ -657,6 +682,18 @@ class ClassMapper : IMapper {
 
                                 // storesPrimitive Relation
                                 val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(arrayType)
+
+                                tripleCollector.addStatement(
+                                    typedStoresPrimitiveURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.DatatypeProperty
+                                )
+
+                                tripleCollector.addStatement(
+                                    typedStoresPrimitiveURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.FunctionalProperty
+                                )
 
                                 tripleCollector.addStatement(
                                     typedStoresPrimitiveURI,
@@ -700,6 +737,18 @@ class ClassMapper : IMapper {
 
                                 // storesReference Relation
                                 val typedStoresReferenceURI = URIs.prog.genTypedStoresReferenceURI(arrayType)
+
+                                tripleCollector.addStatement(
+                                    typedStoresReferenceURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.ObjectProperty
+                                )
+
+                                tripleCollector.addStatement(
+                                    typedStoresReferenceURI,
+                                    URIs.rdf.type,
+                                    URIs.owl.FunctionalProperty
+                                )
 
                                 tripleCollector.addStatement(
                                     typedStoresReferenceURI,
@@ -751,6 +800,12 @@ class ClassMapper : IMapper {
                     return
 
                 val interfaceURI = URIs.prog.genReferenceTypeURI(interfaceType)
+
+                tripleCollector.addStatement(
+                    interfaceURI,
+                    URIs.rdf.type,
+                    URIs.owl.Class
+                )
 
                 // This, as an individual, is a Java Interface
                 tripleCollector.addStatement(

@@ -11,6 +11,7 @@ import com.github.ajalt.clikt.parameters.options.switch
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.datatypes.JavaAccessModifierDatatype
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers.ClassMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers.ObjectMapper
@@ -61,6 +62,8 @@ class SemanticJavaDebugger : CliktCommand() {
         }
 
         try {
+            JavaAccessModifierDatatype.register()
+
             JvmDebugger().use { jvmDebugger ->
                 val graphGen = GraphGenerator(
                     ns,

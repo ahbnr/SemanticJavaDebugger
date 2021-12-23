@@ -38,10 +38,14 @@ class OntURIs(val ns: Namespaces) {
         val ObjectProperty = ns.owl + "ObjectProperty"
         val DatatypeProperty = ns.owl + "DatatypeProperty"
         val FunctionalProperty = ns.owl + "FunctionalProperty"
+        val InverseFunctionalProperty = ns.owl + "InverseFunctionalProperty"
         val cardinality = ns.owl + "cardinality"
         val NamedIndividual = ns.owl + "NamedIndividual"
         val unionOf = ns.owl + "unionOf"
         val oneOf = ns.owl + "oneOf"
+
+        val annotatedTarget = ns.owl + "annotatedTarget"
+        val annotatedSource = ns.owl + "annotatedSource"
     }
 
     val owl = OwlURIs()
@@ -175,8 +179,13 @@ class OntURIs(val ns: Namespaces) {
         fun genFrameURI(frameDepth: Int): String =
             "${ns.run}frame$frameDepth"
 
+        private val objectUriPrefix = "${ns.run}object"
+
         fun genObjectURI(objectReference: ObjectReference): String =
-            "${ns.run}object${objectReference.uniqueID()}"
+            "$objectUriPrefix${objectReference.uniqueID()}"
+
+        fun isObjectURI(uri: String) =
+            uri.startsWith(objectUriPrefix)
 
         fun genSizedHasElementURI(arrayReference: ArrayReference): String =
             "${ns.run}hasElement_object${arrayReference.uniqueID()}"

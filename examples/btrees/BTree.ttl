@@ -19,7 +19,7 @@ domain:Node rdf:type owl:Class ;
                         owl:onProperty prog:examples.btrees.BTreeNode.children ;
                         owl:allValuesFrom [
                             rdf:type owl:Restriction ;
-                            owl:onProperty prog:hasElement ;
+                            owl:onProperty java:hasElement ;
                             owl:maxCardinality "4"^^xsd:nonNegativeInteger
                         ]
                     ]
@@ -29,7 +29,7 @@ domain:Node rdf:type owl:Class ;
                     #     owl:onProperty prog:examples.btrees.BTreeNode.children ;
                     #     owl:allValuesFrom [
                     #         rdf:type owl:Restriction ;
-                    #         owl:onProperty prog:hasElement ;
+                    #         owl:onProperty java:hasElement ;
                     #         owl:minCardinality "2"^^xsd:nonNegativeInteger
                     #     ]
                     # ]
@@ -46,7 +46,7 @@ domain:Leaf a owl:Class ;
                         owl:onProperty prog:examples.btrees.BTreeNode.children ;
                         owl:allValuesFrom [
                             a owl:Restriction ;
-                            owl:onProperty prog:hasElement ;
+                            owl:onProperty java:hasElement ;
                             owl:cardinality "0"^^xsd:nonNegativeInteger
                         ]
                     ]

@@ -113,11 +113,16 @@ private fun computeQuerySignature(ontology: OWLOntology, pattern: Element): Set<
 fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, pattern: Element): Ontology {
     val querySignature = computeQuerySignature(knowledgeBase.ontology, pattern)
 
-    // ontology.saveOntology(TurtleDocumentFormat(), File("original.ttl").outputStream())
+    // RDFWriter
+    //     .create(knowledgeBase.ontology.asGraphModel())
+    //     .lang(Lang.TURTLE)
+    //     .format(RDFFormat.TURTLE_PRETTY)
+    //     .output("original.ttl")
+
     val extractor = SyntacticLocalityModuleExtractor(
         knowledgeBase.ontology.owlOntologyManager,
         knowledgeBase.ontology,
-        ModuleType.TOP
+        ModuleType.STAR
     )
 
     val reasoner = knowledgeBase.getSyntacticModuleExtractionReasoner()
@@ -127,7 +132,13 @@ fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, pattern: Elemen
     val ontManager = OntManagers.createManager()
     val module = ontManager.createOntology(reducedAxioms) as Ontology
 
-    // module.saveOntology(TurtleDocumentFormat(), File("reduced.ttl").outputStream())
+    // val printModel = module.asGraphModel()
+    // printModel.setNsPrefixes(knowledgeBase.ontology.asGraphModel().nsPrefixMap)
+    // RDFWriter
+    //     .create(printModel)
+    //     .lang(Lang.TURTLE)
+    //     .format(RDFFormat.TURTLE_PRETTY)
+    //     .output("reduced.ttl")
 
     return module
 }

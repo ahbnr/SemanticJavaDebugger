@@ -5,6 +5,7 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import org.apache.jena.datatypes.BaseDatatype
 import org.apache.jena.datatypes.DatatypeFormatException
 import org.apache.jena.datatypes.TypeMapper
+import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.impl.LiteralLabel
 import org.koin.core.component.KoinComponent
@@ -14,9 +15,12 @@ class JavaAccessModifierDatatype : BaseDatatype {
     companion object : KoinComponent {
         val instance by lazy {
             val instance = JavaAccessModifierDatatype(get<OntURIs>().java.AccessModifier)
-            TypeMapper.getInstance().registerDatatype(instance)
 
             instance
+        }
+
+        fun register() {
+            TypeMapper.getInstance().registerDatatype(instance)
         }
     }
 
@@ -38,7 +42,7 @@ class JavaAccessModifierDatatype : BaseDatatype {
                 }
         }
 
-        fun toNode() = NodeFactory.createLiteral(this.value, JavaAccessModifierDatatype.instance)
+        fun toNode() = NodeFactory.createLiteral(this.value)
     }
 
     private val allowedLiterals = enumValues<AccessModifierLiteral>().map { it.value }.toSet()
@@ -51,7 +55,7 @@ class JavaAccessModifierDatatype : BaseDatatype {
     }
 
     override fun isValidLiteral(lit: LiteralLabel): Boolean {
-        val literalString = (lit.value as TypedValue).lexicalValue
-        return allowedLiterals.contains(literalString) && lit.datatypeURI == getURI()
+        val literalString = lit.value
+        return allowedLiterals.contains(literalString) && lit.datatypeURI == XSDDatatype.XSDstring.uri
     }
 }

@@ -5,10 +5,10 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.riot.Lang
-import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.riot.RDFFormat
+import org.apache.jena.riot.RDFWriter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
 
 class DumpKBCommand : IREPLCommand, KoinComponent {
     val logger: Logger by inject()
@@ -32,10 +32,12 @@ class DumpKBCommand : IREPLCommand, KoinComponent {
             return false
         }
 
-        File(file).outputStream().use { stream ->
-            RDFDataMgr.write(stream, knowledgeBase.ontology.asGraphModel(), Lang.TTL)
-            logger.success("Knowledge base saved to $file.")
-        }
+        RDFWriter
+            .create(knowledgeBase.ontology.asGraphModel())
+            .lang(Lang.TURTLE)
+            .format(RDFFormat.TURTLE_PRETTY)
+            .output(file)
+        logger.success("Knowledge base saved to $file.")
 
         return true
     }

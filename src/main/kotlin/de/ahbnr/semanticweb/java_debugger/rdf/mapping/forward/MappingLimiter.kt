@@ -8,6 +8,10 @@ data class MappingLimiter(
     val deepPackages: Set<String>,
     val reachableOnly: Boolean
 ) {
+    fun isLimiting(): Boolean =
+        excludedPackages.isNotEmpty() &&
+                shallowPackages.isNotEmpty()
+
     private fun isExcluded(referenceType: ReferenceType) =
         excludedPackages.any { referenceType.name().startsWith(it) }
 

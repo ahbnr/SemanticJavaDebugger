@@ -4,8 +4,8 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
-import de.ahbnr.semanticweb.java_debugger.RdfSanityChecker
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.riot.Lang
@@ -49,8 +49,6 @@ class GraphGenerator(
             .strict(true)
             .checking(true)
             .parse(model)
-
-        RdfSanityChecker().checkRdfTyping(model)
     }
 
     private fun loadJavaOntology(model: Model) {
@@ -79,6 +77,7 @@ class GraphGenerator(
     fun buildOntology(
         buildParameters: BuildParameters,
         applicationDomainRulesPath: String?, /* turtle format file */
+        fullLintingReport: Boolean
     ): Ontology? {
         // var model = ModelFactory.createDefaultModel()
 
@@ -100,6 +99,14 @@ class GraphGenerator(
 
         // Map program state
         mapProgramState(buildParameters, model)
+
+        // Perform sanity checks and linting
+        val checker = ModelSanityChecker()
+        checker.checkRdfTyping(model)
+        // Too many "untyped" errors for IRIs from external ontologies e.g. rdf:List
+        checker.openllintOwlSyntaxChecks(model, buildParameters.limiter, fullLintingReport)
+        checker.OWL2DLProfileViolationTest(ontology)
+        checker.openllintOwlPatternChecks(ontology)
 
         return ontology
     }

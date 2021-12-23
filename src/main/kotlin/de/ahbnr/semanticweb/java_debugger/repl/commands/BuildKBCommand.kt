@@ -21,6 +21,7 @@ class BuildKBCommand(
     val logger: Logger by inject()
 
     override val name = "buildkb"
+    private val usage = "$name [--limit-sdk] [--full-linting-report] [--deep=...]*"
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val jvm = jvmDebugger.jvm
@@ -73,7 +74,11 @@ class BuildKBCommand(
             sourceModel = sourceModel,
             limiter = limiter
         )
-        val ontology = graphGenerator.buildOntology(buildParameters, repl.applicationDomainDefFile)
+        val ontology = graphGenerator.buildOntology(
+            buildParameters,
+            repl.applicationDomainDefFile,
+            argv.contains("--full-linting-report")
+        )
         if (ontology == null) {
             logger.error("Could not create knowledge base.")
             return false
