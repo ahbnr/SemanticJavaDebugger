@@ -76,7 +76,7 @@ class CheckKBCommand(
                 if (graph is PelletInfGraph) {
                     val clash = graph.kb.aBox.lastClash
                     if (clash != null) {
-                        logger.log(clash.nominalExplanation())
+                        logger.log(clash.detailedString())
                         logger.log("Offending node:")
                         logger.log(clash.node.toString())
                     }

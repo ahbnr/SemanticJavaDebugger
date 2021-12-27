@@ -1,12 +1,14 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.linting
 
+import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import openllet.core.vocabulary.BuiltinNamespace
 import openllet.jena.BuiltinTerm
+import openllet.pellint.lintpattern.LintPattern
 import openllet.pellint.lintpattern.LintPatternLoader
-import openllet.pellint.model.OntologyLints
+import openllet.pellint.model.Lint
 import org.apache.jena.rdf.model.Model
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,6 +27,19 @@ class ModelSanityChecker : KoinComponent {
     private val URIs: OntURIs by inject()
     private val logger: Logger by inject()
 
+    fun fullCheck(ontology: Ontology, mappingLimiter: MappingLimiter, doFullLintingReport: Boolean) {
+        val model = ontology.asGraphModel()
+
+        checkRdfTyping(model)
+        logger.log("")
+        openllintOwlSyntaxChecks(model, mappingLimiter, doFullLintingReport)
+        logger.log("")
+        OWL2DLProfileViolationTest(ontology)
+        logger.log("")
+        openllintOwlPatternChecks(ontology)
+        logger.log("")
+    }
+
     fun checkRdfTyping(model: Model) {
         val typeProperty = model.getProperty(URIs.rdf.type)
 
@@ -35,7 +50,7 @@ class ModelSanityChecker : KoinComponent {
                 val node = obj.asNode()
 
                 val builtinTerm = BuiltinTerm.find(node)
-                if (builtinTerm == null) {
+                if (builtinTerm == null && node.isURI) {
                     val builtinNamespace = BuiltinNamespace.find(node.nameSpace)
                     if (builtinNamespace != null) {
                         logger.error("Warning: The term ${node.localName} is not known in namespace ${node.nameSpace}.")
@@ -114,12 +129,15 @@ class ModelSanityChecker : KoinComponent {
     // based on https://github.com/Galigator/openllet/blob/b7a07b60d2ae6a147415e30be0ffb72eff7fe857/tools-cli/src/main/java/openllet/Openllint.java#L315
     fun openllintOwlPatternChecks(ontology: OWLOntology) {
         val patternLoader = LintPatternLoader()
-        val ontologyLints = OntologyLints(ontology)
+        val ontologyLints = mutableMapOf<LintPattern, MutableList<Lint>>()
+
         ontology.axioms().forEach { axiom ->
             for (pattern in patternLoader.axiomLintPatterns) {
                 val lint = pattern.match(ontology, axiom)
                 if (lint != null) {
-                    ontologyLints.addLint(pattern, lint)
+                    val lintList = ontologyLints.getOrDefault(pattern, mutableListOf())
+                    lintList.add(lint)
+                    ontologyLints[pattern] = lintList
                 }
             }
         }
@@ -127,12 +145,42 @@ class ModelSanityChecker : KoinComponent {
         for (pattern in patternLoader.ontologyLintPatterns) {
             val lints = pattern.match(ontology)
             if (lints.isNotEmpty()) {
-                ontologyLints.addLints(pattern, lints)
+                val lintList = ontologyLints.getOrDefault(pattern, mutableListOf())
+                lintList.addAll(lints)
+                ontologyLints[pattern] = lintList
             }
         }
 
-        if (!ontologyLints.isEmpty) {
-            logger.log(ontologyLints.toString())
+        if (ontologyLints.isNotEmpty()) {
+            for (pattern in ontologyLints.keys) {
+                logger.log("Pattern ${pattern.name}: ${pattern.description}")
+
+                val lintFormat = pattern.defaultLintFormat
+                for ((idx, lint) in ontologyLints[pattern]!!.withIndex()) {
+                    logger.log("Lint #$idx: ${lintFormat.format(lint)}")
+                    val fixer = lint.lintFixer
+                    if (fixer != null) {
+                        logger.log("  To fix the lint...")
+                        val axiomsToAdd = fixer.axiomsToAdd
+                        if (axiomsToAdd.isNotEmpty()) {
+                            logger.log("  ...add these axioms:")
+                            for (axiom in axiomsToAdd) {
+                                logger.log("    $axiom")
+                            }
+                        }
+
+                        val axiomsToRemove = fixer.axiomsToRemove
+                        if (axiomsToRemove.isNotEmpty()) {
+                            logger.log("  ...remove these axioms:")
+                            for (axiom in axiomsToRemove) {
+                                logger.log("    $axiom")
+                            }
+                        }
+                    }
+                }
+
+            }
+
             logger.error("Warning: Openllint detected modeling constructs that have a negative effect on reasoning performance.")
             logger.log("")
         }

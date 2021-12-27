@@ -143,7 +143,7 @@ class OwlSyntaxLints : KoinComponent {
     val onlyUntypedJavaObjects: Boolean
         get() =
             lints.isEmpty() || lints.size == 1 && lints.keys.contains("Untyped individuals") && lints["Untyped individuals"]!!.all {
-                it is Lint.Node && it.node is Resource && URIs.run.isObjectURI(
+                it is Lint.Node && it.node is Resource && it.node.isURIResource && URIs.run.isObjectURI(
                     it.node.uri
                 )
             }
@@ -182,7 +182,9 @@ class OwlSyntaxLints : KoinComponent {
                     val line = "- ${lint.render()}"
 
                     val isUntypedJavaObject =
-                        lint is Lint.Node && lint.node is Resource && URIs.run.isObjectURI(lint.node.uri)
+                        lint is Lint.Node && lint.node is Resource && lint.node.isURIResource && URIs.run.isObjectURI(
+                            lint.node.uri
+                        )
                     if (isUntypedJavaObject) {
                         logger.debug(line)
                     } else {

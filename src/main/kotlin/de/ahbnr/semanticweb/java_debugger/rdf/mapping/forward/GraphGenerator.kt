@@ -17,7 +17,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 
-private class ParserException() : Exception()
+class ParserException() : Exception()
 
 class GraphGenerator(
     private val ns: Namespaces,
@@ -77,7 +77,7 @@ class GraphGenerator(
     fun buildOntology(
         buildParameters: BuildParameters,
         applicationDomainRulesPath: String?, /* turtle format file */
-        fullLintingReport: Boolean
+        doFullLintingReport: Boolean
     ): Ontology? {
         // var model = ModelFactory.createDefaultModel()
 
@@ -102,11 +102,7 @@ class GraphGenerator(
 
         // Perform sanity checks and linting
         val checker = ModelSanityChecker()
-        checker.checkRdfTyping(model)
-        // Too many "untyped" errors for IRIs from external ontologies e.g. rdf:List
-        checker.openllintOwlSyntaxChecks(model, buildParameters.limiter, fullLintingReport)
-        checker.OWL2DLProfileViolationTest(ontology)
-        checker.openllintOwlPatternChecks(ontology)
+        checker.fullCheck(ontology, buildParameters.limiter, doFullLintingReport)
 
         return ontology
     }

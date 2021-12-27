@@ -95,6 +95,7 @@ class SemanticJavaDebugger : CliktCommand() {
                 val repl = REPL(
                     terminal = terminal,
                     commands = listOf(
+                        AddTriplesCommand(),
                         AssertCommand(graphGen),
                         BuildKBCommand(jvmDebugger, graphGen),
                         CheckKBCommand(graphGen),
