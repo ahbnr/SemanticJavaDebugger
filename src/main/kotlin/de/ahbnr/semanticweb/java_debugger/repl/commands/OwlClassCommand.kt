@@ -4,6 +4,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -18,6 +19,8 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
     private val URIs: OntURIs by inject()
 
     override val name = "owlclass"
+
+    private val nonOptionRegex = """\s[^-\s]""".toRegex()
 
     override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
         val knowledgeBase = repl.knowledgeBase
@@ -35,8 +38,21 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
         }
         manchesterParser.setDefaultOntology(knowledgeBase.ontology)
 
+        var options: List<String> = emptyList()
+        var rawExpression: String = rawInput
+        if (rawInput.startsWith(' ') || rawInput.startsWith('-')) {
+            val nonOptionPosition = nonOptionRegex.find(rawInput)
+            if (nonOptionPosition == null) {
+                logger.error("No expression has been specified.")
+                return false
+            }
+            val startOfExpression = nonOptionPosition.range.first
+            options = rawInput.substring(0 until startOfExpression).split(' ')
+            rawExpression = rawInput.substring(startOfExpression)
+        }
+
         val classExpression = try {
-            manchesterParser.parseClassExpression(rawInput)
+            manchesterParser.parseClassExpression(rawExpression)
         } catch (e: ParserException) {
             val printStream = PrintStream(logger.logStream())
             e.printStackTrace(printStream)
@@ -45,7 +61,18 @@ class OwlClassCommand : IREPLCommand, KoinComponent {
             return false
         }
 
-        val reasoner = knowledgeBase.getOwlClassExpressionReasoner()
+        val ontology = if (options.contains("--optimize")) {
+            logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
+            val module = extractSyntacticLocalityModule(
+                knowledgeBase,
+                classExpression.signature().asSequence().toSet(),
+                -1
+            )
+            logger.debug("Axioms after module extraction: ${module.axiomCount}.")
+            module
+        } else knowledgeBase.ontology
+
+        val reasoner = knowledgeBase.getOwlClassExpressionReasoner(ontology)
 
         val instances = try {
             reasoner.getInstances(classExpression)

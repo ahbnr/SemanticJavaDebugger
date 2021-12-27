@@ -108,11 +108,15 @@ private fun computeQuerySignature(ontology: OWLOntology, pattern: Element): Set<
     return extractedAxioms
 }
 
-// https://www.javatips.net/api/Owl-master/owlapi-master/contract/src/test/java/org/semanticweb/owlapi/examples/Examples.java
-
-fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, pattern: Element): Ontology {
+fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, pattern: Element, depth: Int): Ontology {
     val querySignature = computeQuerySignature(knowledgeBase.ontology, pattern)
 
+    return extractSyntacticLocalityModule(knowledgeBase, querySignature, depth)
+}
+
+// https://www.javatips.net/api/Owl-master/owlapi-master/contract/src/test/java/org/semanticweb/owlapi/examples/Examples.java
+
+fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, signature: Set<OWLEntity>, depth: Int): Ontology {
     // RDFWriter
     //     .create(knowledgeBase.ontology.asGraphModel())
     //     .lang(Lang.TURTLE)
@@ -127,7 +131,7 @@ fun extractSyntacticLocalityModule(knowledgeBase: KnowledgeBase, pattern: Elemen
 
     val reasoner = knowledgeBase.getSyntacticModuleExtractionReasoner()
     // val reasoner = JFactFactory().createReasoner(ontology)
-    val reducedAxioms = extractor.extract(querySignature, -1, -1, reasoner)
+    val reducedAxioms = extractor.extract(signature, depth, depth, if (depth == 0) null else reasoner)
 
     val ontManager = OntManagers.createManager()
     val module = ontManager.createOntology(reducedAxioms) as Ontology

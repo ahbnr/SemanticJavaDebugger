@@ -84,7 +84,7 @@ class BuildKBCommand(
             return false
         }
 
-        repl.knowledgeBase = KnowledgeBase(ontology, repl)
+        repl.knowledgeBase = KnowledgeBase(ontology, repl, limiter)
 
         logger.success("Knowledge base created.")
 

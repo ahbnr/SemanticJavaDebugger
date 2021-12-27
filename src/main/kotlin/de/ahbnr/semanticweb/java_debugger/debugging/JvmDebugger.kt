@@ -76,7 +76,9 @@ class JvmDebugger : Closeable, KoinComponent {
 
     fun launchVM(mainClass: String, classpath: String? = null) {
         if (jvm != null) {
-            logger.error("There is a VM already running.")
+            logger.debug("There is a JVM already running.")
+            logger.emphasize("Closing existing JVM and creating new one...")
+            close()
         }
 
         val launchingConnector = Bootstrap
@@ -105,5 +107,6 @@ class JvmDebugger : Closeable, KoinComponent {
 
     override fun close() {
         jvm?.vm?.exit(-1)
+        jvm = null
     }
 }

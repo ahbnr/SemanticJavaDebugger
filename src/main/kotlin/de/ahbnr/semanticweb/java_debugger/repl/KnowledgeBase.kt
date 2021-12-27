@@ -3,6 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.repl
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import org.apache.jena.query.Query
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.rdf.model.InfModel
@@ -14,7 +15,11 @@ import org.koin.core.component.inject
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 
-class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinComponent {
+class KnowledgeBase(
+    val ontology: Ontology,
+    private val repl: REPL,
+    val limiter: MappingLimiter
+) : KoinComponent {
     private val URIs: OntURIs by inject()
     private val logger: Logger by inject()
 
@@ -112,12 +117,15 @@ class KnowledgeBase(val ontology: Ontology, private val repl: REPL) : KoinCompon
     fun getJenaValidationModel(): InfModel =
         jenaValidationReasoner.inferJenaModel(ontology)
 
-    private fun getOwlApiReasoner(reasonerId: OwlApiReasonerProvider): OWLReasoner =
-        reasonerId.getOwlApiReasoner(ontology)
+    private fun getOwlApiReasoner(reasonerId: OwlApiReasonerProvider, baseOntology: Ontology): OWLReasoner =
+        reasonerId.getOwlApiReasoner(baseOntology)
 
-    fun getConsistencyReasoner(): OWLReasoner = getOwlApiReasoner(consistencyReasoner)
-    fun getOwlClassExpressionReasoner(): OWLReasoner = getOwlApiReasoner(owlClassExpressionReasoner)
-    fun getSyntacticModuleExtractionReasoner(): OWLReasoner = getOwlApiReasoner(syntacticModuleExtractionReasoner)
+    fun getConsistencyReasoner(): OWLReasoner = getOwlApiReasoner(consistencyReasoner, ontology)
+    fun getOwlClassExpressionReasoner(baseOntology: Ontology): OWLReasoner =
+        getOwlApiReasoner(owlClassExpressionReasoner, baseOntology)
+
+    fun getSyntacticModuleExtractionReasoner(): OWLReasoner =
+        getOwlApiReasoner(syntacticModuleExtractionReasoner, ontology)
 
     val prefixNameToUri: Map<String, String>
 
