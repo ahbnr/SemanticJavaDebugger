@@ -1,6 +1,7 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils
 
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.Node
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -36,6 +37,16 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         }
 
         data class OWLSome(val propertyURI: String, val some: Node) : CollectionObject()
+
+        sealed class CardinalityType {
+            data class Exactly(val value: Int) : CardinalityType()
+        }
+
+        data class OWLCardinalityRestriction(
+            val onPropertyUri: String,
+            val onClassUri: String,
+            val cardinality: CardinalityType
+        ) : CollectionObject()
     }
 
     fun addStatement(subject: Node, predicate: Node, `object`: Node) {
@@ -90,7 +101,44 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
                 collectionObject.objects
             )
             is CollectionObject.OWLSome -> addSomeRestriction(collectionObject.propertyURI, collectionObject.some)
+            is CollectionObject.OWLCardinalityRestriction -> addCardinalityRestriction(collectionObject)
         }
+
+    private fun addCardinalityRestriction(cardinalityRestriction: CollectionObject.OWLCardinalityRestriction): Node {
+        val restrictionNode = NodeFactory.createBlankNode()
+
+        addStatement(
+            restrictionNode,
+            URIs.rdf.type,
+            URIs.owl.Restriction
+        )
+
+        addStatement(
+            restrictionNode,
+            URIs.owl.onProperty,
+            cardinalityRestriction.onPropertyUri
+        )
+
+        addStatement(
+            restrictionNode,
+            URIs.owl.onClass,
+            cardinalityRestriction.onClassUri
+        )
+
+        when (cardinalityRestriction.cardinality) {
+            is CollectionObject.CardinalityType.Exactly ->
+                addStatement(
+                    restrictionNode,
+                    URIs.owl.cardinality,
+                    NodeFactory.createLiteral(
+                        cardinalityRestriction.cardinality.value.toString(),
+                        XSDDatatype.XSDnonNegativeInteger
+                    )
+                )
+        }
+
+        return restrictionNode
+    }
 
     private fun addSomeRestriction(property: String, some: Node): Node {
         val restrictionNode = NodeFactory.createBlankNode()

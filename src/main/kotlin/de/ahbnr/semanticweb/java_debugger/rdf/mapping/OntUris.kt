@@ -32,6 +32,7 @@ class OntURIs(val ns: Namespaces) {
     inner class OwlURIs {
         val Restriction = ns.owl + "Restriction"
         val onProperty = ns.owl + "onProperty"
+        val onClass = ns.owl + "onClass"
         val someValuesFrom = ns.owl + "someValuesFrom"
 
         val Class = ns.owl + "Class"
@@ -46,6 +47,8 @@ class OntURIs(val ns: Namespaces) {
 
         val annotatedTarget = ns.owl + "annotatedTarget"
         val annotatedSource = ns.owl + "annotatedSource"
+
+        val maxQualifiedCardinality = ns.owl + "maxQualifiedCardinality"
     }
 
     val owl = OwlURIs()
@@ -186,9 +189,6 @@ class OntURIs(val ns: Namespaces) {
 
         fun isObjectURI(uri: String) =
             uri.startsWith(objectUriPrefix)
-
-        fun genSizedHasElementURI(arrayReference: ArrayReference): String =
-            "${ns.run}hasElement_object${arrayReference.uniqueID()}"
 
         fun genArrayElementInstanceURI(arrayReference: ArrayReference, index: Int) =
             "${ns.run}element${index}_of_${arrayReference.uniqueID()}"

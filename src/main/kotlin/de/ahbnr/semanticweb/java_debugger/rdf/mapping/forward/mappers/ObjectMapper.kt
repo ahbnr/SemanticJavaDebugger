@@ -88,50 +88,25 @@ class ObjectMapper : IMapper {
                     return
                 }
 
-                // # More concrete hasElement relation
-                // Create sub-relation of hasElement<Type> relation for this particular array object to encode
-                // the array size in the cardinality
-                val typedHasElementURI = URIs.prog.genTypedHasElementURI(referenceType)
-                val sizedHasElementURI = URIs.run.genSizedHasElementURI(arrayReference)
+                // Encode array size in cardinality restriction
+                // (otherwise we won't be able to reliably query for arrays by their size due to the open world assumption)
                 tripleCollector.addStatement(
-                    sizedHasElementURI,
+                    objectURI,
                     URIs.rdf.type,
-                    URIs.owl.ObjectProperty
-                )
-
-                tripleCollector.addStatement(
-                    sizedHasElementURI,
-                    URIs.rdfs.subPropertyOf,
-                    typedHasElementURI
-                )
-
-                tripleCollector.addStatement(
-                    sizedHasElementURI,
-                    URIs.rdfs.domain,
                     tripleCollector.addCollection(
-                        TripleCollector.CollectionObject.OWLOneOf.fromURIs(
-                            listOf(
-                                objectURI
-                            )
+                        TripleCollector.CollectionObject.OWLCardinalityRestriction(
+                            onPropertyUri = URIs.java.hasElement,
+                            onClassUri = URIs.java.ArrayElement,
+                            cardinality = TripleCollector.CollectionObject.CardinalityType.Exactly(arrayReference.length())
                         )
                     )
                 )
 
+                // # More concrete hasElement relation
+                // Create sub-relation of hasElement<Type> relation for this particular array object to encode
+                // the array size in the cardinality
+                val typedHasElementURI = URIs.prog.genTypedHasElementURI(referenceType)
                 val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(referenceType)
-                tripleCollector.addStatement(
-                    sizedHasElementURI,
-                    URIs.rdfs.range,
-                    typedArrayElementURI
-                )
-
-                tripleCollector.addStatement(
-                    sizedHasElementURI,
-                    URIs.owl.cardinality,
-                    NodeFactory.createLiteral(
-                        arrayReference.length().toString(),
-                        XSDDatatype.XSDnonNegativeInteger
-                    )
-                )
 
                 try {
                     val componentType = referenceType.componentType()
@@ -161,7 +136,7 @@ class ObjectMapper : IMapper {
 
                         tripleCollector.addStatement(
                             objectURI,
-                            sizedHasElementURI,
+                            typedHasElementURI,
                             arrayElementInstanceURI
                         )
 
