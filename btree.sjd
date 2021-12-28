@@ -1,19 +1,3 @@
-stop at examples.btrees.tests.InsertTest:24
-run examples.btrees.tests.InsertTest
 domain examples/btrees/BTree.ttl
-buildkb --limit-sdk --full-linting-report --deep=examples
-dumpkb datatest.ttl
-reasoner JenaOwlMicro
-stats
-# reasoner Openllet
-reasoner HermiT
-# checkkb --is-consistent
 
-owlclass domain:Node
-
-# reasoner JenaOwlMicro
-# sparql SELECT ?node WHERE { ?node a domain:Node }
-# sparql SELECT ?node WHERE { ?node a prog:examples.btrees.BTreeNode }
-
-reasoner HermiT
-owlclass domain:Leaf
+run examples.btrees.tests.InsertTest

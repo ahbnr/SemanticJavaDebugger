@@ -104,21 +104,23 @@ domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
                 domain:rolifiedBTreeNode
             ) .
 
-# domain:hasChild # HermiT fails here because `domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E` is complex
-#     a owl:ObjectProperty ;
-#     owl:propertyChainAxiom (
-#         prog:examples.btrees.BTreeNode.children
-#         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
-#         domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
-#     ) .
-
-domain:hasChild # HermiT can do this, since none of the properties are complex
+domain:hasChild # HermiT fails here because `domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E` is complex
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
         prog:examples.btrees.BTreeNode.children
         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
-        prog:storesReference%3Cexamples.btrees.BTreeNode%3E
+        domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
     ) .
+
+# These restrictions of HermiT should trigger a linter!
+#
+# domain:hasChild # HermiT can do this, since none of the properties are complex
+#     a owl:ObjectProperty ;
+#     owl:propertyChainAxiom (
+#         prog:examples.btrees.BTreeNode.children
+#         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
+#         prog:storesReference%3Cexamples.btrees.BTreeNode%3E
+#     ) .
 
 domain:hasParent
     a owl:ObjectProperty ;

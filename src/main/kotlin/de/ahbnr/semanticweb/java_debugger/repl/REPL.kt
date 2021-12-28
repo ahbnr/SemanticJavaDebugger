@@ -185,7 +185,7 @@ class REPL(
                 Signal.handle(Signal("INT"), oldSignalHandler)
 
             } catch (e: UserInterruptException) {
-                readInput = false
+                logger.debug("Send EOF (Ctrl-D) to exit.")
             } catch (e: EndOfFileException) {
                 readInput = false
             }
