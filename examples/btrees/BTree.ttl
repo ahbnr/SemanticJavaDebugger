@@ -140,7 +140,7 @@ domain:Root
             prog:examples.btrees.BTreeNode
             [
                 a owl:Class ;
-                owl:complementOf # Even if it can infer the below, Openllet fails here
+                owl:complementOf # Even if it can infer the below, Openllett fails here
                 [ # Openllet fails to infer this class iff domain:hasChild is complex
                     a owl:Restriction ;
                     owl:onProperty domain:hasParent ;

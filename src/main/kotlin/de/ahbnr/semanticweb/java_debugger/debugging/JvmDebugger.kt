@@ -15,16 +15,20 @@ class JvmDebugger : Closeable, KoinComponent {
     var jvm: JvmInstance? = null
         private set
 
-    private val deferredBreakpoints = mutableMapOf<String, MutableList<Int>>()
+    private val breakpoints = mutableMapOf<String, MutableSet<Int>>()
+    private val deferredBreakpoints = mutableMapOf<String, MutableSet<Int>>()
 
     private val logger: Logger by inject()
 
     fun setBreakpoint(className: String, line: Int) {
+        val lines = breakpoints.getOrPut(className) { mutableSetOf() }
+        lines.add(line)
+
         val classType = jvm?.getClass(className)
         if (classType != null) {
             jvm?.setBreakpointOnReferenceType(classType, line)
         } else {
-            val lines = deferredBreakpoints.getOrPut(className, { mutableListOf() })
+            val lines = deferredBreakpoints.getOrPut(className) { mutableSetOf() }
             lines.add(line)
 
             val rawVM = jvm?.vm
@@ -79,6 +83,9 @@ class JvmDebugger : Closeable, KoinComponent {
             logger.debug("There is a JVM already running.")
             logger.emphasize("Closing existing JVM and creating new one...")
             close()
+
+            deferredBreakpoints.clear()
+            deferredBreakpoints.putAll(breakpoints)
         }
 
         val launchingConnector = Bootstrap
@@ -106,7 +113,7 @@ class JvmDebugger : Closeable, KoinComponent {
     }
 
     override fun close() {
-        jvm?.vm?.exit(-1)
+        jvm?.close()
         jvm = null
     }
 }
