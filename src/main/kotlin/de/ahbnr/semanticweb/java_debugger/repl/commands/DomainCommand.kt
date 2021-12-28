@@ -2,37 +2,20 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.types.file
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.nio.file.FileSystems
-import kotlin.io.path.exists
+import java.io.File
 
-class DomainCommand : IREPLCommand, KoinComponent {
+class DomainCommand : REPLCommand(name = "domain"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "domain"
+    val domainFile: File by argument().file(mustExist = true, mustBeReadable = true)
 
-    private val usage = """
-        Usage: domain <owl file path>
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        if (argv.size != 1) {
-            logger.error(usage)
-            return false
-        }
-
-        val domainFile = argv[0]
-        if (!FileSystems.getDefault().getPath(domainFile).exists()) {
-            logger.error("No such file.")
-            return false
-        }
-
-        repl.applicationDomainDefFile = domainFile
+    override fun run() {
+        state.applicationDomainDefFile = domainFile.path
         logger.log("Will load application domain from $domainFile next time buildkb is called.")
-
-        return true
     }
 }

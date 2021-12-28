@@ -104,17 +104,33 @@ domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
                 domain:rolifiedBTreeNode
             ) .
 
-domain:hasChild
+# domain:hasChild # HermiT fails here because `domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E` is complex
+#     a owl:ObjectProperty ;
+#     owl:propertyChainAxiom (
+#         prog:examples.btrees.BTreeNode.children
+#         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
+#         domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
+#     ) .
+
+domain:hasChild # HermiT can do this, since none of the properties are complex
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
         prog:examples.btrees.BTreeNode.children
         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
-        domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
+        prog:storesReference%3Cexamples.btrees.BTreeNode%3E
     ) .
 
 domain:hasParent
     a owl:ObjectProperty ;
     owl:inverseOf domain:hasChild .
+
+domain:HasParent
+    a owl:Class ;
+    owl:complementOf [
+        a owl:Restriction ;
+        owl:onProperty domain:hasParent ;
+        owl:someValuesFrom prog:examples.btrees.BTreeNode
+    ] .
 
 domain:Root
     a owl:Class ;
@@ -124,8 +140,8 @@ domain:Root
             prog:examples.btrees.BTreeNode
             [
                 a owl:Class ;
-                owl:complementOf
-                [
+                owl:complementOf # Even if it can infer the below, Openllet fails here
+                [ # Openllet fails to infer this class iff domain:hasChild is complex
                     a owl:Restriction ;
                     owl:onProperty domain:hasParent ;
                     owl:someValuesFrom prog:examples.btrees.BTreeNode

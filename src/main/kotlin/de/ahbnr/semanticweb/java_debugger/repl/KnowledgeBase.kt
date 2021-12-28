@@ -17,20 +17,20 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class KnowledgeBase(
     val ontology: Ontology,
-    private val repl: REPL,
     val limiter: MappingLimiter
 ) : KoinComponent {
     private val URIs: OntURIs by inject()
     private val logger: Logger by inject()
+    private val state: SemanticDebuggerState by inject()
 
     private val sparqlReasoner: ReasonerId
-        get() = repl.targetReasoner
+        get() = state.targetReasoner
     private val shaclReasoner: ReasonerId
-        get() = repl.targetReasoner
+        get() = state.targetReasoner
     private val tripleListingReasoner: ReasonerId
-        get() = repl.targetReasoner
+        get() = state.targetReasoner
     private val jenaValidationReasoner: JenaReasonerProvider
-        get() = with(repl.targetReasoner) {
+        get() = with(state.targetReasoner) {
             when (this) {
                 is ReasonerId.PureJenaReasoner -> this
                 is ReasonerId.PureOwlApiReasoner -> {
@@ -42,7 +42,7 @@ class KnowledgeBase(
             }
         }
     private val owlClassExpressionReasoner: OwlApiReasonerProvider
-        get() = with(repl.targetReasoner) {
+        get() = with(state.targetReasoner) {
             when (this) {
                 is ReasonerId.PureJenaReasoner -> {
                     val fallback = ReasonerId.PureOwlApiReasoner.HermiT
@@ -54,7 +54,7 @@ class KnowledgeBase(
             }
         }
     private val consistencyReasoner: OwlApiReasonerProvider
-        get() = with(repl.targetReasoner) {
+        get() = with(state.targetReasoner) {
             when (this) {
                 is ReasonerId.PureJenaReasoner -> {
                     val fallback = ReasonerId.PureOwlApiReasoner.HermiT
@@ -66,7 +66,7 @@ class KnowledgeBase(
             }
         }
     private val syntacticModuleExtractionReasoner: OwlApiReasonerProvider
-        get() = with(repl.targetReasoner) {
+        get() = with(state.targetReasoner) {
             when (this) {
                 is ReasonerId.PureJenaReasoner -> {
                     val fallback = ReasonerId.PureOwlApiReasoner.HermiT

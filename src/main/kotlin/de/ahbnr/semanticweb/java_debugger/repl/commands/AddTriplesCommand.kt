@@ -2,28 +2,29 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.ParserException
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.system.ErrorHandler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class AddTriplesCommand : IREPLCommand, KoinComponent {
+class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
     private val logger: Logger by inject()
     private val URIs: OntURIs by inject()
 
-    override val name = "add-triples"
+    val triplesString: String by argument()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return false
+            throw ProgramResult(-1)
         }
 
         val prefixes = knowledgeBase
@@ -33,7 +34,7 @@ class AddTriplesCommand : IREPLCommand, KoinComponent {
 
         val triplesString = """
                 $prefixes
-                $rawInput
+                $triplesString
         """.trimIndent()
 
         RDFParser
@@ -61,7 +62,5 @@ class AddTriplesCommand : IREPLCommand, KoinComponent {
             .parse(knowledgeBase.ontology.asGraphModel())
 
         ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.limiter, false)
-
-        return true
     }
 }

@@ -2,9 +2,10 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.utils.expandResourceToModel
 import de.ahbnr.semanticweb.java_debugger.utils.toPrettyString
 import org.apache.jena.riot.Lang
@@ -12,26 +13,17 @@ import org.apache.jena.riot.RDFDataMgr
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
+class InspectCommand() : REPLCommand(name = "inspect"), KoinComponent {
     val logger: Logger by inject()
+    val URIs: OntURIs by inject()
 
-    override val name = "inspect"
+    val variableOrIRI: String by argument()
 
-    private val usage = """
-        Usage: inspect <variable or IRI>
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val variableOrIRI = argv.firstOrNull()
-        if (variableOrIRI == null) {
-            logger.error(usage)
-            return false
-        }
-
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
-            return false
+            throw ProgramResult(-1)
         }
 
         val model = knowledgeBase.ontology.asGraphModel()
@@ -39,13 +31,13 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
         val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)
         if (node == null) {
             logger.error("No node is known under this name.")
-            return false
+            throw ProgramResult(-1)
         }
 
         when {
             node.isResource -> {
                 val resource = node.asResource()
-                RDFDataMgr.write(logger.logStream(), expandResourceToModel(resource, ns), Lang.TTL)
+                RDFDataMgr.write(logger.logStream(), expandResourceToModel(resource, URIs.ns), Lang.TTL)
                 // for (property in resource.listProperties()) {
                 //     logger.log(property.toPrettyString(model))
                 // }
@@ -56,7 +48,5 @@ class InspectCommand(val ns: Namespaces) : IREPLCommand, KoinComponent {
         }
 
         logger.log("")
-
-        return true
     }
 }

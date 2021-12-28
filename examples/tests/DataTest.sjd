@@ -1,36 +1,36 @@
-section Prepare Program & Domain
+section "Prepare Program & Domain"
 stop at examples.tests.DataTest:28
 run examples/tests/DataTest.java
 
-section Build Knowledge Base
+section "Build Knowledge Base"
 buildkb --limit-sdk --deep=examples
 dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
-section SPARQL Queries
+section "SPARQL Queries"
 
 # See if all fields have been registered in the graph
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?field
     WHERE {
         prog:examples.tests.DataContainer java:hasField ?field .
     }
-EOF
+'EOF
 
 # Try to extract a boolean field value
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?container ?boolVal
     WHERE {
         ?container a prog:examples.tests.DataContainer ;
                    prog:examples.tests.DataContainer.booleanField ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
-EOF
+'EOF
 inspect ?boolVal
 
 # Try to extract the second int array element
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?second
     WHERE {
         ?container a prog:examples.tests.DataContainer ;
@@ -42,11 +42,11 @@ sparql <<EOF
                      ]
                    ] .
     }
-EOF
+'EOF
 inspect ?second
 
 # Try to extract the first String array element
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?first
     WHERE {
         [] a prog:examples.tests.DataContainer ;
@@ -60,11 +60,11 @@ sparql <<EOF
              ]
            ] .
     }
-EOF
+'EOF
 inspect ?first
 
 # Show value of the string field
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?string
     WHERE {
         [] a prog:examples.tests.DataContainer ;
@@ -72,7 +72,7 @@ sparql <<EOF
              java:hasStringValue ?string
            ] .
     }
-EOF
+'EOF
 inspect ?string
 
 # Show the whole DataContainer instance
@@ -85,18 +85,18 @@ checkkb --is-consistent
 stats
 
 # Extracting a boolean value
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?boolVal
     WHERE {
         [] a java:StackFrame ;
            prog:examples.tests.DataTest.void_varsTest%28%29.booleanVar ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
-EOF
+'EOF
 inspect ?boolVal
 
 # Extracting an array value
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?intArrayVal
     WHERE {
         [] a java:StackFrame ;
@@ -107,7 +107,7 @@ sparql <<EOF
              ]
            ] .
     }
-EOF
+'EOF
 inspect ?intArrayVal
 
 cont

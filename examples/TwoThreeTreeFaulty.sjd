@@ -1,25 +1,25 @@
-section Prepare Program & Domain
+section "Prepare Program & Domain"
 domain examples/TwoThreeTree.ttl
 stop at examples.TwoThreeTree:66
 run examples/TwoThreeTree.java
 
-section Build Knowledge Base
+section "Build Knowledge Base"
 buildkb --limit-sdk
 checkkb --is-consistent
 
-section Detection by Explicit Model
-sparql <<EOF
+section "Detection by Explicit Model"
+sparql -- '<<EOF
   SELECT ?faulty ?var
   WHERE {
       ?faulty a domain:FaultyNode .
       [] ?var ?faulty .
       ?var a java:VariableDeclaration .
   }
-EOF
+'EOF
 reverse ?faulty
 
-section Detection by SPARQL Negation
-sparql <<EOF
+section "Detection by SPARQL Negation"
+sparql -- '<<EOF
   SELECT ?faulty
   WHERE {
       ?faulty a prog:examples.Node .
@@ -28,10 +28,10 @@ sparql <<EOF
           ?faulty a domain:TrueNode .
       }
   }
-EOF
+'EOF
 reverse ?faulty
 
-section Detection by SHACL
+section "Detection by SHACL"
 shacl examples/TwoThreeTreeShapes.ttl
 reverse ?focus0
 

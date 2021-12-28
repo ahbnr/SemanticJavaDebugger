@@ -1,53 +1,53 @@
-section Prepare Program & Domain
+section "Prepare Program & Domain"
 stop at examples.tests.SubtypingTest:65
 run examples/tests/SubtypingTest.java
 
-section Build Knowledge Base
+section "Build Knowledge Base"
 buildkb --limit-sdk --deep=examples
 dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
-section Checking Basic Type Hierarchy
+section "Checking Basic Type Hierarchy"
 
 # There is nothing that is an array and a class
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?classArray
     WHERE {
         ?classArray a java:Class ;
                     a java:Array .
     }
-EOF
+'EOF
 
 # java.lang.Object is a class
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT ?object
     WHERE {
         ?object a java:Class .
         FILTER (?object = prog:java.lang.Object)
     }
-EOF
+'EOF
 
 # java.lang.Object[] is an array
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT ?objectArray
     WHERE {
         ?objectArray a java:Array .
         FILTER (?objectArray = prog:java.lang.Object%5B%5D)
     }
-EOF
+'EOF
 
 # java.lang.Object[] instances are always also java.lang.Object instances
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT ?objectArray
     WHERE {
         ?objectArray rdfs:subClassOf prog:java.lang.Object .
         FILTER (?objectArray = prog:java.lang.Object%5B%5D)
     }
-EOF
+'EOF
 
 # Classes are always sub-types of java.lang.Object
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?class
     WHERE {
         ?class a java:Class .
@@ -55,10 +55,10 @@ assert sparql-fail <<EOF
             ?class rdfs:subClassOf prog:java.lang.Object .
         }
     }
-EOF
+'EOF
 
 # Arrays are sub-types of java.lang.Object
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?array
     WHERE {
         ?array a java:Array .
@@ -66,10 +66,10 @@ assert sparql-fail <<EOF
             ?array rdfs:subClassOf prog:java.lang.Object .
         }
     }
-EOF
+'EOF
 
 # Array types are also java.lang.Cloneable and java.io.Serializable
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
@@ -78,10 +78,10 @@ assert sparql-fail <<EOF
                        rdfs:subClassOf prog:java.io.Serializable .
         }
     }
-EOF
+'EOF
 
 # Primitive type arrays are always sub-types of java:PrimitiveArray
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
@@ -93,10 +93,10 @@ assert sparql-fail <<EOF
             ?arrayType rdfs:subClassOf java:PrimitiveArray .
         }
     }
-EOF
+'EOF
 
 # Reference type Arrays are always sub-types of Object[] arrays
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
@@ -108,11 +108,11 @@ assert sparql-fail <<EOF
             ?arrayType rdfs:subClassOf prog:java.lang.Object%5B%5D .
         }
     }
-EOF
+'EOF
 
-section Checking Local Class Inheritance Hierarchy
+section "Checking Local Class Inheritance Hierarchy"
 
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT ?bot1
     WHERE {
         ?bot1 a prog:examples.tests.Bot1 ;
@@ -120,45 +120,45 @@ assert sparql-success <<EOF
               prog:examples.tests.Mid.midField [] ;
               prog:examples.tests.Top.topField [] .
     }
-EOF
+'EOF
 
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?bot1
     WHERE {
         ?bot1 a prog:examples.tests.Bot1 ;
               prog:examples.tests.Bot1.bot2Field [] .
     }
-EOF
+'EOF
 
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT ?mid
     WHERE {
         ?mid a prog:examples.tests.Mid ;
              prog:examples.tests.Mid.midField [] ;
              prog:examples.tests.Top.topField [] .
     }
-EOF
+'EOF
 
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?mid
     WHERE {
         ?mid a prog:examples.tests.Mid ;
              prog:examples.tests.Bot1.botField [] .
     }
-EOF
+'EOF
 
-assert sparql-fail <<EOF
+assert sparql-fail -- '<<EOF
     SELECT ?notMid
     WHERE {
         ?notMid java:hasMethod prog:examples.tests.Mid.void_midMethod%28%29 .
         FILTER (?notMid != prog:examples.tests.Mid)
     }
-EOF
+'EOF
 
-section Checking Local Interface Hierarchy
+section "Checking Local Interface Hierarchy"
 
 # Check that mid interface has all the methods inherited from the top interface
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT  ?midInterface
     WHERE {
         FILTER (?midInterface = prog:examples.tests.MidInterface) .
@@ -172,10 +172,10 @@ assert sparql-success <<EOF
                         java:hasMethod prog:examples.tests.TopInterface2.void_topInterface2Method%28%29
                       ] .
     }
-EOF
+'EOF
 
 # Check that the Mid class which inherits from MidInterface also has them
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT  ?midClass
     WHERE {
         FILTER (?midClass = prog:examples.tests.Mid) .
@@ -192,15 +192,15 @@ assert sparql-success <<EOF
                     java:hasMethod prog:examples.tests.TopInterface2.void_topInterface2Method%28%29
                   ] .
     }
-EOF
+'EOF
 
 # All individuals of a top interface should also be individuals of java.lang.Object
-assert sparql-success <<EOF
+assert sparql-success -- '<<EOF
     SELECT ?topInterface1
     WHERE {
         FILTER (?topInterface1 = prog:examples.tests.TopInterface1)
         ?topInterface1 rdfs:subClassOf prog:java.lang.Object .
     }
-EOF
+'EOF
 
 cont

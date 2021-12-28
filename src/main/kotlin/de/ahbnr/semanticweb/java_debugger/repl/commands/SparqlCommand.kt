@@ -2,9 +2,15 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.groups.OptionGroup
+import com.github.ajalt.clikt.parameters.groups.groupChoice
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
 import org.apache.jena.query.ResultSetFormatter
@@ -12,31 +18,24 @@ import org.apache.jena.rdf.model.RDFNode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class SparqlCommand : IREPLCommand, KoinComponent {
+class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
     private val logger: Logger by inject()
 
-    override val name = "sparql"
+    class SyntacticExtractionOptions : OptionGroup() {
+        val classRelationDepth by option().int().default(-1)
+    }
 
-    private val nonOptionRegex = """\s[^-\s]""".toRegex()
+    val moduleExtraction by option().groupChoice(
+        "syntactic" to SyntacticExtractionOptions()
+    )
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val knowledgeBase = repl.knowledgeBase
+    val rawSparqlExpression: String by argument()
+
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return false
-        }
-
-        var options: List<String> = emptyList()
-        var rawQuery: String = rawInput
-        if (rawInput.startsWith(' ') || rawInput.startsWith('-')) {
-            val nonOptionPosition = nonOptionRegex.find(rawInput)
-            if (nonOptionPosition == null) {
-                logger.error("No query has been specified.")
-                return false
-            }
-            val startOfQuery = nonOptionPosition.range.first
-            options = rawInput.substring(0 until startOfQuery).split(' ')
-            rawQuery = rawInput.substring(startOfQuery)
+            throw ProgramResult(-1)
         }
 
         val prefixes = knowledgeBase
@@ -46,18 +45,23 @@ class SparqlCommand : IREPLCommand, KoinComponent {
 
         val queryString = """
                 $prefixes
-                $rawQuery
+                $rawSparqlExpression
         """.trimIndent()
 
         try {
             val query = QueryFactory.create(queryString)
 
-            val ontology = if (options.contains("--optimize")) {
-                logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
-                val module = extractSyntacticLocalityModule(knowledgeBase, query.queryPattern)
-                logger.debug("Axioms after module extraction: ${module.axiomCount}.")
-                module
-            } else knowledgeBase.ontology
+            val ontology = when (val it = moduleExtraction) {
+                is SyntacticExtractionOptions -> {
+                    logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
+                    val module =
+                        extractSyntacticLocalityModule(knowledgeBase, query.queryPattern, it.classRelationDepth)
+                    logger.debug("Axioms after module extraction: ${module.axiomCount}.")
+                    module
+                }
+
+                else -> knowledgeBase.ontology
+            }
 
             val model = knowledgeBase.getSparqlModel(ontology)
 
@@ -89,9 +93,7 @@ class SparqlCommand : IREPLCommand, KoinComponent {
             }
         } catch (e: QueryParseException) {
             logger.error(e.message ?: "Could not parse query.")
-            return false
+            throw ProgramResult(-1)
         }
-
-        return true
     }
 }

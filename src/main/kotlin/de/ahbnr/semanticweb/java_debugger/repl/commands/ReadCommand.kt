@@ -2,35 +2,24 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.types.file
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.FileInputStream
-import java.io.FileNotFoundException
 
-class ReadCommand : IREPLCommand, KoinComponent {
+class ReadCommand : REPLCommand(name = "read"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "read"
+    var repl: REPL? = null
 
-    private val usage = "read <command file>"
+    val commandFile by argument().file(mustExist = true, mustBeReadable = true)
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        if (argv.size != 1) {
-            logger.error(usage)
-            return false
+    override fun run() {
+        if (repl?.interpretStream(commandFile.inputStream()) != true) {
+            throw ProgramResult(-1)
         }
-
-        val commandFile = argv.first()
-
-        val fileInputStream = try {
-            FileInputStream(commandFile)
-        } catch (e: FileNotFoundException) {
-            logger.error("No such file: $commandFile.")
-            return false
-        }
-
-        return repl.interpretStream(fileInputStream)
     }
 }

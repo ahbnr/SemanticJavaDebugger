@@ -2,10 +2,11 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.query.ParameterizedSparqlString
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
@@ -18,11 +19,11 @@ import org.koin.core.component.inject
 
 class AssertCommand(
     private val graphGenerator: GraphGenerator
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "assert"), KoinComponent {
     private val logger: Logger by inject()
-    private val URIs: OntURIs by inject()
 
-    override val name = "assert"
+    val subCommand: String by argument().choice(*(AssertionKind.all.map { it.name }.toTypedArray()))
+    val assertionExpression: String by argument()
 
     private sealed class AssertionKind(val name: String) {
         sealed class SparqlAssertion(val subName: String) : AssertionKind(subName)
@@ -39,35 +40,21 @@ class AssertCommand(
         }
     }
 
-    private val usage = """
-        Usage: assert [${AssertionKind.all.joinToString("|") { it.name }}] <sparql WHERE clause>
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return false
-        }
-
-        val subCommand = argv.firstOrNull()
-        if (subCommand == null) {
-            logger.error(usage)
-            return false
+            throw ProgramResult(-1)
         }
 
         val assertionKind = AssertionKind.getByName(subCommand)
-        if (assertionKind == null) {
-            logger.error(usage)
-            return false
-        }
 
         when (assertionKind) {
             is AssertionKind.SparqlAssertion -> {
                 val model = knowledgeBase.getSparqlModel()
 
                 val queryString = ParameterizedSparqlString(
-                    rawInput.drop(subCommand.length)
+                    assertionExpression
                 )
 
                 try {
@@ -87,7 +74,7 @@ class AssertCommand(
                             results.asSequence().find { result -> query.resultVars.all { result.contains(it) } }
                         val wasSuccessful = result != null
 
-                        return when (assertionKind) {
+                        val assertionResult = when (assertionKind) {
                             is AssertionKind.SparqlSuccess -> {
                                 if (wasSuccessful) {
                                     logger.success("PASSED.")
@@ -109,10 +96,12 @@ class AssertCommand(
                                 }
                             }
                         }
+
+                        throw ProgramResult(if (assertionResult) 0 else -1)
                     }
                 } catch (e: QueryParseException) {
                     logger.error(e.message ?: "Could not parse query.")
-                    return false
+                    throw ProgramResult(-1)
                 }
             }
             is AssertionKind.Triples -> {
@@ -130,7 +119,7 @@ class AssertCommand(
                     .source(
                         """
                             $prefixes
-                            ${rawInput.drop(subCommand.length)}
+                            ${assertionExpression}
                         """
                             .trimIndent()
                             .byteInputStream()
@@ -141,7 +130,7 @@ class AssertCommand(
                 for (statement in targetModel.listStatements()) {
                     if (statement.subject.isAnon || statement.`object`.isAnon) {
                         logger.error("Blank nodes are not supported here.")
-                        return false
+                        throw ProgramResult(-1)
                     }
 
                     val selector = SimpleSelector(statement.subject, statement.predicate, statement.`object`)
@@ -149,12 +138,11 @@ class AssertCommand(
                     if (model.query(selector).isEmpty) {
                         logger.error("FAILED!")
                         logger.log("Triple not found: $statement.")
-                        return false
+                        throw ProgramResult(-1)
                     }
                 }
 
                 logger.success("PASSED")
-                return true
             }
         }
     }

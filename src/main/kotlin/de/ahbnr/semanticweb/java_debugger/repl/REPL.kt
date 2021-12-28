@@ -2,8 +2,10 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl
 
+import com.github.ajalt.clikt.core.CliktError
+import com.github.ajalt.clikt.core.ProgramResult
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.commands.IREPLCommand
+import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import net.harawata.appdirs.AppDirsFactory
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
@@ -20,10 +22,8 @@ import sun.misc.Signal
 import sun.misc.SignalHandler
 import java.io.InputStream
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.concurrent.thread
 import kotlin.io.path.createDirectories
-import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
@@ -42,21 +42,13 @@ private sealed class Mode {
 
 class REPL(
     private val terminal: Terminal,
-    commands: List<IREPLCommand>,
-    var compilerTmpDir: Path = Paths.get("") // CWD
+    commands: List<REPLCommand>,
 ) : KoinComponent {
-    var applicationDomainDefFile: String? = null
-    var sourcePath: Path? = null
-    var knowledgeBase: KnowledgeBase? = null
-    var targetReasoner: ReasonerId = ReasonerId.PureJenaReasoner.JenaOwlMicro
-
-    @OptIn(ExperimentalTime::class)
-    var lastCommandDuration: Duration? = null
+    private val state: SemanticDebuggerState by inject()
 
     private var mode: Mode = Mode.Normal
 
-    private val commandMap = commands.map { it.name to it }.toMap()
-    private val parser = DefaultParser()
+    private val commandMap = commands.map { it.commandName to it }.toMap()
     private val reader: LineReader
 
     init {
@@ -65,7 +57,7 @@ class REPL(
 
         reader = LineReaderBuilder.builder()
             .terminal(terminal)
-            .parser(parser)
+            .parser(DefaultParser())
             .variable(LineReader.HISTORY_FILE, cacheDir.resolve("history"))
             .history(DefaultHistory())
             .build()
@@ -80,6 +72,8 @@ class REPL(
     private val logger: Logger by inject()
 
     private val hereDocRegex = """<<\s*([A-z]+)""".toRegex()
+
+    private val lineParser = ReplLineParser()
 
     @OptIn(ExperimentalTime::class)
     private fun interpretLine(line: String): Boolean {
@@ -105,7 +99,8 @@ class REPL(
                     return true
                 }
 
-                val argv = trimmedLine.split(' ')
+                val argv = lineParser.parse(line)
+
                 val commandName = argv.firstOrNull()
 
                 val command = commandMap.getOrDefault(commandName, null)
@@ -115,14 +110,19 @@ class REPL(
                 }
 
                 val (returnValue, duration) = measureTimedValue {
-                    command.handleInput(
-                        argv.drop(1),
-                        trimmedLine.drop(commandName?.length ?: 0).trimStart(),
-                        this
-                    )
+                    try {
+                        command.parse(argv.drop(1))
+                        true
+                    } catch (e: ProgramResult) {
+                        e.statusCode == 0
+                    } catch (e: CliktError) {
+                        logger.log(e.stackTraceToString())
+                        logger.error(e.message ?: "Unknown command execution error.")
+                        false
+                    }
                 }
 
-                this.lastCommandDuration = duration
+                state.lastCommandDuration = duration
                 terminal.flush()
 
                 returnValue

@@ -1,17 +1,17 @@
-section Prepare Program & Domain
+section "Prepare Program & Domain"
 stop at examples.tests.ClassDefinitionsTest:19
 run examples/tests/ClassDefinitionsTest.java
 
-section Build Knowledge Base
+section "Build Knowledge Base"
 buildkb --limit-sdk
 checkkb --is-consistent
 
-section Check for presence of (inner) classes
+section "Check for presence of (inner) classes"
 
-assert triples <<EOF
+assert triples '<<EOF
   prog:examples.tests.OuterClass a java:Class .
   prog:examples.tests.OuterClass%24InnerClass a java:Class .
   prog:examples.tests.OuterClass%24StaticInnerClass a java:Class .
-EOF
+'EOF
 
 cont

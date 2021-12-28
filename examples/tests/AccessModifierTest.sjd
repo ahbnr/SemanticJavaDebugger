@@ -1,27 +1,27 @@
-section Prepare Program & Domain
+section "Prepare Program & Domain"
 stop at examples.tests.AccessModifierTest:34
 run examples/tests/AccessModifierTest.java
 
-section Build Knowledge Base
+section "Build Knowledge Base"
 buildkb --limit-sdk
-checkkb --is-consistent
+# checkkb --is-consistent
 
-section Check access modifiers of classes
+section "Check access modifiers of classes"
 
-assert triples <<EOF
+assert triples '<<EOF
     prog:examples.tests.AccessModifierTest java:hasAccessModifier "public" .
     prog:examples.tests.PackagePrivateClass%24ProtectedClass java:hasAccessModifier "protected" .
     prog:examples.tests.PackagePrivateClass%24PrivateClass java:hasAccessModifier "private" .
     prog:examples.tests.PackagePrivateClass java:hasAccessModifier "package-private" .
-EOF
+'EOF
 
-section Check access modifiers of methods
+section "Check access modifiers of methods"
 
-assert triples <<EOF
+assert triples '<<EOF
     prog:examples.tests.AccessModifierTest.void_publicMethod%28%29 java:hasAccessModifier "public" .
     prog:examples.tests.AccessModifierTest.void_protectedMethod%28%29 java:hasAccessModifier "protected" .
     prog:examples.tests.AccessModifierTest.void_privateMethod%28%29 java:hasAccessModifier "private" .
     prog:examples.tests.AccessModifierTest.void_packagePrivateMethod%28%29 java:hasAccessModifier "package-private" .
-EOF
+'EOF
 
 cont

@@ -2,28 +2,26 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ContCommand(
     private val jvmDebugger: JvmDebugger
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "cont"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "cont"
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
+    override fun run() {
         val jvm = jvmDebugger.jvm
 
         if (jvm == null) {
             logger.error("There is no JVM running.")
-            return false
+            throw ProgramResult(-1)
         }
 
         jvm.resume()
-        return true
     }
 }

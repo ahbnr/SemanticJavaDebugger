@@ -2,43 +2,34 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.types.file
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFFormat
 import org.apache.jena.riot.RDFWriter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.File
 
-class DumpKBCommand : IREPLCommand, KoinComponent {
+class DumpKBCommand : REPLCommand(name = "dumpkb"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "dumpkb"
+    val file: File by argument().file(mustBeWritable = true)
 
-    private val usage = """
-        Usage: dumpkb <file>
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base is available. Run `buildkb` first.")
-            return false
-        }
-
-        val file = argv.firstOrNull()
-        if (file == null) {
-            logger.error(usage)
-            return false
+            throw ProgramResult(-1)
         }
 
         RDFWriter
             .create(knowledgeBase.ontology.asGraphModel())
             .lang(Lang.TURTLE)
             .format(RDFFormat.TURTLE_PRETTY)
-            .output(file)
+            .output(file.outputStream())
         logger.success("Knowledge base saved to $file.")
-
-        return true
     }
 }

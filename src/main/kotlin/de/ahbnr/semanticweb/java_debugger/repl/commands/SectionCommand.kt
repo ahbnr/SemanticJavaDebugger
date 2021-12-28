@@ -2,28 +2,29 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.optional
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class SectionCommand : IREPLCommand, KoinComponent {
+class SectionCommand : REPLCommand(name = "section"), KoinComponent {
     private val logger: Logger by inject()
 
-    override val name = "section"
+    private val sectionText: String? by argument().optional()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
+    override fun run() {
         logger.emphasize("")
-        if (rawInput.isEmpty()) {
+        val sectionText = sectionText
+
+        if (sectionText.isNullOrBlank()) {
             logger.emphasize("**********************")
         } else {
-            logger.emphasize("*".repeat(rawInput.length + 6))
-            logger.emphasize("*  $rawInput  *")
-            logger.emphasize("*".repeat(rawInput.length + 6))
+            logger.emphasize("*".repeat(sectionText.length + 6))
+            logger.emphasize("*  $sectionText  *")
+            logger.emphasize("*".repeat(sectionText.length + 6))
         }
 
         logger.emphasize("")
-
-        return true
     }
 }

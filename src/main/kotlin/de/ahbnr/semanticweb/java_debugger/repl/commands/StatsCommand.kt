@@ -2,33 +2,49 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.query.QueryFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.streams.asSequence
 
 class StatsCommand(
     private val graphGenerator: GraphGenerator
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "stats"), KoinComponent {
     private val logger: Logger by inject()
     private val URIs: OntURIs by inject()
 
-    override val name = "stats"
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return false
+            throw ProgramResult(-1)
         }
 
         logger.log("Number of ontology axioms: ${knowledgeBase.ontology.axiomCount}")
 
         knowledgeBase.ontology.asGraphModel().let { plainModel ->
             logger.log("Number of statements in Jena Model (without inference): ${plainModel.graph.size()}.")
+            logger.log("")
+
+            val numGeneratedUris = plainModel
+                .graph
+                .stream()
+                .asSequence()
+                .flatMap {
+                    sequence {
+                        if (it.subject.isURI) yield(it.subject.uri)
+                        yield(it.predicate.uri)
+                        if (it.`object`.isURI) yield(it.`object`.uri)
+                    }
+                }
+                .filter { it.startsWith(URIs.ns.prog) || it.startsWith(URIs.ns.run) }
+                .toSet()
+                .size
+            logger.log("Number of prog: and run: URIs generated: $numGeneratedUris")
             logger.log("")
 
             data class Countable(val name: String, val uri: String)
@@ -85,7 +101,5 @@ class StatsCommand(
                 logger.log("")
             }
         }
-
-        return true
     }
 }

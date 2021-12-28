@@ -1,17 +1,17 @@
-section Prepare Program & Domain
+section "Prepare Program & Domain"
 domain examples/TwoThreeTree.ttl
 stop at examples.TwoThreeTree:41
 run examples/TwoThreeTree.java
 locals
 
-section Build Knowledge Base
+section "Build Knowledge Base"
 buildkb --limit-sdk
 time
 stats
 # checkkb --is-consistent
 
-section SPARQL Queries
-sparql <<EOF
+section "SPARQL Queries"
+sparql -- '<<EOF
     SELECT ?root ?var
     WHERE {
         [] a java:StackFrame ;
@@ -19,23 +19,23 @@ sparql <<EOF
         ?var a java:VariableDeclaration .
         ?root a domain:Root .
     }
-EOF
+'EOF
 time
 reverse ?root
 
 # Get all fields of true nodes
-sparql <<EOF
+sparql -- '<<EOF
     SELECT ?node ?field
     WHERE {
         ?node a domain:TrueNode .
         [] ?field ?node .
         ?field a java:Field .
     }
-EOF
+'EOF
 time
 reverse ?node
 
-sparql <<EOF
+sparql -- '<<EOF
   SELECT ?root ?source ?line
   WHERE {
       ?root a domain:Root .
@@ -47,12 +47,12 @@ sparql <<EOF
       ?location java:isAtSourcePath ?source ;
                 java:isAtLine ?line .
   }
-EOF
+'EOF
 time
 inspect ?root
 reverse ?root
 
-section SHACL Validation
+section "SHACL Validation"
 shacl examples/TwoThreeTreeShapes.ttl
 
 cont

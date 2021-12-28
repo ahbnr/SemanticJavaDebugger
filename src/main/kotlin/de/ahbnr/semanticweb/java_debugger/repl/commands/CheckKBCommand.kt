@@ -2,9 +2,11 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import openllet.core.OpenlletOptions
 import openllet.jena.PelletInfGraph
 import openllet.owlapi.OpenlletReasoner
@@ -17,23 +19,22 @@ import java.io.PrintWriter
 
 class CheckKBCommand(
     private val graphGenerator: GraphGenerator
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "checkkb"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "checkkb"
+    val checkIfConsistent: Boolean by option("--is-consistent").flag(default = false)
+    val checkForUnsatisfiableClasses: Boolean by option("--has-unsatisfiable-classes").flag(default = false)
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base is available. Run `buildkb` first.")
-            return false
+            throw ProgramResult(-1)
         }
 
-        val checkIfConsistent = argv.contains("--is-consistent")
-        val checkForUnsatisfiableClasses = argv.contains("--has-unsatisfiable-classes")
         if (checkForUnsatisfiableClasses && !checkIfConsistent) {
             logger.error("Can only check for unsatisfiable classes if we also check for consistency with --is-consistent.")
-            return false
+            throw ProgramResult(-1)
         }
 
         logger.log("${knowledgeBase.ontology.axiomCount} axioms.")
@@ -120,7 +121,7 @@ class CheckKBCommand(
                 if (checkForUnsatisfiableClasses) {
                     if (!isConsistent) {
                         logger.error("Can only do a full check if Ontology is consistent.")
-                        return false
+                        throw ProgramResult(-1)
                     }
 
                     // FIXME: Am I using Hermit correctly here?
@@ -136,7 +137,5 @@ class CheckKBCommand(
                 OpenlletOptions.USE_TRACING = originalTracingSetting
             }
         }
-
-        return true
     }
 }

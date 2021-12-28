@@ -2,61 +2,52 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.backward.BackwardMapper
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ReverseCommand(
-    val jvmDebugger: JvmDebugger,
-    val ns: Namespaces
-) : IREPLCommand, KoinComponent {
+    val jvmDebugger: JvmDebugger
+) : REPLCommand(name = "reverse"), KoinComponent {
     val logger: Logger by inject()
+    val URIs: OntURIs by inject()
 
-    override val name = "reverse"
+    val variableOrIRI: String by argument()
 
-    private val usage = """
-        Usage: reverse <variable or IRI>
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val variableOrUri = argv.firstOrNull()
-        if (variableOrUri == null) {
-            logger.error(usage)
-            return false
-        }
-
+    override fun run() {
         val jvm = jvmDebugger.jvm
         if (jvm == null) {
             logger.error("No JVM is running.")
-            return false
+            throw ProgramResult(-1)
         }
 
         val jvmState = jvm.state
         if (jvmState == null) {
             logger.error("JVM is currently not paused.")
-            return false
+            throw ProgramResult(-1)
         }
 
-        val knowledgeBase = repl.knowledgeBase
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("You must first extract a knowledge base. Run buildkb.")
-            return false
+            throw ProgramResult(-1)
         }
 
         val model = knowledgeBase.ontology.asGraphModel()
-        val node = knowledgeBase.resolveVariableOrUri(variableOrUri)
+        val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)
 
         if (node == null) {
             logger.error("No such node is known.")
-            return false
+            throw ProgramResult(-1)
         }
 
-        val inverseMapping = BackwardMapper(ns, jvmState)
+        val inverseMapping = BackwardMapper(URIs.ns, jvmState)
 
         when (val mapping = inverseMapping.map(node, model)) {
             is ObjectReference -> {
@@ -69,7 +60,5 @@ class ReverseCommand(
         }
 
         logger.log("")
-
-        return true
     }
 }

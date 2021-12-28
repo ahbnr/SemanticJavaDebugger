@@ -2,10 +2,12 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.types.file
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
@@ -13,37 +15,28 @@ import org.apache.jena.shacl.ShaclValidator
 import org.apache.jena.shacl.Shapes
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.File
 
 
 class ShaclCommand(
     private val graphGenerator: GraphGenerator
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "shacl"), KoinComponent {
     private val logger: Logger by inject()
     private val URIs: OntURIs by inject()
 
-    override val name = "shacl"
+    private val shapesFile: File by argument().file(mustExist = true, mustBeReadable = true)
 
-    private val usage = """
-        Usage: shacl <shapes file>4
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val shapesFile = argv.firstOrNull()
-        if (shapesFile == null) {
-            logger.error(usage)
-            return false
-        }
-
-        val knowledgeBase = repl.knowledgeBase
+    override fun run() {
+        val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
             logger.error("No knowledge base available. Run `buildkb` first.")
-            return false
+            throw ProgramResult(-1)
         }
 
         val model = knowledgeBase.getShaclModel()
         val graph = model.graph
 
-        val shapesGraph = RDFDataMgr.loadGraph(shapesFile)
+        val shapesGraph = RDFDataMgr.loadGraph(shapesFile.path)
         val shapes = Shapes.parse(shapesGraph)
 
         val report = ShaclValidator.get().validate(shapes, graph)
@@ -75,7 +68,5 @@ class ShaclCommand(
             logger.log("The focus nodes have been made available under the following names: ")
             logger.log(nameMap.keys.joinToString(", "))
         }
-
-        return true
     }
 }

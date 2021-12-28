@@ -2,13 +2,16 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.multiple
+import com.github.ajalt.clikt.parameters.options.option
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import spoon.Launcher
@@ -17,26 +20,27 @@ import kotlin.io.path.absolutePathString
 class BuildKBCommand(
     val jvmDebugger: JvmDebugger,
     val graphGenerator: GraphGenerator
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "buildkb"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "buildkb"
-    private val usage = "$name [--limit-sdk] [--full-linting-report] [--deep=...]*"
+    val limitSdk: Boolean by option().flag(default = false)
+    val fullLintingReport: Boolean by option().flag(default = false)
+    val deep: List<String> by option().multiple()
 
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
+    override fun run() {
         val jvm = jvmDebugger.jvm
         if (jvm == null) {
             logger.error("No JVM is running.")
-            return false
+            throw ProgramResult(-1)
         }
 
-        val state = jvm.state
-        if (state == null) {
+        val jvmState = jvm.state
+        if (jvmState == null) {
             logger.error("JVM is currently not paused.")
-            return false
+            throw ProgramResult(-1)
         }
 
-        val sourcePath = repl.sourcePath
+        val sourcePath = state.sourcePath
 
         val spoonLauncher = Launcher()
 
@@ -49,7 +53,7 @@ class BuildKBCommand(
         val sourceModel = spoonLauncher.model
 
         val limiter = MappingLimiter(
-            excludedPackages = if (argv.contains("--limit-sdk"))
+            excludedPackages = if (limitSdk)
                 setOf(
                     "sun",
                     "jdk",
@@ -59,35 +63,31 @@ class BuildKBCommand(
                     "java.lang.ref",
                     "java.lang.module",
                     "java.lang.invoke",
+                    "java"
                 )
             else setOf(),
-            shallowPackages = setOf("java"),
-            deepPackages = argv
-                .filter { it.startsWith("--deep=") }
-                .map { it.substring("--deep=".length until it.length) }
-                .toSet(),
+            shallowPackages = emptySet(), // setOf("java"),
+            deepPackages = deep.toSet(),
             reachableOnly = true
         )
 
         val buildParameters = BuildParameters(
-            jvmState = state,
+            jvmState = jvmState,
             sourceModel = sourceModel,
             limiter = limiter
         )
         val ontology = graphGenerator.buildOntology(
             buildParameters,
-            repl.applicationDomainDefFile,
-            argv.contains("--full-linting-report")
+            state.applicationDomainDefFile,
+            fullLintingReport
         )
         if (ontology == null) {
             logger.error("Could not create knowledge base.")
-            return false
+            throw ProgramResult(-1)
         }
 
-        repl.knowledgeBase = KnowledgeBase(ontology, repl, limiter)
+        state.knowledgeBase = KnowledgeBase(ontology, limiter)
 
         logger.success("Knowledge base created.")
-
-        return true
     }
 }

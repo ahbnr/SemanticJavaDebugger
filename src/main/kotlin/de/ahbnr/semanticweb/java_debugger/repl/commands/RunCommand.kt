@@ -2,9 +2,9 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Paths
@@ -12,23 +12,13 @@ import kotlin.io.path.absolutePathString
 
 class RunCommand(
     private val jvmDebugger: JvmDebugger
-) : IREPLCommand, KoinComponent {
+) : REPLCommand(name = "run"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "run"
+    private val classOrSource: String by argument()
 
-    private val usage = """
-        Usage: run <class or source file>
-    """.trimIndent()
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        val classOrSource = argv.firstOrNull()
-        if (classOrSource == null) {
-            logger.error(usage)
-            return false
-        }
-
-        repl.sourcePath = null
+    override fun run() {
+        state.sourcePath = null
 
         var classpath = Paths.get("") // CWD
 
@@ -38,15 +28,15 @@ class RunCommand(
 
                 val compiler = de.ahbnr.semanticweb.java_debugger.utils.Compiler(
                     listOf(sourcePath),
-                    repl.compilerTmpDir
+                    state.compilerTmpDir
                 )
 
-                logger.log("Compiling to ${repl.compilerTmpDir}.")
+                logger.log("Compiling to ${state.compilerTmpDir}.")
                 compiler.compile()
                 logger.success("Compiled!")
 
-                repl.sourcePath = sourcePath
-                classpath = repl.compilerTmpDir
+                state.sourcePath = sourcePath
+                classpath = state.compilerTmpDir
 
                 sourcePath
                     .toString()
@@ -57,7 +47,5 @@ class RunCommand(
         logger.log("Launching Java program.")
         jvmDebugger.launchVM(className, classpath.absolutePathString())
         jvmDebugger.jvm?.resume()
-
-        return true
     }
 }

@@ -19,6 +19,7 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers.StackMappe
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.genDefaultNs
 import de.ahbnr.semanticweb.java_debugger.repl.JLineLogger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
+import de.ahbnr.semanticweb.java_debugger.repl.SemanticDebuggerState
 import de.ahbnr.semanticweb.java_debugger.repl.commands.*
 import org.apache.commons.io.FilenameUtils
 import org.jline.terminal.TerminalBuilder
@@ -51,12 +52,35 @@ class SemanticJavaDebugger : CliktCommand() {
 
         val ns = genDefaultNs()
 
+        val systemTmpDir = System.getProperty("java.io.tmpdir")
+        val applicationTmpDir = Path.of(systemTmpDir, "SemanticJavaDebugger")
+
+        val compilerTmpDir =
+            applicationTmpDir.resolve(
+                if (commandFile != null) {
+                    if (Path.of(commandFile).isAbsolute) {
+                        Path.of(FilenameUtils.getBaseName(commandFile))
+                    } else {
+                        Path.of(
+                            FilenameUtils.getPath(commandFile),
+                            FilenameUtils.getBaseName(commandFile)
+                        )
+                    }
+                } else Path.of("repl")
+            )
+        compilerTmpDir.createDirectories()
+
         @Suppress("USELESS_CAST")
         startKoin {
             modules(
                 module {
                     single { JLineLogger(terminal) as Logger }
                     single { OntURIs(ns) }
+                    single {
+                        SemanticDebuggerState(
+                            compilerTmpDir = compilerTmpDir
+                        )
+                    }
                 }
             )
         }
@@ -74,23 +98,7 @@ class SemanticJavaDebugger : CliktCommand() {
                     )
                 )
 
-                val systemTmpDir = System.getProperty("java.io.tmpdir")
-                val applicationTmpDir = Path.of(systemTmpDir, "SemanticJavaDebugger")
-
-                val compilerTmpDir =
-                    applicationTmpDir.resolve(
-                        if (commandFile != null) {
-                            if (Path.of(commandFile).isAbsolute) {
-                                Path.of(FilenameUtils.getBaseName(commandFile))
-                            } else {
-                                Path.of(
-                                    FilenameUtils.getPath(commandFile),
-                                    FilenameUtils.getBaseName(commandFile)
-                                )
-                            }
-                        } else Path.of("repl")
-                    )
-                compilerTmpDir.createDirectories()
+                val readCommand = ReadCommand()
 
                 val repl = REPL(
                     terminal = terminal,
@@ -102,11 +110,11 @@ class SemanticJavaDebugger : CliktCommand() {
                         ContCommand(jvmDebugger),
                         DomainCommand(),
                         DumpKBCommand(),
-                        InspectCommand(ns),
-                        ReverseCommand(jvmDebugger, ns),
+                        InspectCommand(),
+                        ReverseCommand(jvmDebugger),
                         LocalsCommand(jvmDebugger),
                         OwlClassCommand(),
-                        ReadCommand(),
+                        readCommand,
                         ReasonerCommand(),
                         RunCommand(jvmDebugger),
                         SectionCommand(),
@@ -115,9 +123,9 @@ class SemanticJavaDebugger : CliktCommand() {
                         StatsCommand(graphGen),
                         StopCommand(jvmDebugger),
                         TimeCommand()
-                    ),
-                    compilerTmpDir = compilerTmpDir
+                    )
                 )
+                readCommand.repl = repl
 
                 val wasSuccessful = if (commandFile != null) {
                     val fileInputStream = FileInputStream(commandFile!!)

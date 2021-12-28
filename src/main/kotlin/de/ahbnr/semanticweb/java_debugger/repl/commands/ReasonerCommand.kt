@@ -2,37 +2,36 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
+import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.optional
+import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import de.ahbnr.semanticweb.java_debugger.repl.ReasonerId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class ReasonerCommand : IREPLCommand, KoinComponent {
+class ReasonerCommand : REPLCommand(name = "reasoner"), KoinComponent {
     val logger: Logger by inject()
 
-    override val name = "reasoner"
+    val reasonerName: String? by argument().choice(*ReasonerId.availableReasoners.map { it.name }.toTypedArray())
+        .optional()
 
-    private val usage = "reasoner [set <${ReasonerId.availableReasoners.joinToString("|") { it.name }}>]"
-
-    override fun handleInput(argv: List<String>, rawInput: String, repl: REPL): Boolean {
-        if (argv.isEmpty()) {
-            logger.log("Currently using ${repl.targetReasoner.name} reasoner.")
-            return true
-        } else if (argv.size == 2 && argv[0] == "set") {
-            val reasonerId = ReasonerId.availableReasoners.find { it.name == argv[1] }
-
-            if (reasonerId == null) {
-                logger.error("No such reasoner is available.")
-                return false
+    override fun run() {
+        when (val it = reasonerName) {
+            null -> {
+                logger.log("Currently using ${state.targetReasoner.name} reasoner.")
             }
+            else -> {
+                val reasonerId = ReasonerId.availableReasoners.find { reasonerId -> reasonerId.name == it }
 
-            repl.targetReasoner = reasonerId
+                if (reasonerId == null) {
+                    logger.error("No such reasoner is available.")
+                    throw ProgramResult(-1)
+                }
 
-            return true
-        } else {
-            logger.error(usage)
-            return false
+                state.targetReasoner = reasonerId
+            }
         }
     }
 }
