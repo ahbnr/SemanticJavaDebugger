@@ -63,10 +63,9 @@ class BuildKBCommand(
                     "java.lang.ref",
                     "java.lang.module",
                     "java.lang.invoke",
-                    "java"
                 )
             else setOf(),
-            shallowPackages = emptySet(), // setOf("java"),
+            shallowPackages = setOf("java"),
             deepPackages = deep.toSet(),
             reachableOnly = true
         )
