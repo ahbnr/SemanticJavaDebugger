@@ -1,3 +1,5 @@
-domain examples/btrees/BTree.ttl
-
 run examples.btrees.tests.InsertTest
+domain examples/btrees/BTree.ttl
+stop at examples.btrees.tests.InsertTest:51
+run examples.btrees.tests.InsertTest
+buildkb --limit-sdk --deep=examples.btrees

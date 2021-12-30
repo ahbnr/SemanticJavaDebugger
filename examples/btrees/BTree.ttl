@@ -97,6 +97,22 @@ prog:examples.btrees.BTreeNode owl:equivalentClass [
         owl:hasSelf "true"^^xsd:boolean
     ] .
 
+domain:rolifiedInteger
+    a owl:ObjectProperty .
+
+prog:java.lang.Integer owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty domain:rolifiedInteger ;
+        owl:hasSelf "true"^^xsd:boolean
+    ] .
+
+domain:storesNonNullReference%3Cjava.lang.Integer%3E
+            a owl:ObjectProperty ;
+            owl:propertyChainAxiom (
+                prog:storesReference%3Cjava.lang.Integer%3E
+                domain:rolifiedInteger
+            ) .
+
 domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
             a owl:ObjectProperty ;
             owl:propertyChainAxiom (
@@ -110,6 +126,14 @@ domain:hasChild # HermiT fails here because `domain:storesNonNullReference%3Cexa
         prog:examples.btrees.BTreeNode.children
         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
         domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
+    ) .
+
+domain:hasKey # HermiT fails here because `domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E` is complex
+    a owl:ObjectProperty ;
+    owl:propertyChainAxiom (
+        prog:examples.btrees.BTreeNode.keys
+        prog:hasElement%3Cjava.lang.Integer%3E
+        domain:storesNonNullReference%3Cjava.lang.Integer%3E
     ) .
 
 # These restrictions of HermiT should trigger a linter!

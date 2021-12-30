@@ -14,5 +14,6 @@ class BTreeNode<K extends Comparable<? super K>> {
     K[] keys;
     BTreeNode<K>[] children;
 
+    // number of keys, number of children is this size + 1
     int size = 0;
 }

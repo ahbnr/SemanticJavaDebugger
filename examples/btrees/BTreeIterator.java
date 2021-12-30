@@ -3,90 +3,82 @@ package examples.btrees;
 import java.util.Iterator;
 import java.util.Stack;
 import java.lang.Override;
+import java.lang.RuntimeException;
 
 
 class BTreeIterator<K extends Comparable<? super K>> implements Iterator<K> {
     private static class NodeTraversalState<K extends Comparable<? super K>> {
         BTreeNode<K> node;
 
-        int childIdx;
-        int keyIdx;
-
-        boolean atChild;
+        int idx;
 
         NodeTraversalState(
-                BTreeNode<K> node
+                BTreeNode<K> node,
+                int idx
         ) {
             this.node = node;
-
-            this.keyIdx = 0;
-
-            if (node.children[0] != null) {
-                childIdx = 0;
-                atChild = true;
-            } else {
-                childIdx = 2 * BTree.order;
-                atChild = false;
-            }
+            this.idx = idx;
         }
     }
 
-    private NodeTraversalState<K> currentState;
     private Stack<NodeTraversalState<K>> stack;
 
     BTreeIterator(BTreeNode<K> root) {
+        this.stack = new Stack<NodeTraversalState<K>>();
+
         if (root != null) {
-            this.currentState = new NodeTraversalState<K>(root);
-            this.stack = new Stack<NodeTraversalState<K>>();
-        } else {
-            this.currentState = null;
-            this.stack = null;
+            this.stack.push(new NodeTraversalState<K>(root, 0));
         }
     }
 
     @Override
     public boolean hasNext() {
-        return currentState != null;
+        return !this.stack.isEmpty();
     }
 
     @Override
     public K next() {
-        while (currentState != null) {
-            K toReturn = null;
+        var currentState = this.stack.pop();
 
-            if (currentState.atChild) {
-                var newState = new NodeTraversalState<K>(currentState.node.children[currentState.childIdx]);
+        var firstChild = currentState.node.children[0];
+        var isLeaf = firstChild == null;
 
-                currentState.atChild = false;
-                ++currentState.childIdx;
-                stack.push(currentState);
+        K toReturn = null;
 
-                currentState = newState;
-            } else {
-                if (currentState.keyIdx < currentState.node.size) {
-                    toReturn = currentState.node.keys[currentState.keyIdx];
-
-                    ++currentState.keyIdx;
-                    if (currentState.childIdx < currentState.node.children.length && currentState.node.children[currentState.childIdx] != null) {
-                        currentState.atChild = true;
-                    }
-                }
-
-                while (currentState.keyIdx >= currentState.node.size) {
-                    if (stack.empty()) {
-                        currentState = null;
-                        break;
-                    } else {
-                        currentState = stack.pop();
-                    }
-                }
+        if (isLeaf) {
+            // then yield all keys
+            if (currentState.idx < currentState.node.size - 1) {
+                this.stack.push(
+                        new NodeTraversalState<K>(currentState.node, currentState.idx + 1)
+                );
             }
 
-            if (toReturn != null) {
-                return toReturn;
+            toReturn = currentState.node.keys[currentState.idx];
+        } else {
+            // prepare next
+            if (currentState.idx < currentState.node.size - 1) {
+                this.stack.push(
+                        new NodeTraversalState<K>(currentState.node, currentState.idx + 1)
+                );
+            }
+            this.stack.push(
+                    new NodeTraversalState<K>(currentState.node.children[currentState.idx], 0)
+            );
+
+            // are we looking at the first child?
+            if (currentState.idx == 0) {
+                // then immediately recurse
+                toReturn = next();
+            } else {
+                // yield the current key
+                toReturn = currentState.node.keys[currentState.idx - 1];
             }
         }
 
-        throw new java.lang.RuntimeException("No more elements.");
+        if (toReturn == null) {
+            throw new RuntimeException("Trying to continue iteration after end of tree content.");
+        }
+
+        return toReturn;
     }
 }
