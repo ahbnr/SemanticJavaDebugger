@@ -4,6 +4,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.sun.jdi.ArrayReference
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
@@ -49,6 +50,17 @@ class ReverseCommand(
 
         val inverseMapping = BackwardMapper(URIs.ns, jvmState)
 
+        // Need to obtain the toString method from java.lang.Object
+        // because array reference types do not return any methods
+        val toStringMethod =
+            jvm.vm.allClasses()
+                .find { it.name() == "java.lang.Object" }
+                ?.methodsByName("toString")
+                ?.firstOrNull()
+        if (toStringMethod == null) {
+            logger.error("Can not obtain toString() method reference. This should never happen.")
+        }
+
         when (val mapping = inverseMapping.map(node, model)) {
             is ObjectReference -> {
                 logger.log("Java Object: $mapping")
@@ -59,9 +71,15 @@ class ReverseCommand(
                     }
                 }
 
-                val toStringMethod = mapping.referenceType().methodsByName("toString").firstOrNull()
-                if (toStringMethod != null) {
-                    val stringRepresenation = mapping.invokeMethod(
+                if (mapping is ArrayReference) {
+                    val values = mapping
+                        .values
+                        .joinToString(", ") { it?.toString() ?: "null" }
+
+                    logger.log("")
+                    logger.log("  Array contents: [${values}]")
+                } else if (toStringMethod != null) {
+                    val stringRepresentation = mapping.invokeMethod(
                         jvmState.pausedThread,
                         toStringMethod,
                         emptyList(),
@@ -69,9 +87,7 @@ class ReverseCommand(
                     )
 
                     logger.log("")
-                    logger.log("  toString(): ${stringRepresenation}")
-                } else {
-                    logger.error("Could not obtain a toString() representation of this object. This should never happen.")
+                    logger.log("  toString(): ${stringRepresentation}")
                 }
             }
             else -> logger.error("Could not retrieve a Java construct for the given variable.")
