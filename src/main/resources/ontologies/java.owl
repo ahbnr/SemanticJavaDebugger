@@ -25,11 +25,19 @@ https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6
 and
 https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.6"""^^rdfs:Literal ;
                     owl:equivalentClass [ rdf:type rdfs:Datatype ;
-                                          owl:oneOf ( "package-private"
-                                                      "private"
-                                                      "protected"
-                                                      "public"
-                                                    )
+                                          owl:oneOf [ rdf:type rdf:List ;
+                                                      rdf:first "package-private" ;
+                                                      rdf:rest [ rdf:type rdf:List ;
+                                                                 rdf:first "private" ;
+                                                                 rdf:rest [ rdf:type rdf:List ;
+                                                                            rdf:first "protected" ;
+                                                                            rdf:rest [ rdf:type rdf:List ;
+                                                                                       rdf:first "public" ;
+                                                                                       rdf:rest rdf:nil
+                                                                                     ]
+                                                                          ]
+                                                               ]
+                                                    ]
                                         ] .
 
 
@@ -91,6 +99,13 @@ java:storesReference rdf:type owl:ObjectProperty ,
                                                 ]
                                               )
                                 ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#this
+java:this rdf:type owl:ObjectProperty ,
+                   owl:FunctionalProperty ;
+          rdfs:domain java:StackFrame ;
+          rdfs:range prog:java.lang.Object .
 
 
 #################################################################
@@ -199,13 +214,6 @@ java:Array rdf:type owl:Class ;
                             java:Interface .
 
 
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement
-java:ArrayElement rdf:type owl:Class ;
-                  owl:disjointUnionOf ( java:PrimitiveArrayElement
-                                        <https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement%3CObject%3E>
-                                      ) .
-
-
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Class
 java:Class rdf:type owl:Class ;
            rdfs:subClassOf java:ReferenceType ;
@@ -280,6 +288,13 @@ Until I define java:PrimitiveType for Jena, I wont set the range here."""^^rdfs:
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ReferenceType
 java:ReferenceType rdf:type owl:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement
+java:ArrayElement rdf:type owl:Class ;
+                     owl:disjointUnionOf ( java:PrimitiveArrayElement
+                                           <https://github.com/ahbnr/SemanticJavaDebugger/Java#ArrayElement%3CObject%3E>
+                                         ) .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#StackFrame

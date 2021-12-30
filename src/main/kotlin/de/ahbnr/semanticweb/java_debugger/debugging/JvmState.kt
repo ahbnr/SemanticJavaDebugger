@@ -14,11 +14,17 @@ data class JvmState(
     val pausedThread: ThreadReference
 ) {
     private val referencedByLocalVar = mutableSetOf<Long>()
-    private val stackReferences = mutableListOf<ObjectReference>()
+    private val stackReferences = mutableSetOf<ObjectReference>()
 
     init {
         for (frameDepth in 0 until pausedThread.frameCount()) {
-            val frame = pausedThread.frame(0)
+            val frame = pausedThread.frame(frameDepth)
+
+            val thisRef = frame.thisObject()
+            if (thisRef != null) {
+                referencedByLocalVar.add(thisRef.uniqueID())
+                stackReferences.add(thisRef)
+            }
 
             for ((_, value) in frame.getValues(frame.visibleVariables())) {
                 if (value is ObjectReference) {

@@ -88,10 +88,10 @@ class JvmDebugger : Closeable, KoinComponent {
             logger.debug("There is a JVM already running.")
             logger.emphasize("Closing existing JVM and creating new one...")
             close()
-
-            deferredBreakpoints.clear()
-            deferredBreakpoints.putAll(breakpoints)
         }
+
+        deferredBreakpoints.clear()
+        deferredBreakpoints.putAll(breakpoints)
 
         val launchingConnector = Bootstrap
             .virtualMachineManager()

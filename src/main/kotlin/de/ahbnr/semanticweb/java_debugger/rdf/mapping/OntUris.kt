@@ -98,6 +98,8 @@ class OntURIs(val ns: Namespaces) {
         val Object = ns.java + "Object"
         val StackFrame = ns.java + "StackFrame"
 
+        val `this` = ns.java + "this"
+
         val isAtStackDepth = ns.java + "isAtStackDepth"
         val hasJDWPObjectId = ns.java + "hasJDWPObjectId"
 

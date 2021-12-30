@@ -93,6 +93,12 @@ class StackMapper : IMapper {
             fun addStackFrame(frameDepth: Int, frame: StackFrame) {
                 val frameSubject = URIs.run.genFrameURI(frameDepth)
 
+                tripleCollector.addStatement(
+                    frameSubject,
+                    URIs.rdf.type,
+                    URIs.owl.NamedIndividual
+                )
+
                 // this *is* a stack frame
                 tripleCollector.addStatement(
                     frameSubject,
@@ -107,6 +113,22 @@ class StackMapper : IMapper {
                     NodeFactory.createLiteral(frameDepth.toString(), XSDDatatype.XSDint)
                 )
 
+                // ...and it oftentimes has a `this` reference:
+                val thisRef = frame.thisObject()
+                if (thisRef != null) {
+                    val thisObjectNode = valueMapper.map(thisRef)
+
+                    if (thisObjectNode != null) {
+                        tripleCollector.addStatement(
+                            frameSubject,
+                            URIs.java.`this`,
+                            thisObjectNode
+                        )
+                    } else {
+                        logger.error("Could not find `this` object for frame. This should never happen.")
+                    }
+                }
+
                 // ...and it holds some variables
                 addLocalVariables(frameDepth, frameSubject, frame)
             }
@@ -115,7 +137,7 @@ class StackMapper : IMapper {
                 // TODO: Handle multiple threads
                 val numFrames = buildParameters.jvmState.pausedThread.frameCount()
                 for (i in 0 until numFrames) {
-                    addStackFrame(numFrames - i - 1, buildParameters.jvmState.pausedThread.frame(i))
+                    addStackFrame(i, buildParameters.jvmState.pausedThread.frame(i))
                 }
             }
 
