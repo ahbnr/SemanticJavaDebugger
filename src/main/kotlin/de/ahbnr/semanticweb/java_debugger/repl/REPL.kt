@@ -50,15 +50,18 @@ class REPL(
 
     private val commandMap = commands.map { it.commandName to it }.toMap()
     private val reader: LineReader
+    private val historyPath: Path
 
     init {
         val cacheDir = Path.of(AppDirsFactory.getInstance().getUserCacheDir("SemanticJavaDebugger", null, null) ?: ".")
         cacheDir.createDirectories()
 
+        historyPath = cacheDir.resolve("history")
+
         reader = LineReaderBuilder.builder()
             .terminal(terminal)
             .parser(DefaultParser())
-            .variable(LineReader.HISTORY_FILE, cacheDir.resolve("history"))
+            .variable(LineReader.HISTORY_FILE, historyPath)
             .history(DefaultHistory())
             .build()
     }
@@ -162,6 +165,8 @@ class REPL(
     }
 
     fun main() {
+        logger.debug("Storing command history in ${historyPath}.")
+
         var readInput = true
         while (readInput) {
             try {
