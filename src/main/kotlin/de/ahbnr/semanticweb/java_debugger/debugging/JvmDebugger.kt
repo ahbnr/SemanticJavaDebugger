@@ -22,6 +22,11 @@ class JvmDebugger : Closeable, KoinComponent {
 
     fun setBreakpoint(className: String, line: Int) {
         val lines = breakpoints.getOrPut(className) { mutableSetOf() }
+        if (lines.contains(line)) {
+            logger.debug("There is already a breakpoint at this line.")
+            return
+        }
+
         lines.add(line)
 
         val classType = jvm?.getClass(className)
