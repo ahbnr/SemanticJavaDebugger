@@ -85,7 +85,7 @@ class BuildKBCommand(
             throw ProgramResult(-1)
         }
 
-        state.knowledgeBase = KnowledgeBase(ontology, limiter)
+        state.knowledgeBase = KnowledgeBase(ontology, buildParameters)
 
         logger.success("Knowledge base created.")
     }

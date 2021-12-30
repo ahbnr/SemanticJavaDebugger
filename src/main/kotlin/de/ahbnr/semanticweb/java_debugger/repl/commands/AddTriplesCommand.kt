@@ -61,6 +61,6 @@ class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
             .checking(true)
             .parse(knowledgeBase.ontology.asGraphModel())
 
-        ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.limiter, false)
+        ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.buildParameters.limiter, false)
     }
 }

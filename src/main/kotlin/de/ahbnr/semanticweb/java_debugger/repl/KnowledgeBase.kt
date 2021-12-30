@@ -3,7 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.repl
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import org.apache.jena.query.Query
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.rdf.model.InfModel
@@ -17,7 +17,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class KnowledgeBase(
     val ontology: Ontology,
-    val limiter: MappingLimiter
+    val buildParameters: BuildParameters
 ) : KoinComponent {
     private val URIs: OntURIs by inject()
     private val logger: Logger by inject()
