@@ -181,6 +181,17 @@ class KnowledgeBase(
         variableStore.remove(name)
     }
 
+    fun asPrefixNameUri(uri: String): String {
+        val prefixNameAndUri =
+            uriToPrefixName.entries.find { (prefixUri, _) -> uri.startsWith(prefixUri) }
+
+        return if (prefixNameAndUri != null) {
+            val (prefixUri, prefixName) = prefixNameAndUri
+
+            uri.replaceRange(prefixUri.indices, "$prefixName:")
+        } else uri
+    }
+
     fun resolvePrefixNameInUri(uri: String): String {
         val prefixNameAndUri =
             prefixNameToUri.entries.find { (prefixName, _) -> uri.startsWith("$prefixName:") }
