@@ -79,6 +79,8 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             val dataFactory = manager.owlDataFactory
             val inferenceGenerator = InferredOntologyGenerator(reasoner)
 
+            logger.debug("Warning: The current reasoner ($name) does not support on-demand inference on Jena models. Thus, all inferences must first be realized before it can be used here. This can take a long time.")
+
             // perform all possible inferences
             // (This can probably be implemented much more efficiently by adapting Jenas reasoner interface)
             inferenceGenerator.fillOntology(dataFactory, ontologyCopy)
