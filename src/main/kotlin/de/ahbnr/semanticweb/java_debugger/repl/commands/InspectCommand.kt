@@ -8,6 +8,7 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.utils.expandResourceToModel
 import de.ahbnr.semanticweb.java_debugger.utils.toPrettyString
+import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr
 import org.koin.core.component.KoinComponent
@@ -28,11 +29,26 @@ class InspectCommand() : REPLCommand(name = "inspect"), KoinComponent {
 
         val model = knowledgeBase.ontology.asGraphModel()
 
-        val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)
-        if (node == null) {
+        val storedNode = knowledgeBase.resolveVariableOrUri(variableOrIRI)
+        if (storedNode == null) {
             logger.error("No node is known under this name.")
             throw ProgramResult(-1)
         }
+
+        // the stored node might be part of a more complex inference / reasoner model.
+        // E.g. it might be the result of a Openllet SPARQL-DL query.
+        // Inspecting such nodes can take a long time, hence we try to use the node from the plain model
+        // instead, where possible:
+        val node: RDFNode = storedNode.visitWith(object : RDFVisitor {
+            override fun visitLiteral(l: Literal): RDFNode = storedNode
+            override fun visitBlank(r: Resource, id: AnonId): RDFNode = storedNode
+            override fun visitURI(r: Resource, uri: String): RDFNode =
+                if (model.containsResource(ResourceFactory.createResource(uri))) {
+                    model.getResource(uri)
+                } else {
+                    storedNode
+                }
+        }) as RDFNode
 
         when {
             node.isResource -> {
