@@ -52,8 +52,26 @@ class ReverseCommand(
         when (val mapping = inverseMapping.map(node, model)) {
             is ObjectReference -> {
                 logger.log("Java Object: $mapping")
+
                 for ((field, value) in mapping.getValues(mapping.referenceType().allFields())) {
-                    logger.log("  ${field.name()} = $value")
+                    if (!field.isStatic) {
+                        logger.log("  ${field.name()} = $value")
+                    }
+                }
+
+                val toStringMethod = mapping.referenceType().methodsByName("toString").firstOrNull()
+                if (toStringMethod != null) {
+                    val stringRepresenation = mapping.invokeMethod(
+                        jvmState.pausedThread,
+                        toStringMethod,
+                        emptyList(),
+                        0
+                    )
+
+                    logger.log("")
+                    logger.log("  toString(): ${stringRepresenation}")
+                } else {
+                    logger.error("Could not obtain a toString() representation of this object. This should never happen.")
                 }
             }
             else -> logger.error("Could not retrieve a Java construct for the given variable.")
