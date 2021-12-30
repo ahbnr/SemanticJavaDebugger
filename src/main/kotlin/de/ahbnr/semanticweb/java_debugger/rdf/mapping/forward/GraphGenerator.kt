@@ -16,6 +16,7 @@ import org.koin.core.component.inject
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
+import java.io.SequenceInputStream
 
 class ParserException() : Exception()
 
@@ -70,7 +71,20 @@ class GraphGenerator(
         model: Model
     ) {
         if (applicationDomainRulesPath != null) {
-            readIntoModel(model, FileInputStream(File(applicationDomainRulesPath)))
+            val prefixStream = model
+                .nsPrefixMap
+                .entries
+                .joinToString("\n") { (prefixName, prefixUri) -> "@prefix $prefixName: <$prefixUri> ." }
+                .byteInputStream()
+
+            val fileStream = FileInputStream(File(applicationDomainRulesPath))
+
+            val domainInputStream = SequenceInputStream(
+                prefixStream,
+                fileStream
+            )
+
+            readIntoModel(model, domainInputStream)
         }
     }
 
@@ -90,15 +104,15 @@ class GraphGenerator(
             // Load Java ontology
             loadJavaOntology(model)
 
+            // Map program state
+            mapProgramState(buildParameters, model)
+
             // Load application domain knowledge
             loadApplicationDomain(applicationDomainRulesPath, model)
         } catch (e: ParserException) {
             logger.log("Aborted model building due to fatal parser error.")
             return null
         }
-
-        // Map program state
-        mapProgramState(buildParameters, model)
 
         // Perform sanity checks and linting
         val checker = ModelSanityChecker()
