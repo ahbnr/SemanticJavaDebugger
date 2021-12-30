@@ -7,9 +7,11 @@ interface Logger {
     fun log(line: String)
     fun emphasize(line: String)
     fun success(line: String)
+    fun warning(line: String)
     fun error(line: String)
 
     fun logStream(): OutputStream
+    fun warningStream(): OutputStream
     fun errorStream(): OutputStream
     fun successStream(): OutputStream
 }

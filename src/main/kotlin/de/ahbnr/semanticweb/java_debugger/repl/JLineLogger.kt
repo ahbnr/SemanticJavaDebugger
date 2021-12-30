@@ -49,6 +49,17 @@ class JLineLogger(
         terminal.flush()
     }
 
+    override fun warning(line: String) {
+        terminal.writer().println(
+            AttributedStringBuilder()
+                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
+                .append(line)
+                .style(AttributedStyle.DEFAULT)
+                .toAnsi(terminal)
+        )
+        terminal.flush()
+    }
+
     override fun error(line: String) {
         terminal.writer().println(
             AttributedStringBuilder()
@@ -61,6 +72,11 @@ class JLineLogger(
     }
 
     override fun logStream(): OutputStream {
+        return WriterOutputStream(terminal.writer(), Charset.defaultCharset())
+    }
+
+    override fun warningStream(): OutputStream {
+        // FIXME: no color here
         return WriterOutputStream(terminal.writer(), Charset.defaultCharset())
     }
 

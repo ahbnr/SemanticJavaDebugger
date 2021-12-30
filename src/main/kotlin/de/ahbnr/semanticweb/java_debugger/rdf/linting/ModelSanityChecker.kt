@@ -53,7 +53,7 @@ class ModelSanityChecker : KoinComponent {
                 if (builtinTerm == null && node.isURI) {
                     val builtinNamespace = BuiltinNamespace.find(node.nameSpace)
                     if (builtinNamespace != null) {
-                        logger.error("Warning: The term ${node.localName} is not known in namespace ${node.nameSpace}.")
+                        logger.warning("Warning: The term ${node.localName} is not known in namespace ${node.nameSpace}.")
                     }
                 }
             }
@@ -121,7 +121,7 @@ class ModelSanityChecker : KoinComponent {
                     )
                 }
             }
-            logger.error("Warning: Openllint found OWL2 DL violations.")
+            logger.error("Error: Openllint found OWL2 DL violations.")
             logger.log("")
         }
     }
@@ -181,7 +181,7 @@ class ModelSanityChecker : KoinComponent {
 
             }
 
-            logger.error("Warning: Openllint detected modeling constructs that have a negative effect on reasoning performance.")
+            logger.warning("Warning: Openllint detected modeling constructs that have a negative effect on reasoning performance.")
             logger.log("")
         }
 
