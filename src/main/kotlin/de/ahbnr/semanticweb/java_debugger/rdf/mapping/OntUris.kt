@@ -71,11 +71,11 @@ class OntURIs(val ns: Namespaces) {
         val Interface = ns.java + "Interface"
 
         val Array = ns.java + "Array"
-        val ArrayElement = ns.java + "ArrayElement"
-        val `ArrayElement%3CObject%3E` = ns.java + IRILib.encodeUriComponent("ArrayElement<Object>")
+        val SequenceElement = ns.java + "SequenceElement"
+        val `SequenceElement%3CObject%3E` = ns.java + IRILib.encodeUriComponent("SequenceElement<Object>")
         val UnloadedTypeArray = ns.java + "UnloadedTypeArray"
         val PrimitiveArray = ns.java + "PrimitiveArray"
-        val PrimitiveArrayElement = ns.java + "PrimitiveArrayElement"
+        val PrimitiveSequenceElement = ns.java + "PrimitiveSequenceElement"
         val hasIndex = ns.java + "hasIndex"
         val hasElement = ns.java + "hasElement"
         val storesPrimitive = ns.java + "storesPrimitive"
@@ -165,17 +165,17 @@ class OntURIs(val ns: Namespaces) {
         fun genLocationURI(locationInfo: LocationInfo): String =
             "${ns.prog}location_${IRILib.encodeUriComponent(locationInfo.id)}"
 
-        fun genTypedHasElementURI(arrayType: ArrayType): String =
-            "${ns.prog}hasElement${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
+        fun genTypedHasElementURI(componentTypeName: String): String =
+            "${ns.prog}hasElement${IRILib.encodeUriComponent("<${componentTypeName}>")}"
 
-        fun genTypedArrayElementURI(arrayType: ArrayType): String =
-            "${ns.prog}ArrayElement${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
+        fun genTypedSequenceElementURI(componentTypeName: String): String =
+            "${ns.prog}SequenceElement${IRILib.encodeUriComponent("<${componentTypeName}>")}"
 
-        fun genTypedStoresPrimitiveURI(arrayType: ArrayType): String =
-            "${ns.prog}storesPrimitive${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
+        fun genTypedStoresPrimitiveURI(componentTypeName: String): String =
+            "${ns.prog}storesPrimitive${IRILib.encodeUriComponent("<${componentTypeName}>")}"
 
-        fun genTypedStoresReferenceURI(arrayType: ArrayType): String =
-            "${ns.prog}storesReference${IRILib.encodeUriComponent("<${arrayType.componentTypeName()}>")}"
+        fun genTypedStoresReferenceURI(componentTypeName: String): String =
+            "${ns.prog}storesReference${IRILib.encodeUriComponent("<${componentTypeName}>")}"
     }
 
     val prog = ProgURIs()
@@ -192,8 +192,8 @@ class OntURIs(val ns: Namespaces) {
         fun isObjectURI(uri: String) =
             uri.startsWith(objectUriPrefix)
 
-        fun genArrayElementInstanceURI(arrayReference: ArrayReference, index: Int) =
-            "${ns.run}element${index}_of_${arrayReference.uniqueID()}"
+        fun genSequenceElementInstanceURI(containerRef: ObjectReference, index: Int) =
+            "${ns.run}element${index}_of_${containerRef.uniqueID()}"
     }
 
     val run = RunURIs()

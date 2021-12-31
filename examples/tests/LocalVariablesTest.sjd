@@ -3,7 +3,7 @@ stop at examples.tests.MyClass:7
 run examples/tests/LocalVariablesTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk --deep=examples
+buildkb --limit-sdk
 checkkb --is-consistent
 
 section "Are local variables correctly declared?"

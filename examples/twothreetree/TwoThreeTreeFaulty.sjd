@@ -1,7 +1,7 @@
 section "Prepare Program & Domain"
-domain examples/TwoThreeTree.ttl
-stop at examples.TwoThreeTree:66
-run examples/TwoThreeTree.java
+domain examples/twothreetree/TwoThreeTree.ttl
+stop at examples.twothreetree.TwoThreeTree:66
+run examples/twothreetree/TwoThreeTree.java
 
 section "Build Knowledge Base"
 buildkb --limit-sdk
@@ -22,7 +22,7 @@ section "Detection by SPARQL Negation"
 sparql -- '<<EOF
   SELECT ?faulty
   WHERE {
-      ?faulty a prog:examples.Node .
+      ?faulty a prog:examples.twothreetree.Node .
       ?faulty a owl:NamedIndividual .
       FILTER NOT EXISTS {
           ?faulty a domain:TrueNode .
@@ -32,7 +32,7 @@ sparql -- '<<EOF
 reverse ?faulty
 
 section "Detection by SHACL"
-shacl examples/TwoThreeTreeShapes.ttl
+shacl examples/twothreetree/TwoThreeTreeShapes.ttl
 reverse ?focus0
 
 cont

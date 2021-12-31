@@ -1,4 +1,4 @@
-package examples;
+package examples.twothreetree;
 
 class Pair<K, V> {
     public K key;

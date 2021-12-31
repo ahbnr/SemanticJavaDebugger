@@ -3,7 +3,7 @@ stop at examples.tests.StaticFieldsTest:14
 run examples/tests/StaticFieldsTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk --deep=examples
+buildkb --limit-sdk
 checkkb --is-consistent
 
 section "Are the fields correctly declared?"

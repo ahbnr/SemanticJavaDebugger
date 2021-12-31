@@ -31,19 +31,10 @@ class ClassMapper : IMapper {
             val tripleCollector = TripleCollector(triplePattern)
 
             fun addReferenceOrNullClass(referenceTypeURI: String) =
-            // every reference can either be an instance or null:
-            // fieldTypeSubject ∪ { java:null }
-                // [ owl:unionOf ( fieldTypeSubject [ owl:oneOf ( java:null ) ] ) ] .
-                tripleCollector.addCollection(
-                    TripleCollector.CollectionObject.OWLUnion(
-                        listOf(
-                            NodeFactory.createURI(referenceTypeURI),
-
-                            tripleCollector.addCollection(
-                                TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
-                            )
-                        )
-                    )
+                de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.addReferenceOrNullClass(
+                    referenceTypeURI,
+                    tripleCollector,
+                    URIs
                 )
 
             /**
@@ -437,7 +428,7 @@ class ClassMapper : IMapper {
                 }
             }
 
-            fun addMethod(method: Method, referenceTypeURI: String, referenceType: ReferenceType) {
+            fun addMethod(method: Method, referenceTypeURI: String) {
                 if (buildParameters.limiter.canMethodBeSkipped(method))
                     return
 
@@ -481,7 +472,7 @@ class ClassMapper : IMapper {
 
             fun addMethods(referenceTypeURI: String, referenceType: ReferenceType) {
                 for (method in referenceType.methods()) { // inherited methods are not included!
-                    addMethod(method, referenceTypeURI, referenceType)
+                    addMethod(method, referenceTypeURI)
                 }
             }
 
@@ -628,171 +619,6 @@ class ClassMapper : IMapper {
                         )
                     }
                 }
-
-                val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(arrayType)
-
-                // hasElement<type> Relation
-                val typedHasElementURI = URIs.prog.genTypedHasElementURI(arrayType)
-
-                tripleCollector.addStatement(
-                    typedHasElementURI,
-                    URIs.rdf.type,
-                    URIs.owl.ObjectProperty
-                )
-
-                tripleCollector.addStatement(
-                    typedHasElementURI,
-                    URIs.rdf.type,
-                    URIs.owl.InverseFunctionalProperty
-                )
-
-                tripleCollector.addStatement(
-                    typedHasElementURI,
-                    URIs.rdfs.subPropertyOf,
-                    URIs.java.hasElement
-                )
-
-                tripleCollector.addStatement(
-                    typedHasElementURI,
-                    URIs.rdfs.domain,
-                    arrayTypeURI
-                )
-
-                tripleCollector.addStatement(
-                    typedHasElementURI,
-                    URIs.rdfs.range,
-                    typedArrayElementURI
-                )
-
-                tripleCollector.addStatement(
-                    typedArrayElementURI,
-                    URIs.rdf.type,
-                    URIs.owl.Class
-                )
-
-                when (componentType) {
-                    is JavaType.LoadedType -> {
-                        when (componentType.type) {
-                            is PrimitiveType -> {
-                                tripleCollector.addStatement(
-                                    typedArrayElementURI,
-                                    URIs.rdfs.subClassOf,
-                                    URIs.java.PrimitiveArrayElement
-                                )
-
-                                // storesPrimitive Relation
-                                val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(arrayType)
-
-                                tripleCollector.addStatement(
-                                    typedStoresPrimitiveURI,
-                                    URIs.rdf.type,
-                                    URIs.owl.DatatypeProperty
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedStoresPrimitiveURI,
-                                    URIs.rdf.type,
-                                    URIs.owl.FunctionalProperty
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedStoresPrimitiveURI,
-                                    URIs.rdfs.subPropertyOf,
-                                    URIs.java.storesPrimitive
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedStoresPrimitiveURI,
-                                    URIs.rdfs.domain,
-                                    typedArrayElementURI
-                                )
-
-                                val datatypeURI = URIs.java.genPrimitiveTypeURI(componentType.type)
-                                if (datatypeURI == null) {
-                                    logger.error("Unknown primitive data type: $componentType.")
-                                    return
-                                }
-                                tripleCollector.addStatement(
-                                    typedStoresPrimitiveURI,
-                                    URIs.rdfs.range,
-                                    datatypeURI
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedArrayElementURI,
-                                    URIs.rdfs.subClassOf,
-                                    tripleCollector.addCollection(
-                                        TripleCollector.CollectionObject.OWLSome(
-                                            typedStoresPrimitiveURI, NodeFactory.createURI(datatypeURI)
-                                        )
-                                    )
-                                )
-                            }
-                            is ReferenceType -> {
-                                tripleCollector.addStatement(
-                                    typedArrayElementURI,
-                                    URIs.rdfs.subClassOf,
-                                    URIs.java.`ArrayElement%3CObject%3E`
-                                )
-
-                                // storesReference Relation
-                                val typedStoresReferenceURI = URIs.prog.genTypedStoresReferenceURI(arrayType)
-
-                                tripleCollector.addStatement(
-                                    typedStoresReferenceURI,
-                                    URIs.rdf.type,
-                                    URIs.owl.ObjectProperty
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedStoresReferenceURI,
-                                    URIs.rdf.type,
-                                    URIs.owl.FunctionalProperty
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedStoresReferenceURI,
-                                    URIs.rdfs.subPropertyOf,
-                                    URIs.java.storesReference
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedStoresReferenceURI,
-                                    URIs.rdfs.domain,
-                                    typedArrayElementURI
-                                )
-
-                                val referenceURI = URIs.prog.genReferenceTypeURI(componentType.type)
-                                tripleCollector.addStatement(
-                                    typedStoresReferenceURI,
-                                    URIs.rdfs.range,
-                                    addReferenceOrNullClass(referenceURI)
-                                )
-
-                                tripleCollector.addStatement(
-                                    typedArrayElementURI,
-                                    URIs.rdfs.subClassOf,
-                                    tripleCollector.addCollection(
-                                        TripleCollector.CollectionObject.OWLSome(
-                                            typedStoresReferenceURI, addReferenceOrNullClass(referenceURI)
-                                        )
-                                    )
-                                )
-                            }
-                            else -> {
-                                logger.error("Encountered unknown array component type.")
-                                return
-                            }
-                        }
-                    }
-                    else -> {
-                        tripleCollector.addStatement(
-                            typedArrayElementURI,
-                            URIs.rdfs.subClassOf,
-                            URIs.java.ArrayElement
-                        )
-                    }
-                }
             }
 
             fun addInterface(interfaceType: InterfaceType) {
@@ -843,8 +669,6 @@ class ClassMapper : IMapper {
                 val allReferenceTypes = buildParameters.jvmState.pausedThread.virtualMachine().allClasses()
 
                 for (referenceType in allReferenceTypes) {
-                    val referenceTypeURI = URIs.prog.genReferenceTypeURI(referenceType)
-
                     when (referenceType) {
                         is ClassType -> addClass(referenceType)
                         is ArrayType -> addArrayType(referenceType)

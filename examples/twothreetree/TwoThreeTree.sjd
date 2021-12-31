@@ -1,7 +1,7 @@
 section "Prepare Program & Domain"
-domain examples/TwoThreeTree.ttl
-stop at examples.TwoThreeTree:41
-run examples/TwoThreeTree.java
+domain examples/twothreetree/TwoThreeTree.ttl
+stop at examples.twothreetree.TwoThreeTree:41
+run examples/twothreetree/TwoThreeTree.java
 locals
 
 section "Build Knowledge Base"
@@ -53,6 +53,6 @@ inspect ?root
 reverse ?root
 
 section "SHACL Validation"
-shacl examples/TwoThreeTreeShapes.ttl
+shacl examples/twothreetree/TwoThreeTreeShapes.ttl
 
 cont

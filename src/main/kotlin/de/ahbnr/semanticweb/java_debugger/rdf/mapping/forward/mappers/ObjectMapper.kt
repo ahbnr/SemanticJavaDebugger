@@ -3,6 +3,10 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 
 import com.sun.jdi.*
+import de.ahbnr.semanticweb.java_debugger.debugging.JvmObjectIterator
+import de.ahbnr.semanticweb.java_debugger.debugging.ReferenceContexts
+import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.IterableMirror
+import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.utils.MirroringError
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
@@ -26,10 +30,29 @@ class ObjectMapper : IMapper {
         private val URIs: OntURIs by inject()
         private val logger: Logger by inject()
 
+        val referenceContexts = ReferenceContexts()
         private val valueMapper = ValueToNodeMapper()
+
+        private val iterator = JvmObjectIterator(
+            buildParameters.jvmState.pausedThread,
+            buildParameters.limiter,
+            referenceContexts
+        )
+        private val allObjects = iterator.iterateObjects().toList()
+
+        // Names of those component types of arrays and iterables for which typed sequence element triples
+        // already have been added
+        private val mappedSequenceComponentTypes = mutableSetOf<String>()
 
         override fun graphBaseFind(triplePattern: Triple): ExtendedIterator<Triple> {
             val tripleCollector = TripleCollector(triplePattern)
+
+            fun addReferenceOrNullClass(referenceTypeURI: String) =
+                de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.addReferenceOrNullClass(
+                    referenceTypeURI,
+                    tripleCollector,
+                    URIs
+                )
 
             fun addField(field: Field, value: Value?, parentURI: String) {
                 if (buildParameters.limiter.canFieldBeSkipped(field))
@@ -64,21 +87,329 @@ class ObjectMapper : IMapper {
                 }
             }
 
+            /**
+             * This is actually more part of the static structure.
+             * So it really should belong into ClassMapper.
+             *
+             * However, two arguments to put it here:
+             *
+             * * to avoid unnecessary triples, we should only generate them if there actually
+             *   is a non-empty sequence being mapped
+             * * for Iterables, due to type-erasure, we can only generate them if we can extract the
+             *   concrete component type from the first element of a mapped, non-empty sequence
+             *
+             * But this also means, we dont get this static information if there are only empty arrays
+             * // TODO Evaluate the effects of this decision
+             */
+            fun addTypedSequenceTriples(componentType: Type) {
+                val componentTypeName = componentType.name()
+
+                if (mappedSequenceComponentTypes.contains(componentTypeName)) {
+                    return
+                }
+                mappedSequenceComponentTypes.add(componentTypeName)
+
+                val typedSequenceElementURI = URIs.prog.genTypedSequenceElementURI(componentTypeName)
+
+                // hasElement<type> Relation
+                val typedHasElementURI = URIs.prog.genTypedHasElementURI(componentTypeName)
+
+                tripleCollector.addStatement(
+                    typedHasElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.ObjectProperty
+                )
+
+                tripleCollector.addStatement(
+                    typedHasElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.InverseFunctionalProperty
+                )
+
+                tripleCollector.addStatement(
+                    typedHasElementURI,
+                    URIs.rdfs.subPropertyOf,
+                    URIs.java.hasElement
+                )
+
+                // Removed this part:
+                //   We would have to declare the domain as the union of the array type and all possible
+                //   iterable implementors.
+                //   This is complex and does not have much use, so we dont declare the domain
+                // val containerTypeUri = URIs.prog.genReferenceTypeURI(containerType)
+                // tripleCollector.addStatement(
+                //     typedHasElementURI,
+                //     URIs.rdfs.domain,
+                //     containerTypeUri
+                // )
+
+                tripleCollector.addStatement(
+                    typedHasElementURI,
+                    URIs.rdfs.range,
+                    typedSequenceElementURI
+                )
+
+                tripleCollector.addStatement(
+                    typedSequenceElementURI,
+                    URIs.rdf.type,
+                    URIs.owl.Class
+                )
+
+                when (componentType) {
+                    is PrimitiveType -> {
+                        tripleCollector.addStatement(
+                            typedSequenceElementURI,
+                            URIs.rdfs.subClassOf,
+                            URIs.java.PrimitiveSequenceElement
+                        )
+
+                        // storesPrimitive Relation
+                        val typedStoresPrimitiveURI =
+                            URIs.prog.genTypedStoresPrimitiveURI(componentTypeName)
+
+                        tripleCollector.addStatement(
+                            typedStoresPrimitiveURI,
+                            URIs.rdf.type,
+                            URIs.owl.DatatypeProperty
+                        )
+
+                        tripleCollector.addStatement(
+                            typedStoresPrimitiveURI,
+                            URIs.rdf.type,
+                            URIs.owl.FunctionalProperty
+                        )
+
+                        tripleCollector.addStatement(
+                            typedStoresPrimitiveURI,
+                            URIs.rdfs.subPropertyOf,
+                            URIs.java.storesPrimitive
+                        )
+
+                        tripleCollector.addStatement(
+                            typedStoresPrimitiveURI,
+                            URIs.rdfs.domain,
+                            typedSequenceElementURI
+                        )
+
+                        val datatypeURI = URIs.java.genPrimitiveTypeURI(componentType)
+                        if (datatypeURI == null) {
+                            logger.error("Unknown primitive data type: $componentType.")
+                            return
+                        }
+                        tripleCollector.addStatement(
+                            typedStoresPrimitiveURI,
+                            URIs.rdfs.range,
+                            datatypeURI
+                        )
+
+                        tripleCollector.addStatement(
+                            typedSequenceElementURI,
+                            URIs.rdfs.subClassOf,
+                            tripleCollector.addCollection(
+                                TripleCollector.CollectionObject.OWLSome(
+                                    typedStoresPrimitiveURI, NodeFactory.createURI(datatypeURI)
+                                )
+                            )
+                        )
+                    }
+                    is ReferenceType -> {
+                        tripleCollector.addStatement(
+                            typedSequenceElementURI,
+                            URIs.rdfs.subClassOf,
+                            URIs.java.`SequenceElement%3CObject%3E`
+                        )
+
+                        // storesReference Relation
+                        val typedStoresReferenceURI =
+                            URIs.prog.genTypedStoresReferenceURI(componentTypeName)
+
+                        tripleCollector.addStatement(
+                            typedStoresReferenceURI,
+                            URIs.rdf.type,
+                            URIs.owl.ObjectProperty
+                        )
+
+                        tripleCollector.addStatement(
+                            typedStoresReferenceURI,
+                            URIs.rdf.type,
+                            URIs.owl.FunctionalProperty
+                        )
+
+                        tripleCollector.addStatement(
+                            typedStoresReferenceURI,
+                            URIs.rdfs.subPropertyOf,
+                            URIs.java.storesReference
+                        )
+
+                        tripleCollector.addStatement(
+                            typedStoresReferenceURI,
+                            URIs.rdfs.domain,
+                            typedSequenceElementURI
+                        )
+
+                        val referenceURI = URIs.prog.genReferenceTypeURI(componentType)
+                        tripleCollector.addStatement(
+                            typedStoresReferenceURI,
+                            URIs.rdfs.range,
+                            addReferenceOrNullClass(referenceURI)
+                        )
+
+                        tripleCollector.addStatement(
+                            typedSequenceElementURI,
+                            URIs.rdfs.subClassOf,
+                            tripleCollector.addCollection(
+                                TripleCollector.CollectionObject.OWLSome(
+                                    typedStoresReferenceURI, addReferenceOrNullClass(referenceURI)
+                                )
+                            )
+                        )
+                    }
+                    else -> {
+                        logger.error("Encountered unknown array component type.")
+                        return
+                    }
+                }
+            }
+
+            fun addSequence(
+                containerURI: String,
+                containerRef: ObjectReference,
+                cardinality: Int,
+                componentType: Type?,
+                components: List<Value?>
+            ) {
+                // Encode container size in cardinality restriction
+                // (otherwise we won't be able to reliably query for arrays / iterables by their size due to the open world assumption)
+                tripleCollector.addStatement(
+                    containerURI,
+                    URIs.rdf.type,
+                    tripleCollector.addCollection(
+                        TripleCollector.CollectionObject.OWLCardinalityRestriction(
+                            onPropertyUri = URIs.java.hasElement,
+                            onClassUri = URIs.java.SequenceElement,
+                            cardinality = TripleCollector.CollectionObject.CardinalityType.Exactly(cardinality)
+                        )
+                    )
+                )
+
+                // Component type might be unloaded
+                if (componentType == null) {
+                    return
+                }
+
+                addTypedSequenceTriples(componentType)
+
+                // # More concrete hasElement relation
+                // Create sub-relation of hasElement<Type> relation for this particular array/iterable object to encode
+                // the container size in the cardinality
+                val typedHasElementURI = URIs.prog.genTypedHasElementURI(componentType.name())
+                val typedSequenceElementURI = URIs.prog.genTypedSequenceElementURI(componentType.name())
+
+                // add the actual elements
+                for ((idx, elementValue) in components.withIndex()) {
+                    val elementInstanceURI = URIs.run.genSequenceElementInstanceURI(containerRef, idx)
+                    tripleCollector.addStatement(
+                        elementInstanceURI,
+                        URIs.rdf.type,
+                        URIs.owl.NamedIndividual
+                    )
+
+                    tripleCollector.addStatement(
+                        elementInstanceURI,
+                        URIs.rdf.type,
+                        typedSequenceElementURI
+                    )
+
+                    tripleCollector.addStatement(
+                        elementInstanceURI,
+                        URIs.java.hasIndex,
+                        NodeFactory.createLiteral(idx.toString(), XSDDatatype.XSDint)
+                    )
+
+                    tripleCollector.addStatement(
+                        containerURI,
+                        typedHasElementURI,
+                        elementInstanceURI
+                    )
+
+                    val valueNode = valueMapper.map(elementValue)
+                    if (valueNode != null) {
+                        when (componentType) {
+                            is PrimitiveType -> {
+                                val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(componentType.name())
+                                tripleCollector.addStatement(
+                                    elementInstanceURI,
+                                    typedStoresPrimitiveURI,
+                                    valueNode
+                                )
+                            }
+                            is ReferenceType -> {
+                                val typedStoresReferenceURI = URIs.prog.genTypedStoresReferenceURI(componentType.name())
+                                tripleCollector.addStatement(
+                                    elementInstanceURI,
+                                    typedStoresReferenceURI,
+                                    valueNode
+                                )
+                            }
+                            else -> {
+                                logger.error("Encountered unknown component type: $componentType")
+                                return
+                            }
+                        }
+                    }
+                }
+            }
+
+            fun addIterableSequence(iterableUri: String, iterableReference: ObjectReference) {
+                if (buildParameters.limiter.canSequenceBeSkipped(
+                        iterableReference,
+                        referenceContexts
+                    )
+                )
+                    return
+
+                try {
+                    val iterable = IterableMirror(iterableReference, buildParameters.jvmState.pausedThread)
+
+                    val iterator = iterable.iterator()
+                    if (iterator != null) {
+                        // FIXME: Potentially infinite iterator! We should add a limiter
+                        val elementList = iterator.asSequence().toList()
+                        val componentType = elementList.firstOrNull()?.type()
+
+                        addSequence(
+                            containerURI = iterableUri,
+                            containerRef = iterableReference,
+                            cardinality = elementList.size,
+                            componentType = componentType,
+                            components = elementList
+                        )
+                    } else {
+                        logger.warning("Can not map elements of iterable ${iterableUri} because its iterator() method returns null.")
+                    }
+                } catch (e: MirroringError) {
+                    logger.error(e.message)
+                }
+            }
+
             fun addPlainObject(objectURI: String, objectReference: ObjectReference, referenceType: ReferenceType) {
                 if (referenceType is ClassType) {
                     addFields(objectURI, objectReference, referenceType)
+
+                    val hasIterableInterface = referenceType.allInterfaces().any { it.name() == "java.lang.Iterable" }
+                    if (hasIterableInterface) {
+                        addIterableSequence(objectURI, objectReference)
+                    }
                 } else {
                     logger.error("Encountered regular object which is not of a class type: $objectURI of type $referenceType.")
                 }
             }
 
             fun addArray(objectURI: String, arrayReference: ArrayReference, referenceType: ReferenceType) {
-                if (!buildParameters.limiter.isDeep(referenceType) && !buildParameters.jvmState.isReferencedByVariable(
-                        arrayReference
-                    ) && !arrayReference.referringObjects(
-                        Long.MAX_VALUE
+                if (buildParameters.limiter.canSequenceBeSkipped(
+                        arrayReference,
+                        referenceContexts
                     )
-                        .any { buildParameters.limiter.isDeep(it.referenceType()) } // FIXME: Of course, this is incredibly slow
                 ) {
                     return
                 }
@@ -88,89 +419,25 @@ class ObjectMapper : IMapper {
                     return
                 }
 
-                // Encode array size in cardinality restriction
-                // (otherwise we won't be able to reliably query for arrays by their size due to the open world assumption)
-                tripleCollector.addStatement(
-                    objectURI,
-                    URIs.rdf.type,
-                    tripleCollector.addCollection(
-                        TripleCollector.CollectionObject.OWLCardinalityRestriction(
-                            onPropertyUri = URIs.java.hasElement,
-                            onClassUri = URIs.java.ArrayElement,
-                            cardinality = TripleCollector.CollectionObject.CardinalityType.Exactly(arrayReference.length())
-                        )
-                    )
-                )
+                val arrayLength = arrayReference.length()
 
-                // # More concrete hasElement relation
-                // Create sub-relation of hasElement<Type> relation for this particular array object to encode
-                // the array size in the cardinality
-                val typedHasElementURI = URIs.prog.genTypedHasElementURI(referenceType)
-                val typedArrayElementURI = URIs.prog.genTypedArrayElementURI(referenceType)
-
-                try {
-                    val componentType = referenceType.componentType()
-
-                    // add the actual elements
-                    for (i in 0 until arrayReference.length()) {
-                        val value = arrayReference.getValue(i)
-
-                        val arrayElementInstanceURI = URIs.run.genArrayElementInstanceURI(arrayReference, i)
-                        tripleCollector.addStatement(
-                            arrayElementInstanceURI,
-                            URIs.rdf.type,
-                            URIs.owl.NamedIndividual
-                        )
-
-                        tripleCollector.addStatement(
-                            arrayElementInstanceURI,
-                            URIs.rdf.type,
-                            typedArrayElementURI
-                        )
-
-                        tripleCollector.addStatement(
-                            arrayElementInstanceURI,
-                            URIs.java.hasIndex,
-                            NodeFactory.createLiteral(i.toString(), XSDDatatype.XSDint)
-                        )
-
-                        tripleCollector.addStatement(
-                            objectURI,
-                            typedHasElementURI,
-                            arrayElementInstanceURI
-                        )
-
-                        val valueNode = valueMapper.map(value)
-                        if (valueNode != null) {
-                            when (componentType) {
-                                is PrimitiveType -> {
-                                    val typedStoresPrimitiveURI = URIs.prog.genTypedStoresPrimitiveURI(referenceType)
-                                    tripleCollector.addStatement(
-                                        arrayElementInstanceURI,
-                                        typedStoresPrimitiveURI,
-                                        valueNode
-                                    )
-                                }
-                                is ReferenceType -> {
-                                    val typedStoresReferenceURI = URIs.prog.genTypedStoresReferenceURI(referenceType)
-                                    tripleCollector.addStatement(
-                                        arrayElementInstanceURI,
-                                        typedStoresReferenceURI,
-                                        valueNode
-                                    )
-                                }
-                                else -> {
-                                    logger.error("Encountered unknown array element component type: $componentType")
-                                    return
-                                }
-                            }
-                        }
-                    }
+                val componentType = try {
+                    referenceType.componentType()
                 } catch (e: ClassNotLoadedException) {
-                    if (arrayReference.length() > 0) {
+                    if (arrayLength > 0) {
                         logger.error("Array of unloaded component type that has elements. That should not happen.")
                     }
+
+                    null
                 }
+
+                addSequence(
+                    containerURI = objectURI,
+                    containerRef = arrayReference,
+                    cardinality = arrayLength,
+                    componentType,
+                    arrayReference.values
+                )
             }
 
             fun addString(objectURI: String, stringReference: StringReference, referenceType: ReferenceType) {
@@ -234,6 +501,7 @@ class ObjectMapper : IMapper {
             }
 
             fun addStaticClassMembers() {
+                // FIXME: Aren't class type instances already handled by the JvmObjectIterator in the allObjects method?
                 val classTypes =
                     buildParameters.jvmState.pausedThread.virtualMachine().allClasses().filterIsInstance<ClassType>()
 
@@ -250,7 +518,7 @@ class ObjectMapper : IMapper {
             }
 
             fun addObjects() {
-                for (obj in buildParameters.jvmState.allObjects(buildParameters.limiter)) {
+                for (obj in allObjects) {
                     addObject(obj)
                 }
             }

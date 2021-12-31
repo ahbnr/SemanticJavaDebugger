@@ -3,7 +3,7 @@ stop at examples.tests.DataTest:28
 run examples/tests/DataTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk --deep=examples
+buildkb --limit-sdk --deep=examples.tests.DataContainer.intArrayField --deep=examples.tests.DataContainer.stringArrayField
 dumpkb datatest.ttl
 stats
 checkkb --is-consistent
@@ -35,7 +35,7 @@ sparql -- '<<EOF
     WHERE {
         ?container a prog:examples.tests.DataContainer ;
                    prog:examples.tests.DataContainer.intArrayField [
-                     a java:Array ;
+                     a prog:int%5B%5D ;
                      java:hasElement [
                          java:hasIndex 1 ;
                          java:storesPrimitive ?second
@@ -51,7 +51,7 @@ sparql -- '<<EOF
     WHERE {
         [] a prog:examples.tests.DataContainer ;
            prog:examples.tests.DataContainer.stringArrayField [
-             a java:Array ;
+             a prog:java.lang.String%5B%5D ;
              java:hasElement [
                  java:hasIndex 0 ;
                  java:storesReference [
@@ -80,7 +80,7 @@ inspect ?container
 
 stop at examples.tests.DataTest:44
 cont
-buildkb --limit-sdk --deep=examples
+buildkb --limit-sdk --deep=examples.tests.DataContainer.intArrayField --deep=examples.tests.DataContainer.stringArrayField
 checkkb --is-consistent
 stats
 

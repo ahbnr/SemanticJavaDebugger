@@ -1,12 +1,12 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 
 import com.sun.jdi.*
+import de.ahbnr.semanticweb.java_debugger.debugging.ReferenceContexts
 
 data class MappingLimiter(
-    val excludedPackages: Set<String>,
-    val shallowPackages: Set<String>,
-    val deepPackages: Set<String>,
-    val reachableOnly: Boolean
+    private val excludedPackages: Set<String>,
+    private val shallowPackages: Set<String>,
+    private val deepFields: Set<String>
 ) {
     fun isLimiting(): Boolean =
         excludedPackages.isNotEmpty() &&
@@ -18,8 +18,10 @@ data class MappingLimiter(
     private fun isShallow(referenceType: ReferenceType) =
         isExcluded(referenceType) || shallowPackages.any { referenceType.name().startsWith(it) }
 
-    fun isDeep(referenceType: ReferenceType) =
-        deepPackages.any { referenceType.name().startsWith(it) }
+    private fun isDeep(fullyQualifiedFieldName: String) =
+        deepFields.any {
+            fullyQualifiedFieldName.startsWith(it)
+        }
 
     fun canReferenceTypeBeSkipped(unloadedTypeName: String) =
         excludedPackages.any { unloadedTypeName.startsWith(it) }
@@ -69,5 +71,26 @@ data class MappingLimiter(
         val referenceType = field.declaringType()
 
         return canReferenceTypeBeSkipped(referenceType) || isShallow(referenceType) && !field.isPublic
+    }
+
+    fun canSequenceBeSkipped(
+        containerRef: ObjectReference,
+        referenceContexts: ReferenceContexts?
+    ): Boolean {
+        val isReferencedOnStack = referenceContexts?.isReferencedByStack(containerRef)
+        if (isReferencedOnStack == true) {
+            return false
+        }
+
+        val namesOfReferencingFields = referenceContexts
+            ?.getReferencingFields(containerRef)
+            ?.asSequence()
+            ?.map { field -> "${field.declaringType().name()}.${field.name()}" }
+
+        if (namesOfReferencingFields?.any { isDeep(it) } == true) {
+            return false
+        }
+
+        return true
     }
 }

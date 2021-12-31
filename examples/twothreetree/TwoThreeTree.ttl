@@ -9,7 +9,7 @@
 
 domain:Root rdf:type owl:Class ;
             owl:equivalentClass [ rdf:type owl:Restriction ;
-                                  owl:onProperty prog:examples.Node.parent ;
+                                  owl:onProperty prog:examples.twothreetree.Node.parent ;
                                   owl:hasValue java:null
                                 ] .
 
@@ -17,11 +17,11 @@ domain:TruePair rdf:type owl:Class ;
            owl:equivalentClass [
                 rdf:type owl:Restriction ;
                 owl:onProperty rdf:type;
-                owl:hasValue prog:examples.Pair
+                owl:hasValue prog:examples.twothreetree.Pair
            ].
 
 domain:Node rdf:type owl:Class ;
-           owl:equivalentClass prog:examples.Node.
+           owl:equivalentClass prog:examples.twothreetree.Node.
 
 domain:Leaf rdf:type owl:Class ;
             owl:equivalentClass [
@@ -29,27 +29,27 @@ domain:Leaf rdf:type owl:Class ;
                 owl:intersectionOf (
                     [
                       rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.childL ;
+                      owl:onProperty prog:examples.twothreetree.Node.childL ;
                       owl:hasValue java:null
                     ]
                     [
                       rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.childM ;
+                      owl:onProperty prog:examples.twothreetree.Node.childM ;
                       owl:hasValue java:null
                     ]
                     [
                       rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.childR ;
+                      owl:onProperty prog:examples.twothreetree.Node.childR ;
                       owl:hasValue java:null
                     ]
                     [
                       rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.dataR ;
+                      owl:onProperty prog:examples.twothreetree.Node.dataR ;
                       owl:hasValue java:null
                     ]
                     [
                       rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.dataL ;
+                      owl:onProperty prog:examples.twothreetree.Node.dataL ;
                       owl:someValuesFrom domain:TruePair
                     ]
                 )
@@ -60,19 +60,19 @@ domain:TwoNode rdf:type owl:Class ;
           a owl:Class ;
           owl:intersectionOf(
                      [rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.dataR ;
+                      owl:onProperty prog:examples.twothreetree.Node.dataR ;
                       owl:hasValue java:null]
                      [rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.childR ;
+                      owl:onProperty prog:examples.twothreetree.Node.childR ;
                       owl:hasValue java:null]
                      [rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.dataL;
+                      owl:onProperty prog:examples.twothreetree.Node.dataL;
                       owl:someValuesFrom domain:TruePair]
                      [rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.childL;
+                      owl:onProperty prog:examples.twothreetree.Node.childL;
                       owl:someValuesFrom domain:Node]
                      [rdf:type owl:Restriction ;
-                      owl:onProperty prog:examples.Node.childM;
+                      owl:onProperty prog:examples.twothreetree.Node.childM;
                       owl:someValuesFrom domain:Node]
           )
      ] .
@@ -82,19 +82,19 @@ domain:ThreeNode rdf:type owl:Class ;
           a owl:Class ;
           owl:intersectionOf(
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.dataR;
+                                      owl:onProperty prog:examples.twothreetree.Node.dataR;
                                       owl:someValuesFrom domain:TruePair]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.childR;
+                                      owl:onProperty prog:examples.twothreetree.Node.childR;
                                       owl:someValuesFrom domain:Node]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.dataL;
+                                      owl:onProperty prog:examples.twothreetree.Node.dataL;
                                       owl:someValuesFrom domain:TruePair]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.childL;
+                                      owl:onProperty prog:examples.twothreetree.Node.childL;
                                       owl:someValuesFrom domain:Node]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.childM;
+                                      owl:onProperty prog:examples.twothreetree.Node.childM;
                                       owl:someValuesFrom domain:Node]
                          )
      ] .
@@ -104,20 +104,20 @@ domain:FaultyNode rdf:type owl:Class ;
         a owl:Class ;
         owl:intersectionOf(
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.dataL;
+                                      owl:onProperty prog:examples.twothreetree.Node.dataL;
                                       owl:someValuesFrom domain:TruePair]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.dataR;
+                                      owl:onProperty prog:examples.twothreetree.Node.dataR;
                                       owl:hasValue java:null]
 
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.childL;
+                                      owl:onProperty prog:examples.twothreetree.Node.childL;
                                       owl:someValuesFrom domain:Node]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.childM;
+                                      owl:onProperty prog:examples.twothreetree.Node.childM;
                                       owl:someValuesFrom domain:Node]
                                      [rdf:type owl:Restriction ;
-                                      owl:onProperty prog:examples.Node.childR;
+                                      owl:onProperty prog:examples.twothreetree.Node.childR;
                                       owl:someValuesFrom domain:Node]
                          )
      ] .

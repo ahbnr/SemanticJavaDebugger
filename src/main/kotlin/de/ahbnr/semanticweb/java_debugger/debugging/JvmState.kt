@@ -1,163 +1,17 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
-import com.sun.jdi.ArrayReference
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ThreadReference
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
+import de.ahbnr.semanticweb.java_debugger.debugging.utils.InternalJDIUtils
 
 /**
  * Later, we might want to implement an abstract interface over the JVM state here
  * so that the actual JDI source (reference JDI / IntelliJ Idea JDI / ...) is hidden....
  */
 
-data class JvmState(
+class JvmState(
     val pausedThread: ThreadReference
 ) {
-    private val referencedByLocalVar = mutableSetOf<Long>()
-    private val stackReferences = mutableSetOf<ObjectReference>()
-
-    init {
-        for (frameDepth in 0 until pausedThread.frameCount()) {
-            val frame = pausedThread.frame(frameDepth)
-
-            val thisRef = frame.thisObject()
-            if (thisRef != null) {
-                referencedByLocalVar.add(thisRef.uniqueID())
-                stackReferences.add(thisRef)
-            }
-
-            for ((_, value) in frame.getValues(frame.visibleVariables())) {
-                if (value is ObjectReference) {
-                    referencedByLocalVar.add(value.uniqueID())
-                    stackReferences.add(value)
-                }
-            }
-        }
-    }
-
-    fun isReferencedByVariable(objectReference: ObjectReference) =
-        referencedByLocalVar.contains(objectReference.uniqueID())
-
-    private fun recursivelyFindObjects(
-        objectReference: ObjectReference,
-        limiter: MappingLimiter,
-        seen: MutableSet<Long>
-    ): Sequence<ObjectReference> = sequence {
-        val id = objectReference.uniqueID()
-        if (seen.contains(id))
-            return@sequence
-        seen.add(id)
-
-        val referenceType = objectReference.referenceType()
-
-        if (limiter.canReferenceTypeBeSkipped(referenceType))
-            return@sequence
-
-        for (field in referenceType.fields()) { // FIXME: Also handle inherited fields
-            if (field.isStatic)
-                continue
-
-            if (limiter.canFieldBeSkipped(field))
-                continue
-
-            val value = objectReference.getValue(field)
-
-            if (value !is ObjectReference)
-                continue
-
-            yieldAll(recursivelyFindObjects(value, limiter, seen))
-        }
-
-        if (objectReference is ArrayReference) {
-            for (idx in 0 until objectReference.length()) {
-                val arrayElement = objectReference.getValue(idx)
-                if (arrayElement is ObjectReference) {
-                    yieldAll(
-                        recursivelyFindObjects(arrayElement, limiter, seen)
-                    )
-                }
-            }
-        }
-
-        yield(objectReference)
-    }
-
-    /**
-     * Utility function to iterate over all objects
-     *
-     * Implementation is a bit hacky (iterate over all classes, then iterate over all instances per class).
-     * However, this is exactly how IntelliJ does it in their Memory view implementation.
-     *
-     * FIXME: Check if JDWP protocol allows some better way of accessing the heap
-     */
-    fun allObjects(limiter: MappingLimiter?): Sequence<ObjectReference> = sequence {
-        val vm = pausedThread.virtualMachine()
-        val allReferenceTypes = vm.allClasses()
-
-        if (limiter?.reachableOnly == true) {
-            val seen = mutableSetOf<Long>()
-
-            // get objects in variables
-            for (value in stackReferences) {
-                yieldAll(
-                    recursivelyFindObjects(
-                        value,
-                        limiter,
-                        seen
-                    )
-                )
-            }
-
-            // get objects directly referenced by static fields
-            for (referenceType in allReferenceTypes) {
-                if (limiter.canReferenceTypeBeSkipped(referenceType))
-                    continue
-
-                if (!referenceType.isPrepared)
-                    continue // skip details if this class has not been fully prepared in the VM state
-
-                for (field in referenceType.allFields()) {
-                    if (!field.isStatic)
-                        continue
-
-                    if (limiter.canFieldBeSkipped(field))
-                        continue
-
-                    val value = referenceType.getValue(field)
-                    if (value !is ObjectReference)
-                        continue
-
-                    yieldAll(
-                        recursivelyFindObjects(
-                            value,
-                            limiter,
-                            seen
-                        )
-                    )
-                }
-
-                // Reference types themselves are also objects
-                yieldAll(
-                    recursivelyFindObjects(
-                        referenceType.classObject(),
-                        limiter,
-                        seen
-                    )
-                )
-
-                // FIXME: Arent modules also objects?
-            }
-        } else {
-            // This is how IntelliJ does it in its memory view.
-            // However, IntelliJ limits the number of objects being retrieved.
-            for (referenceType in allReferenceTypes) {
-                val allInstances = referenceType.instances(Long.MAX_VALUE)
-
-                yieldAll(allInstances)
-            }
-        }
-    }
-
     /**
      * Utility function to retrieve an object using its ID.
      *
@@ -176,12 +30,14 @@ data class JvmState(
      *   5. Append the ObjectReferences to Apache Jena Nodes / Statements (is that possible?)
      */
     fun getObjectById(objectId: Long): ObjectReference? {
-        for (obj in allObjects(null)) {
-            if (obj.uniqueID() == objectId) {
-                return obj
-            }
-        }
+        return InternalJDIUtils.objectReferenceFromId(pausedThread.virtualMachine(), objectId)
 
-        return null
+        // for (obj in allObjects()) {
+        //     if (obj.uniqueID() == objectId) {
+        //         return obj
+        //     }
+        // }
+
+        // return null
     }
 }

@@ -66,8 +66,7 @@ class BuildKBCommand(
                 )
             else setOf(),
             shallowPackages = setOf("java"),
-            deepPackages = deep.toSet(),
-            reachableOnly = true
+            deepFields = deep.toSet()
         )
 
         val buildParameters = BuildParameters(

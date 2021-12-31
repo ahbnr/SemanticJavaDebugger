@@ -3,6 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils
 import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.Method
+import de.ahbnr.semanticweb.java_debugger.debugging.utils.InternalJDIUtils
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import org.apache.commons.collections4.MultiValuedMap
