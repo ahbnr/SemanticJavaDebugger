@@ -1,0 +1,35 @@
+section "Prepare Program & Domain"
+stop at examples.tests.IterableTest:13
+run examples/tests/IterableTest.java
+
+section "Build Knowledge Base"
+buildkb --limit-sdk
+dumpkb datatest.ttl
+stats
+checkkb --is-consistent
+
+section "SPARQL Queries"
+
+# See if list elements are present
+assert sparql-success -- '<<EOF
+    SELECT ?first ?second ?third
+    WHERE {
+        run:frame0 prog:examples.tests.IterableTest.void_main%28java.lang.String%5B%5D%29.list [
+            a prog:java.util.List ;
+            java:hasElement [
+                java:hasIndex 0 ;
+                java:storesReference ?first
+            ] ;
+            java:hasElement [
+                java:hasIndex 1 ;
+                java:storesReference ?second
+            ] ;
+            java:hasElement [
+                java:hasIndex 2 ;
+                java:storesReference ?third
+            ]
+        ]
+    }
+'EOF
+
+cont
