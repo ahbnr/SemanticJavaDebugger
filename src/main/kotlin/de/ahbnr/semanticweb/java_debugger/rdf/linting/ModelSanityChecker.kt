@@ -12,7 +12,6 @@ import openllet.pellint.model.Lint
 import org.apache.jena.rdf.model.Model
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.semanticweb.owlapi.formats.ManchesterSyntaxDocumentFormat
 import org.semanticweb.owlapi.model.OWLLiteral
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.profiles.OWLProfileViolation
@@ -20,7 +19,6 @@ import org.semanticweb.owlapi.profiles.Profiles
 import org.semanticweb.owlapi.profiles.violations.UseOfDefinedDatatypeInLiteral
 import org.semanticweb.owlapi.profiles.violations.UseOfReservedVocabularyForClassIRI
 import org.semanticweb.owlapi.profiles.violations.UseOfReservedVocabularyForIndividualIRI
-import java.io.FileOutputStream
 
 
 class ModelSanityChecker : KoinComponent {
@@ -84,10 +82,19 @@ class ModelSanityChecker : KoinComponent {
 
     // based on https://github.com/Galigator/openllet/blob/b7a07b60d2ae6a147415e30be0ffb72eff7fe857/tools-cli/src/main/java/openllet/Openllint.java#L315
     fun OWL2DLProfileViolationTest(ontology: OWLOntology) {
-        ontology.saveOntology(ManchesterSyntaxDocumentFormat(), FileOutputStream("onto"))
-
         val owl2Profile = Profiles.OWL2_DL
-        val profileReport = owl2Profile.checkOntology(ontology)
+
+        // This linter is prone to throwing exceptions for the smallest anomalies in the input data
+        val profileReport = try {
+            owl2Profile.checkOntology(ontology)
+        } catch (e: RuntimeException) {
+            val message = e.message
+            if (message != null) {
+                logger.log(message)
+            }
+            logger.warning("Internal OWL2DL Profile linter error. This can indicate some anomaly in the input data.")
+            null
+        } ?: return
 
         val violationRemovalFilters: List<(OWLProfileViolation) -> Boolean> = listOf(
             // Protege produces `owl:Class rdf:type owl:Class` axioms, which are unfortunately detected as use of
@@ -131,7 +138,22 @@ class ModelSanityChecker : KoinComponent {
         val patternLoader = LintPatternLoader()
         val ontologyLints = mutableMapOf<LintPattern, MutableList<Lint>>()
 
-        ontology.axioms().forEach { axiom ->
+        val axiomIterator = ontology.axioms().iterator()
+        while (true) {
+            // OwlApi/OntApi is prone to throwing exceptions for the smallest anomalies in the input data
+            val axiom = try {
+                if (axiomIterator.hasNext()) {
+                    axiomIterator.next()
+                } else break
+            } catch (e: RuntimeException) {
+                val message = e.message
+                if (message != null) {
+                    logger.log(message)
+                }
+                logger.warning("Internal Openllint pattern checker error. This can indicate some anomaly in the input data.")
+                null
+            } ?: return
+
             for (pattern in patternLoader.axiomLintPatterns) {
                 val lint = pattern.match(ontology, axiom)
                 if (lint != null) {
@@ -141,6 +163,7 @@ class ModelSanityChecker : KoinComponent {
                 }
             }
         }
+
 
         for (pattern in patternLoader.ontologyLintPatterns) {
             val lints = pattern.match(ontology)
