@@ -79,6 +79,8 @@ class ReverseCommand(
                     logger.log("")
                     logger.log("  Array contents: [${values}]")
                 } else if (toStringMethod != null) {
+                    // Be aware, that this invalidates any frame references for the paused thread
+                    // and that they have to be retrieved again via frame(i)
                     val stringRepresentation = mapping.invokeMethod(
                         jvmState.pausedThread,
                         toStringMethod,

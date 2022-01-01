@@ -7,6 +7,8 @@ import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.utils.MirroringError
 import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.utils.retrieveInterface
 import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.utils.retrieveMethod
 
+// Be aware, that invoking any method of this mirror invalidates any frame references for the thread
+// and that they have to be retrieved again via frame(i)
 class IterableMirror(
     private val iterableRef: ObjectReference,
     private val thread: ThreadReference

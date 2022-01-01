@@ -37,13 +37,9 @@ class StackMapper : IMapper {
 
             fun addLocalVariable(
                 stackFrameURI: String,
-                frame: StackFrame,
                 variable: LocalVariableInfo,
                 value: Value?
             ) {
-                val method = frame.location().method()
-                val classType = method.declaringType()
-
                 // we model this via the variable declaration property.
                 // The property value depends on the kind of value we have here
                 val valueObject = valueMapper.map(value)
@@ -57,7 +53,13 @@ class StackMapper : IMapper {
                 }
             }
 
-            fun addLocalVariables(frameDepth: Int, frameSubject: String, frame: StackFrame) {
+            fun addLocalVariables(
+                frameDepth: Int,
+                frameSubject: String,
+                // Careful, no invokeMethod calls should take place from here on to keep this frame reference
+                // valid.
+                frame: StackFrame
+            ) {
                 val jdiMethod = frame.location().method()
                 val methodInfo = MethodInfo(jdiMethod, buildParameters)
                 val methodVariableDeclarations = methodInfo.variables
@@ -82,7 +84,6 @@ class StackMapper : IMapper {
 
                         addLocalVariable(
                             frameSubject,
-                            frame,
                             variableInfo,
                             value
                         )
@@ -90,7 +91,12 @@ class StackMapper : IMapper {
                 }
             }
 
-            fun addStackFrame(frameDepth: Int, frame: StackFrame) {
+            fun addStackFrame(
+                frameDepth: Int,
+                // Careful, no invokeMethod calls should take place from here on to keep this frame reference
+                // valid.
+                frame: StackFrame
+            ) {
                 val frameSubject = URIs.run.genFrameURI(frameDepth)
 
                 tripleCollector.addStatement(

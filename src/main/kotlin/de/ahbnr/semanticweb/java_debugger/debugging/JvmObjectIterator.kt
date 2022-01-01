@@ -76,17 +76,20 @@ class JvmObjectIterator(
 
     private fun iterateStackReferences(): Sequence<ObjectReference> = sequence {
         for (frameDepth in 0 until thread.frameCount()) {
-            val frame = thread.frame(frameDepth)
-            val method = frame.location().method()
+            // the frame reference must be freshly retrieved every time,
+            // since any resuming of the thread  (e.g. due to a invokeMethod call)
+            // can invalidate frame references.
 
-            val thisRef = frame.thisObject()
+            fun frame() = thread.frame(frameDepth)
+            val method = frame().location().method()
+
+            val thisRef = frame().thisObject()
             if (thisRef != null) {
                 yield(thisRef)
             }
 
-
-            val stackReferences = frame
-                .getValues(frame.visibleVariables())
+            val stackReferences = frame()
+                .getValues(frame().visibleVariables())
 
             yieldAll(
                 if (contextRecorder != null)

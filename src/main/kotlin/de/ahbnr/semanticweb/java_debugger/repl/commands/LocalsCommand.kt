@@ -40,6 +40,8 @@ class LocalsCommand(
             throw ProgramResult(-1)
         }
 
+        // Careful, no invokeMethod calls should take place from here on to keep this frame reference
+        // valid.
         val frame = jvmState.pausedThread.frame(0)
 
         val knowledgeBase = state.knowledgeBase
