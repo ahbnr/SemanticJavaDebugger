@@ -96,7 +96,10 @@ class JvmInstance(
                     }
                 }
 
-                eventHandler.handleEvent(this, event)
+                val handlerResult = eventHandler.handleEvent(this, event)
+                when (handlerResult) {
+                    is HandleEventResult.ForceResume -> paused = false
+                }
 
                 if (!paused) {
                     vm.resume()

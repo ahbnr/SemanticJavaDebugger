@@ -4,6 +4,7 @@ package de.ahbnr.semanticweb.java_debugger.repl
 
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.core.UsageError
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import net.harawata.appdirs.AppDirsFactory
@@ -118,6 +119,9 @@ class REPL(
                         true
                     } catch (e: ProgramResult) {
                         e.statusCode == 0
+                    } catch (e: UsageError) {
+                        logger.error(e.helpMessage())
+                        false
                     } catch (e: CliktError) {
                         logger.log(e.stackTraceToString())
                         logger.error(e.message ?: "Unknown command execution error.")

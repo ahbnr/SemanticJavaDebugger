@@ -5,6 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
 import org.apache.jena.rdf.model.Model
@@ -91,7 +92,7 @@ class GraphGenerator(
     fun buildOntology(
         buildParameters: BuildParameters,
         applicationDomainRulesPath: String?, /* turtle format file */
-        doFullLintingReport: Boolean
+        linterMode: LinterMode
     ): Ontology? {
         // var model = ModelFactory.createDefaultModel()
 
@@ -116,7 +117,7 @@ class GraphGenerator(
 
         // Perform sanity checks and linting
         val checker = ModelSanityChecker()
-        checker.fullCheck(ontology, buildParameters.limiter, doFullLintingReport)
+        checker.fullCheck(ontology, buildParameters.limiter, linterMode)
 
         return ontology
     }

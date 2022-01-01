@@ -8,14 +8,11 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
+import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
-import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.KnowledgeBaseBuilder
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import spoon.Launcher
-import kotlin.io.path.absolutePathString
 
 class BuildKBCommand(
     val jvmDebugger: JvmDebugger,
@@ -40,51 +37,25 @@ class BuildKBCommand(
             throw ProgramResult(-1)
         }
 
-        val sourcePath = state.sourcePath
-
-        val spoonLauncher = Launcher()
-
-        if (sourcePath != null) {
-            spoonLauncher.addInputResource(sourcePath.absolutePathString())
-        }
-        spoonLauncher.buildModel()
-        logger.success("Source model created.")
-
-        val sourceModel = spoonLauncher.model
-
-        val limiter = MappingLimiter(
-            excludedPackages = if (limitSdk)
-                setOf(
-                    "sun",
-                    "jdk",
-                    "java.util.concurrent",
-                    "java.security",
-                    "java.lang.reflect",
-                    "java.lang.ref",
-                    "java.lang.module",
-                    "java.lang.invoke",
-                )
-            else setOf(),
-            shallowPackages = setOf("java"),
-            deepFieldsAndVariables = deep.toSet()
-        )
-
-        val buildParameters = BuildParameters(
+        val builder = KnowledgeBaseBuilder(
+            graphGenerator = graphGenerator,
+            sourcePath = state.sourcePath,
+            applicationDomainDefFile = state.applicationDomainDefFile,
             jvmState = jvmState,
-            sourceModel = sourceModel,
-            limiter = limiter
+            limitSdk = limitSdk,
+            deepFieldsAndVariables = deep.toSet(),
+            linterMode = if (fullLintingReport) LinterMode.FullReport else LinterMode.Normal,
+            quiet = false
         )
-        val ontology = graphGenerator.buildOntology(
-            buildParameters,
-            state.applicationDomainDefFile,
-            fullLintingReport
-        )
-        if (ontology == null) {
+
+        val newKnowledgeBase = builder.build()
+
+        if (newKnowledgeBase == null) {
             logger.error("Could not create knowledge base.")
             throw ProgramResult(-1)
         }
 
-        state.knowledgeBase = KnowledgeBase(ontology, buildParameters)
+        state.knowledgeBase = newKnowledgeBase
 
         logger.success("Knowledge base created.")
     }

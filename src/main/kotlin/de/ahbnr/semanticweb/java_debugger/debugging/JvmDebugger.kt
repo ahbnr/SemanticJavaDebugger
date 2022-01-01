@@ -5,6 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.debugging
 import com.sun.jdi.Bootstrap
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.event.*
+import com.sun.jdi.request.BreakpointRequest
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -15,26 +16,36 @@ class JvmDebugger : Closeable, KoinComponent {
     var jvm: JvmInstance? = null
         private set
 
-    private val breakpoints = mutableMapOf<String, MutableSet<Int>>()
-    private val deferredBreakpoints = mutableMapOf<String, MutableSet<Int>>()
+    private data class Breakpoint(val line: Int, val callback: (() -> Boolean)?)
+
+    private val breakpoints = mutableMapOf<String, MutableSet<Breakpoint>>()
+    private val deferredBreakpoints = mutableMapOf<String, MutableSet<Breakpoint>>()
 
     private val logger: Logger by inject()
 
-    fun setBreakpoint(className: String, line: Int) {
-        val lines = breakpoints.getOrPut(className) { mutableSetOf() }
-        if (lines.contains(line)) {
-            logger.debug("There is already a breakpoint at this line.")
+    fun setBreakpoint(
+        className: String,
+        line: Int,
+        callback: (() -> Boolean)?
+    ) {
+        val newBreakpoint = Breakpoint(line, callback)
+
+        val breakpointsInFile = breakpoints
+            .getOrPut(className) { mutableSetOf() }
+
+        if (breakpointsInFile.any { it.line == newBreakpoint.line }) {
+            logger.debug("There is already a breakpoint at line $line.")
             return
         }
 
-        lines.add(line)
+        breakpointsInFile.add(newBreakpoint)
 
         val classType = jvm?.getClass(className)
         if (classType != null) {
             jvm?.setBreakpointOnReferenceType(classType, line)
         } else {
-            val lines = deferredBreakpoints.getOrPut(className) { mutableSetOf() }
-            lines.add(line)
+            val deferredBreakpointsInFile = deferredBreakpoints.getOrPut(className) { mutableSetOf() }
+            deferredBreakpointsInFile.add(newBreakpoint)
 
             val rawVM = jvm?.vm
             if (rawVM != null) {
@@ -49,11 +60,11 @@ class JvmDebugger : Closeable, KoinComponent {
 
     private fun tryApplyingDeferredBreakpoints(jvm: JvmInstance, preparedType: ReferenceType) {
         val className = preparedType.name()
-        val lines = deferredBreakpoints.getOrDefault(className, null)
+        val breakpoints = deferredBreakpoints.getOrDefault(className, null)
 
-        if (lines != null) {
-            for (line in lines) {
-                jvm.setBreakpointOnReferenceType(preparedType, line)
+        if (breakpoints != null) {
+            for (breakpoint in breakpoints) {
+                jvm.setBreakpointOnReferenceType(preparedType, breakpoint.line)
             }
 
             deferredBreakpoints.remove(className)
@@ -61,26 +72,52 @@ class JvmDebugger : Closeable, KoinComponent {
     }
 
     private val eventHandler = object : IJvmEventHandler {
-        override fun handleEvent(jvm: JvmInstance, event: Event) {
+        override fun handleEvent(jvm: JvmInstance, event: Event): HandleEventResult =
             when (event) {
                 is VMStartEvent -> {
                     logger.log("JVM started.")
+                    HandleEventResult.Nothing
                 }
 
                 is ClassPrepareEvent -> {
                     tryApplyingDeferredBreakpoints(jvm, event.referenceType())
+                    HandleEventResult.Nothing
                 }
 
                 is BreakpointEvent -> {
-                    logger.log("Breakpoint hit: $event")
+                    val request = event.request() as? BreakpointRequest
+                    val location = request?.location()
+                    val className = location?.declaringType()?.name()
+                    val breakpoint = if (className != null)
+                        breakpoints
+                            .getOrElse(className, { setOf() })
+                            .find { it.line == location.lineNumber() }
+                    else null
+
+                    if (breakpoint == null) {
+                        logger.error("Hit a breakpoint which was not specified by this debugger: $event. This should never happen.")
+                        HandleEventResult.Nothing
+                    } else {
+                        if (breakpoint.callback != null) {
+                            if (!breakpoint.callback.invoke())
+                                HandleEventResult.ForceResume
+                            else HandleEventResult.Nothing
+                        } else {
+                            logger.log("Breakpoint hit: $event")
+                            HandleEventResult.Nothing
+                        }
+                    }
                 }
 
                 is VMDisconnectEvent -> {
                     logger.log("The JVM terminated.")
                     this@JvmDebugger.jvm = null
+
+                    HandleEventResult.Nothing
                 }
+
+                else -> HandleEventResult.Nothing
             }
-        }
     }
 
     fun launchVM(mainClass: String, classpath: String? = null) {

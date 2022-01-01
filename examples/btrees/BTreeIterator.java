@@ -57,11 +57,11 @@ class BTreeIterator<K extends Comparable<? super K>> implements Iterator<K> {
         } else {
             if (currentState.idx < 0) {
                 this.stack.push(
-                        new NodeTraversalState<K>(currentState.node, 0)
+                        new NodeTraversalState<K>(currentState.node.children[0], -1)
                 );
 
                 this.stack.push(
-                        new NodeTraversalState<K>(currentState.node.children[0], -1)
+                        new NodeTraversalState<K>(currentState.node, 0)
                 );
 
                 toReturn = next();

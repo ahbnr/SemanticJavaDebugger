@@ -20,17 +20,25 @@ import org.semanticweb.owlapi.profiles.violations.UseOfDefinedDatatypeInLiteral
 import org.semanticweb.owlapi.profiles.violations.UseOfReservedVocabularyForClassIRI
 import org.semanticweb.owlapi.profiles.violations.UseOfReservedVocabularyForIndividualIRI
 
+enum class LinterMode {
+    Normal,
+    FullReport,
+    NoLinters
+}
 
 class ModelSanityChecker : KoinComponent {
     private val URIs: OntURIs by inject()
     private val logger: Logger by inject()
 
-    fun fullCheck(ontology: Ontology, mappingLimiter: MappingLimiter, doFullLintingReport: Boolean) {
+    fun fullCheck(ontology: Ontology, mappingLimiter: MappingLimiter, linterMode: LinterMode) {
+        if (linterMode == LinterMode.NoLinters)
+            return
+
         val model = ontology.asGraphModel()
 
         checkRdfTyping(model)
         logger.log("")
-        openllintOwlSyntaxChecks(model, mappingLimiter, doFullLintingReport)
+        openllintOwlSyntaxChecks(model, mappingLimiter, linterMode == LinterMode.FullReport)
         logger.log("")
         OWL2DLProfileViolationTest(ontology)
         logger.log("")

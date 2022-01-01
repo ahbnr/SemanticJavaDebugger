@@ -5,6 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.ParserException
@@ -61,6 +62,6 @@ class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
             .checking(true)
             .parse(knowledgeBase.ontology.asGraphModel())
 
-        ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.buildParameters.limiter, false)
+        ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.buildParameters.limiter, LinterMode.Normal)
     }
 }
