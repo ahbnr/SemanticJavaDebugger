@@ -75,6 +75,14 @@ java:hasMethod rdf:type owl:ObjectProperty ;
                rdfs:range java:Method .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasSuccessor
+java:hasSuccessor rdf:type owl:ObjectProperty ,
+                           owl:FunctionalProperty ,
+                           owl:InverseFunctionalProperty ;
+                  rdfs:domain java:SequenceElement ;
+                  rdfs:range java:SequenceElement .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#isDeclaredAt
 java:isDeclaredAt rdf:type owl:ObjectProperty ,
                            owl:FunctionalProperty ;

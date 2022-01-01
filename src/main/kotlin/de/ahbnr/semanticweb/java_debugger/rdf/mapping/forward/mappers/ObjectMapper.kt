@@ -101,7 +101,7 @@ class ObjectMapper : IMapper {
              * But this also means, we dont get this static information if there are only empty arrays
              * // TODO Evaluate the effects of this decision
              */
-            fun addTypedSequenceTriples(componentType: Type) {
+            fun addSequenceTypingTriples(componentType: Type) {
                 val componentTypeName = componentType.name()
 
                 if (mappedSequenceComponentTypes.contains(componentTypeName)) {
@@ -297,7 +297,7 @@ class ObjectMapper : IMapper {
                     return
                 }
 
-                addTypedSequenceTriples(componentType)
+                addSequenceTypingTriples(componentType)
 
                 // # More concrete hasElement relation
                 // Create sub-relation of hasElement<Type> relation for this particular array/iterable object to encode
@@ -325,6 +325,30 @@ class ObjectMapper : IMapper {
                         URIs.java.hasIndex,
                         NodeFactory.createLiteral(idx.toString(), XSDDatatype.XSDint)
                     )
+
+                    if (idx < components.size - 1) {
+                        val nextElementInstanceURI = URIs.run.genSequenceElementInstanceURI(containerRef, idx + 1)
+
+                        tripleCollector.addStatement(
+                            elementInstanceURI,
+                            URIs.java.hasSuccessor,
+                            nextElementInstanceURI
+                        )
+                    } else {
+                        // encode hasSuccessor cardinality, to make it clear that there is no successor
+                        // (we are closing the world here!)
+                        tripleCollector.addStatement(
+                            elementInstanceURI,
+                            URIs.rdf.type,
+                            tripleCollector.addCollection(
+                                TripleCollector.CollectionObject.OWLCardinalityRestriction(
+                                    onPropertyUri = URIs.java.hasSuccessor,
+                                    onClassUri = URIs.java.SequenceElement,
+                                    cardinality = TripleCollector.CollectionObject.CardinalityType.Exactly(0)
+                                )
+                            )
+                        )
+                    }
 
                     tripleCollector.addStatement(
                         containerURI,

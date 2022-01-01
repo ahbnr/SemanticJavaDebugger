@@ -79,6 +79,7 @@ class OntURIs(val ns: Namespaces) {
         val PrimitiveSequenceElement = ns.java + "PrimitiveSequenceElement"
         val hasIndex = ns.java + "hasIndex"
         val hasElement = ns.java + "hasElement"
+        val hasSuccessor = ns.java + "hasSuccessor"
         val storesPrimitive = ns.java + "storesPrimitive"
         val storesReference = ns.java + "storesReference"
 

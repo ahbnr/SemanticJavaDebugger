@@ -51,9 +51,11 @@ class OwlClassCommand : REPLCommand(name = "owlclass"), KoinComponent {
         val classExpression = try {
             manchesterParser.parseClassExpression(rawClassExpression)
         } catch (e: ParserException) {
-            val printStream = PrintStream(logger.logStream())
-            e.printStackTrace(printStream)
-            printStream.flush()
+            val message = e.message
+            if (message != null) {
+                logger.log(message)
+                logger.log("")
+            }
             logger.error("Could not parse Manchester class expression.")
             throw ProgramResult(-1)
         }
