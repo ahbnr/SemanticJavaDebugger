@@ -2,4 +2,4 @@ run examples.btrees.tests.InsertTest
 domain examples/btrees/BTree.ttl
 stop at examples.btrees.tests.InsertTest:51
 run examples.btrees.tests.InsertTest
-buildkb --limit-sdk --deep=examples.btrees
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys --deep=examples.btrees.BTreeIterator.stack
