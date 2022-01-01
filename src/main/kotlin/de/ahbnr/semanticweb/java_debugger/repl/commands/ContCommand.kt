@@ -22,6 +22,8 @@ class ContCommand(
             throw ProgramResult(-1)
         }
 
+        logger.debug("Resuming program and deleting old knowledge base.")
         jvm.resume()
+        this.state.knowledgeBase = null
     }
 }
