@@ -4,6 +4,7 @@ import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.Method
 import de.ahbnr.semanticweb.java_debugger.debugging.utils.InternalJDIUtils
+import de.ahbnr.semanticweb.java_debugger.debugging.utils.getLocalMethodId
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import org.apache.commons.collections4.MultiValuedMap
@@ -26,7 +27,7 @@ class MethodInfo(
     private val logger: Logger by inject()
 
     // we have to encode the return type to deal with bridge methods which can violate the overloading rules
-    val id = "${jdiMethod.returnTypeName()}_${jdiMethod.name()}(${jdiMethod.argumentTypeNames().joinToString(",")})"
+    val id = getLocalMethodId(jdiMethod)
 
     val declarationLocation: LocationInfo?
         get() {

@@ -2,11 +2,13 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.debugging.ReferenceContexts
+import de.ahbnr.semanticweb.java_debugger.debugging.utils.getFullyQualifiedName
+import de.ahbnr.semanticweb.java_debugger.debugging.utils.getFullyQualifiedNamePrefix
 
 data class MappingLimiter(
     private val excludedPackages: Set<String>,
     private val shallowPackages: Set<String>,
-    private val deepFields: Set<String>
+    private val deepFieldsAndVariables: Set<String>
 ) {
     fun isLimiting(): Boolean =
         excludedPackages.isNotEmpty() &&
@@ -18,9 +20,9 @@ data class MappingLimiter(
     private fun isShallow(referenceType: ReferenceType) =
         isExcluded(referenceType) || shallowPackages.any { referenceType.name().startsWith(it) }
 
-    private fun isDeep(fullyQualifiedFieldName: String) =
-        deepFields.any {
-            fullyQualifiedFieldName.startsWith(it)
+    private fun isDeep(fullyQualifiedFieldOrVariableName: String) =
+        deepFieldsAndVariables.any {
+            fullyQualifiedFieldOrVariableName.startsWith(it)
         }
 
     fun canReferenceTypeBeSkipped(unloadedTypeName: String) =
@@ -77,15 +79,18 @@ data class MappingLimiter(
         containerRef: ObjectReference,
         referenceContexts: ReferenceContexts?
     ): Boolean {
-        val isReferencedOnStack = referenceContexts?.isReferencedByStack(containerRef)
-        if (isReferencedOnStack == true) {
+        val namesOfReferencingVars = referenceContexts
+            ?.getStackReferences(containerRef)
+            ?.asSequence()
+            ?.map { getFullyQualifiedNamePrefix(it.method, it.variable) }
+        if (namesOfReferencingVars?.any { isDeep(it) } == true) {
             return false
         }
 
         val namesOfReferencingFields = referenceContexts
             ?.getReferencingFields(containerRef)
             ?.asSequence()
-            ?.map { field -> "${field.declaringType().name()}.${field.name()}" }
+            ?.map { field -> getFullyQualifiedName(field) }
 
         if (namesOfReferencingFields?.any { isDeep(it) } == true) {
             return false

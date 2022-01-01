@@ -1,6 +1,8 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
 import com.sun.jdi.Field
+import com.sun.jdi.LocalVariable
+import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
 
 class ReferenceContexts {
@@ -20,10 +22,11 @@ class ReferenceContexts {
         contextList.add(context)
     }
 
-    fun isReferencedByStack(objectReference: ObjectReference) =
+    fun getStackReferences(objectReference: ObjectReference): List<Context.ReferencedByStack> =
         objectIdsToContexts
             .getOrDefault(objectReference.uniqueID(), null)
-            ?.contains(Context.ReferencedByStack) == true
+            ?.filterIsInstance<Context.ReferencedByStack>()
+            ?: emptyList()
 
     fun getReferencingFields(objectReference: ObjectReference): List<Field> =
         objectIdsToContexts
@@ -33,7 +36,7 @@ class ReferenceContexts {
             ?: listOf()
 
     sealed class Context {
-        object ReferencedByStack : Context()
+        class ReferencedByStack(val method: Method, val variable: LocalVariable) : Context()
         class ReferencedByField(val field: Field) : Context()
     }
 }

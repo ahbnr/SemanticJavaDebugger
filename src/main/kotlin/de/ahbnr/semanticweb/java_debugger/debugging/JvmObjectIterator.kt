@@ -77,6 +77,7 @@ class JvmObjectIterator(
     private fun iterateStackReferences(): Sequence<ObjectReference> = sequence {
         for (frameDepth in 0 until thread.frameCount()) {
             val frame = thread.frame(frameDepth)
+            val method = frame.location().method()
 
             val thisRef = frame.thisObject()
             if (thisRef != null) {
@@ -86,17 +87,24 @@ class JvmObjectIterator(
 
             val stackReferences = frame
                 .getValues(frame.visibleVariables())
-                .values
-                .asSequence()
-                .filterIsInstance<ObjectReference>()
 
             yieldAll(
                 if (contextRecorder != null)
-                    stackReferences.map {
-                        contextRecorder.addContext(it, ReferenceContexts.Context.ReferencedByStack)
-                        it
-                    }
+                    stackReferences
+                        .asSequence()
+                        .mapNotNull { (variable, value) ->
+                            if (value is ObjectReference) {
+                                contextRecorder.addContext(
+                                    value,
+                                    ReferenceContexts.Context.ReferencedByStack(method, variable)
+                                )
+                                value
+                            } else null
+                        }
                 else stackReferences
+                    .values
+                    .asSequence()
+                    .filterIsInstance<ObjectReference>()
             )
         }
     }

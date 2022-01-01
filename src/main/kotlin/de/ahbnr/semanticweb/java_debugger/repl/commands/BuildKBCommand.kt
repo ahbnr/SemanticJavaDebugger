@@ -66,7 +66,7 @@ class BuildKBCommand(
                 )
             else setOf(),
             shallowPackages = setOf("java"),
-            deepFields = deep.toSet()
+            deepFieldsAndVariables = deep.toSet()
         )
 
         val buildParameters = BuildParameters(

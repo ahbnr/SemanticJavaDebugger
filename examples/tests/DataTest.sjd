@@ -4,7 +4,6 @@ run examples/tests/DataTest.java
 
 section "Build Knowledge Base"
 buildkb --limit-sdk --deep=examples.tests.DataContainer.intArrayField --deep=examples.tests.DataContainer.stringArrayField
-dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
@@ -80,7 +79,12 @@ inspect ?container
 
 stop at examples.tests.DataTest:44
 cont
-buildkb --limit-sdk --deep=examples.tests.DataContainer.intArrayField --deep=examples.tests.DataContainer.stringArrayField
+buildkb <<EOF
+    --limit-sdk
+    --deep=examples.tests.DataContainer.intArrayField
+    --deep=examples.tests.DataContainer.stringArrayField
+    --deep=examples.tests.DataTest.void_varsTest().intArrayVar
+EOF
 checkkb --is-consistent
 stats
 

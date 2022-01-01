@@ -3,8 +3,7 @@ stop at examples.tests.IterableTest:13
 run examples/tests/IterableTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
-dumpkb datatest.ttl
+buildkb --limit-sdk --deep=examples.tests.IterableTest.void_main(java.lang.String[]).list
 stats
 checkkb --is-consistent
 

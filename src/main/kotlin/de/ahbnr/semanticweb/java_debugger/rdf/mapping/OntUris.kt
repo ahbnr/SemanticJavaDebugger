@@ -1,6 +1,7 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping
 
 import com.sun.jdi.*
+import de.ahbnr.semanticweb.java_debugger.debugging.utils.getFullyQualifiedName
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocalVariableInfo
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocationInfo
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.MethodInfo
@@ -129,23 +130,11 @@ class OntURIs(val ns: Namespaces) {
         val `java_lang_Object%5B%5D` = ns.prog + IRILib.encodeUriComponent("java.lang.Object[]")
         val java_lang_Object = ns.prog + IRILib.encodeUriComponent("java.lang.Object")
 
-        fun genVariableDeclarationURI(variable: LocalVariableInfo): String {
-            val referenceType = variable.methodInfo.jdiMethod.declaringType()
+        fun genVariableDeclarationURI(variable: LocalVariableInfo): String =
+            "${ns.prog}${IRILib.encodeUriComponent(getFullyQualifiedName(variable))}"
 
-            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}.${IRILib.encodeUriComponent(variable.methodInfo.id)}.${
-                IRILib.encodeUriComponent(
-                    variable.id
-                )
-            }"
-        }
-
-        fun genMethodURI(methodInfo: MethodInfo): String {
-            val referenceType = methodInfo.jdiMethod.declaringType()
-
-            return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}.${
-                IRILib.encodeUriComponent(methodInfo.id)
-            }"
-        }
+        fun genMethodURI(methodInfo: MethodInfo): String =
+            "${ns.prog}${IRILib.encodeUriComponent(getFullyQualifiedName(methodInfo.jdiMethod))}"
 
         fun genReferenceTypeURI(referenceType: ReferenceType): String {
             return "${ns.prog}${IRILib.encodeUriComponent(referenceType.name())}"
@@ -154,9 +143,9 @@ class OntURIs(val ns: Namespaces) {
         fun genFieldURI(field: Field): String =
             "${ns.prog}${
                 IRILib.encodeUriComponent(
-                    field.declaringType().name()
+                    getFullyQualifiedName(field)
                 )
-            }.${IRILib.encodeUriComponent(field.name())}"
+            }"
 
         fun genUnloadedTypeURI(typeName: String): String {
             return ns.prog + IRILib.encodeUriComponent(typeName)
