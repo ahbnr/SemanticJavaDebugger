@@ -27,7 +27,7 @@ class BTreeIterator<K extends Comparable<? super K>> implements Iterator<K> {
         this.stack = new Stack<NodeTraversalState<K>>();
 
         if (root != null) {
-            this.stack.push(new NodeTraversalState<K>(root, 0));
+            this.stack.push(new NodeTraversalState<K>(root, -1));
         }
     }
 
@@ -47,31 +47,32 @@ class BTreeIterator<K extends Comparable<? super K>> implements Iterator<K> {
 
         if (isLeaf) {
             // then yield all keys
-            if (currentState.idx < currentState.node.size - 1) {
+            if (currentState.idx < currentState.node.size - 2) {
                 this.stack.push(
                         new NodeTraversalState<K>(currentState.node, currentState.idx + 1)
                 );
             }
 
-            toReturn = currentState.node.keys[currentState.idx];
+            toReturn = currentState.node.keys[currentState.idx + 1];
         } else {
-            // prepare next
-            if (currentState.idx < currentState.node.size - 1) {
+            if (currentState.idx < 0) {
                 this.stack.push(
-                        new NodeTraversalState<K>(currentState.node, currentState.idx + 1)
+                        new NodeTraversalState<K>(currentState.node, 0)
                 );
-            }
-            this.stack.push(
-                    new NodeTraversalState<K>(currentState.node.children[currentState.idx], 0)
-            );
 
-            // are we looking at the first child?
-            if (currentState.idx == 0) {
-                // then immediately recurse
+                this.stack.push(
+                        new NodeTraversalState<K>(currentState.node.children[0], -1)
+                );
+
                 toReturn = next();
             } else {
+                // add right child
+                this.stack.push(
+                        new NodeTraversalState<K>(currentState.node.children[currentState.idx + 1], -1)
+                );
+
                 // yield the current key
-                toReturn = currentState.node.keys[currentState.idx - 1];
+                toReturn = currentState.node.keys[currentState.idx];
             }
         }
 

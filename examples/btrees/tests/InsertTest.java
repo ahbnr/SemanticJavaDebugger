@@ -40,7 +40,7 @@ public class InsertTest {
         System.out.println("PASSED.");
     }
 
-    private static void testMultiInsert() {
+    private static void testMultiInsert1() {
         var bTree = new BTree<Integer>();
         bTree.insert(4);
         bTree.insert(1);
@@ -48,13 +48,29 @@ public class InsertTest {
         bTree.insert(2);
         bTree.insert(5);
 
-        assertEquals("Multi Insert", Arrays.asList(1, 2, 3, 4, 5), bTree);
+        assertEquals("Multi Insert 1", Arrays.asList(1, 2, 3, 4, 5), bTree);
+
+        System.out.println("PASSED.");
+    }
+
+    private static void testMultiInsert2() {
+        var bTree = new BTree<Integer>();
+        bTree.insert(7);
+        bTree.insert(4);
+        bTree.insert(1);
+        bTree.insert(3);
+        bTree.insert(2);
+        bTree.insert(5);
+        bTree.insert(6);
+
+        assertEquals("Multi Insert 2", Arrays.asList(1, 2, 3, 4, 5, 6, 7), bTree);
 
         System.out.println("PASSED.");
     }
 
     public static void main(String[] args) {
         testSingleInsert();
-        testMultiInsert();
+        testMultiInsert1();
+        testMultiInsert2();
     }
 }
