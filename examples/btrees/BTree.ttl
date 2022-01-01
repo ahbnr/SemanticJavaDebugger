@@ -10,195 +10,55 @@
 java:hasElement a owl:ObjectProperty .
 java:SequenceElement a owl:Class .
 
-domain:NodeBase rdf:type owl:Class ;
-            owl:equivalentClass
-            [
-                a owl:Class ;
-                owl:intersectionOf (
-                    prog:examples.btrees.BTreeNode
-                    [
-                        rdfs:comment """Every node can have at most 2M children, where M is the order of the tree."""^^rdfs:Literal ;
-                        rdf:type owl:Restriction ;
-                        owl:onProperty prog:examples.btrees.BTreeNode.children ;
-                        owl:allValuesFrom [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty java:hasElement ;
-                            owl:maxQualifiedCardinality "4"^^xsd:nonNegativeInteger ;
-                            owl:onClass [
-                                a owl:Restriction ;
-                                owl:onProperty java:storesReference ;
-                                owl:allValuesFrom prog:examples.btrees.BTreeNode
-                            ]
-                        ]
-                    ]
-                )
-            ] .
-
-domain:IntermediateNode
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:intersectionOf (
-            domain:NodeBase
-            [
-                rdfs:comment """Every non-leaf, non-root node must have at least M children, where M is the order of the tree."""^^rdfs:Literal ;
-                rdf:type owl:Restriction ;
-                owl:onProperty prog:examples.btrees.BTreeNode.children ;
-                owl:allValuesFrom [
-                    rdf:type owl:Restriction ;
-                    owl:onProperty java:hasElement ;
-                    owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ;
-                    owl:onClass [
-                        a owl:Restriction ;
-                        owl:onProperty java:storesReference ;
-                        owl:allValuesFrom prog:examples.btrees.BTreeNode
-                    ]
-                ]
-            ]
-        )
-    ] .
-
-domain:Leaf a owl:Class ;
-            owl:equivalentClass [
-                a owl:Class ;
-                owl:intersectionOf (
-                    domain:NodeBase
-                    [
-                        a owl:Restriction ;
-                        owl:onProperty prog:examples.btrees.BTreeNode.children ;
-                        owl:allValuesFrom [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty java:hasElement ;
-                            owl:allValuesFrom [
-                                    a owl:Class ;
-                                    owl:intersectionOf (
-                                        prog:SequenceElement%3Cexamples.btrees.BTreeNode%3E
-                                        [
-                                            a owl:Restriction ;
-                                            owl:onProperty java:storesReference ;
-                                            owl:allValuesFrom [
-                                                a owl:Class ;
-                                                owl:oneOf ( java:null )
-                                            ]
-                                        ]
-                                    )
-                            ]
-                        ]
-                    ]
-                )
-            ] .
-
-domain:rolifiedBTreeNode
-    a owl:ObjectProperty .
-
-prog:examples.btrees.BTreeNode owl:equivalentClass [
-        a owl:Restriction ;
-        owl:onProperty domain:rolifiedBTreeNode ;
-        owl:hasSelf "true"^^xsd:boolean
-    ] .
-
-domain:rolifiedInteger
-    a owl:ObjectProperty .
-
-prog:java.lang.Integer owl:equivalentClass [
-        a owl:Restriction ;
-        owl:onProperty domain:rolifiedInteger ;
-        owl:hasSelf "true"^^xsd:boolean
-    ] .
-
-domain:storesNonNullReference%3Cjava.lang.Integer%3E
-            a owl:ObjectProperty ;
-            owl:propertyChainAxiom (
-                prog:storesReference%3Cjava.lang.Integer%3E
-                domain:rolifiedInteger
-            ) .
-
-domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
-            a owl:ObjectProperty ;
-            owl:propertyChainAxiom (
-                prog:storesReference%3Cexamples.btrees.BTreeNode%3E
-                domain:rolifiedBTreeNode
-            ) .
-
-domain:hasChild # HermiT fails here because `domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E` is complex
+domain:hasNullableChild
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
         prog:examples.btrees.BTreeNode.children
-        prog:hasElement%3Cexamples.btrees.BTreeNode%3E
-        domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E
+        java:hasElement
+        java:storesReference
     ) .
 
-domain:hasKey # HermiT fails here because `domain:storesNonNullReference%3Cexamples.btrees.BTreeNode%3E` is complex
+domain:hasParent
+    a owl:ObjectProperty ;
+    owl:inverseOf domain:hasNullableChild .
+
+domain:hasCurrentNode
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
-        prog:examples.btrees.BTreeNode.keys
-        prog:hasElement%3Cjava.lang.Integer%3E
-        domain:storesNonNullReference%3Cjava.lang.Integer%3E
+        prog:examples.btrees.BTreeIterator.java.lang.Comparable_next%28%29.currentState
+        prog:examples.btrees.BTreeIterator%24NodeTraversalState.node
     ) .
 
-domain:isLeaf
+domain:currentNodeOf
+    a owl:ObjectProperty ;
+    owl:inverseOf domain:hasCurrentNode .
+
+domain:CurrentNode
     a owl:Class ;
     owl:equivalentClass [
         a owl:Restriction ;
-        owl:onProperty prog:examples.btrees.BTreeIterator.java.lang.Comparable_next%28%29.isLeaf ;
-        owl:hasValue "true"^^xsd:boolean
+        owl:onProperty domain:currentNodeOf ;
+        owl:someValuesFrom java:StackFrame
     ] .
 
-domain:isFrame0
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:oneOf ( run:frame0 )
-    ] .
-
-domain:FirstElement
+domain:ChildrenOfCurrentNode
     a owl:Class ;
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            java:SequenceElement
-            [ a owl:Restriction ;
-              owl:onProperty java:hasIndex ;
-              owl:hasValue "0"^^xsd:int ]
+            [
+                a owl:Restriction ;
+                owl:onProperty domain:hasParent ;
+                owl:someValuesFrom domain:CurrentNode
+            ]
+            [
+                a owl:Class ;
+                owl:complementOf [
+                    a owl:Class ;
+                    owl:oneOf ( java:null )
+                ]
+            ]
         )
-    ] .
-
-
-#
-# domain:rolifiedFirstElement
-#     a owl:ObjectProperty .
-#
-# domain:FirstElement owl:equivalentClass [
-#         a owl:Restriction ;
-#         owl:onProperty domain:rolifiedFirstElement ;
-#         owl:hasSelf "true"^^xsd:boolean
-#     ] .
-#
-# domain:hasFirstElement
-#     a owl:ObjectProperty ;
-#     owl:propertyChainAxiom (
-#         java:hasElement
-#         domain:rolifiedFirstElement
-#     ) .
-
-# domain:childOnTop
-#     a owl:Class ;
-#     owl:equivalentClass [
-#         a owl:Class ;
-#         owl:intersectionOf (
-#             [ a owl:Restriction ;
-#               owl:onProperty java:hasElement ;
-#               owl:someValuesFrom [
-#                 java:hasIndex "0"^^xsd:int ;
-#                 java:storesReference
-#               ]
-#             ]
-#         )
-#     ] .
-
-domain:ThisIteratorWithNonEmptyStack
-    a owl:Class ;
-    owl:equivalentClass [
     ] .
 
 domain:isLeaf
@@ -216,149 +76,60 @@ domain:isLeaf
         )
     ] .
 
-domain:postcondition
+domain:CurrentNodeIsLastElement
     a owl:Class ;
     owl:equivalentClass [
-        a owl:Class ;
-        owl:unionOf (
-            [
-                a owl:Class ;
-                owl:intersectionOf (
-                    [ a owl:Class ;
-                      owl:oneOf ( run:frame0 )
-                    ]
-                    [ a owl:Restriction ;
-                      owl:onProperty prog:examples.btrees.BTreeIterator.java.lang.Comparable_next%28%29.isLeaf ;
-                      owl:hasValue "true"^^xsd:boolean
-                    ]
-                )
-            ]
-            [
-                a owl:Class ;
-                owl:intersectionOf (
-                    [
-                        a owl:Class ;
-                        owl:oneOf ( run:frame0 )
-                    ]
-                    [
-                        a owl:Restriction ;
-                        owl:onProperty java:this ;
-                        owl:someValuesFrom [
-                            a owl:Restriction ;
-                            owl:onProperty prog:examples.btrees.BTreeIterator.stack ;
-                            owl:someValuesFrom [
-                                a owl:Restriction ;
-                                owl:onProperty java:hasElement ;
-                                owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-                                owl:onClass java:SequenceElement
-                            ]
-                        ]
-                    ]
-                )
-            ]
-        )
-    ] .
-
-# These restrictions of HermiT should trigger a linter!
-#
-# domain:hasChild # HermiT can do this, since none of the properties are complex
-#     a owl:ObjectProperty ;
-#     owl:propertyChainAxiom (
-#         prog:examples.btrees.BTreeNode.children
-#         prog:hasElement%3Cexamples.btrees.BTreeNode%3E
-#         prog:storesReference%3Cexamples.btrees.BTreeNode%3E
-#     ) .
-
-domain:hasParent
-    a owl:ObjectProperty ;
-    owl:inverseOf domain:hasChild .
-
-domain:HasParent
-    a owl:Class ;
-    owl:complementOf [
         a owl:Restriction ;
-        owl:onProperty domain:hasParent ;
-        owl:someValuesFrom prog:examples.btrees.BTreeNode
+        owl:onProperty java:hasElement ;
+        owl:someValuesFrom [
+            a owl:Class ;
+            owl:intersectionOf (
+                java:SequenceElement
+                [
+                    a owl:Restriction ;
+                    owl:onProperty java:hasSuccessor ;
+                    owl:cardinality "0"^^xsd:nonNegativeInteger
+                ]
+                [
+                    a owl:Restriction ;
+                    owl:onProperty java:storesReference ;
+                    owl:someValuesFrom [
+                        a owl:Restriction ;
+                        owl:onProperty prog:examples.btrees.BTreeIterator%24NodeTraversalState.node ;
+                        owl:someValuesFrom domain:ChildrenOfCurrentNode
+                    ]
+                ]
+            )
+        ]
     ] .
 
-domain:Root
+domain:CurrentStackWithChildAsTop
     a owl:Class ;
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
             [
                 a owl:Class ;
-                owl:complementOf # Even if it can infer the below, Openllett fails here
-                [ # Openllet fails to infer this class iff domain:hasChild is complex
+                owl:oneOf ( run:frame0 )
+            ]
+            [
+                a owl:Restriction ;
+                owl:onProperty java:this ;
+                owl:someValuesFrom [
                     a owl:Restriction ;
-                    owl:onProperty domain:hasParent ;
-                    owl:someValuesFrom prog:examples.btrees.BTreeNode
+                    owl:onProperty prog:examples.btrees.BTreeIterator.stack ;
+                    owl:someValuesFrom domain:CurrentNodeIsLastElement
                 ]
             ]
         )
     ] .
 
-# domain:Root
-#     a owl:Class ;
-#     owl:intersectionOf (
-#         owl:disjointUnionOf (
-#             domain:Leaf
-#             [
-#                 a owl:Class ;
-#                 owl:intersectionOf (
-#                     domain:NodeBase
-#                     [
-#                         rdfs:comment """Every non-leaf root node has at least two children."""^^rdfs:Literal ;
-#                         rdf:type owl:Restriction ;
-#                         owl:onProperty prog:examples.btrees.BTreeNode.children ;
-#                         owl:allValuesFrom [
-#                             rdf:type owl:Restriction ;
-#                             owl:onProperty java:hasElement ;
-#                             owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ;
-#                             owl:onClass [
-#                                 a owl:Restriction ;
-#                                 owl:onProperty java:storesReference ;
-#                                 owl:allValuesFrom prog:examples.btrees.BTreeNode
-#                             ]
-#                         ]
-#                     ]
-#                 )
-#             ]
-#         )
-#         [
-#
-#         ]
-#     ) .
-
-# owl:Nothing owl:equivalentClass [ rdf:type owl:Restriction ;
-#                                   owl:onProperty prog:examples.btrees.BTreeNode.children ;
-#                                   owl:someValuesFrom domain:Root
-#                                 ] .
-
-#[ rdf:type owl:Axiom ;
-#   owl:annotatedSource [ rdf:type owl:Restriction ;
-#                         owl:onProperty prog:examples.btrees.BTreeNode.children ;
-#                         owl:someValuesFrom [
-#                            a owl:Restriction ;
-#                            owl:onProperty java:hasElement ;
-#                            owl:someValuesFrom [
-#                                a owl:Restriction ;
-#                                owl:onProperty java:storesReference ;
-#                                owl:someValuesFrom domain:Root
-#                            ]
-#                         ];
-#                         owl:equivalentClass owl:Nothing
-#                       ] ;
-#   owl:annotatedProperty owl:equivalentClass ;
-#   owl:annotatedTarget owl:Nothing ;
-#   rdfs:comment "BTree roots are not children of any other nodes"^^rdfs:Literal
-# ] .
-
-# domain:Node
-#     a owl:Class ;
-#     owl:unionOf (
-#         domain:Root
-#         domain:IntermediateNode
-#         domain:Leaf
-#     ) .
+domain:postcondition
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:unionOf (
+            domain:isLeaf
+            domain:CurrentStackWithChildAsTop
+        )
+    ] .

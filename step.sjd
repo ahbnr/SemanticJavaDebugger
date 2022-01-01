@@ -1,6 +1,3 @@
-stop at examples.btrees.BTreeIterator:83
-stop at examples.btrees.BTreeIterator:67
-domain examples/btrees/BTree.ttl
-run examples.btrees.tests.InsertTest
+cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys --deep=examples.btrees.BTreeIterator.stack
 owlclass domain:postcondition
