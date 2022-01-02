@@ -61,7 +61,7 @@ domain:ChildrenOfCurrentNode
         )
     ] .
 
-domain:isLeaf
+domain:IsLeaf
     a owl:Class ;
     owl:equivalentClass [
         a owl:Class ;
@@ -76,7 +76,7 @@ domain:isLeaf
         )
     ] .
 
-domain:CurrentNodeIsLastElement
+domain:ChildIsLastElement
     a owl:Class ;
     owl:equivalentClass [
         a owl:Restriction ;
@@ -103,7 +103,7 @@ domain:CurrentNodeIsLastElement
         ]
     ] .
 
-domain:CurrentStackWithChildAsTop
+domain:StackTopIsChild
     a owl:Class ;
     owl:equivalentClass [
         a owl:Class ;
@@ -118,18 +118,18 @@ domain:CurrentStackWithChildAsTop
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty prog:examples.btrees.BTreeIterator.stack ;
-                    owl:someValuesFrom domain:CurrentNodeIsLastElement
+                    owl:someValuesFrom domain:ChildIsLastElement
                 ]
             ]
         )
     ] .
 
-domain:postcondition
+domain:PostCondition
     a owl:Class ;
     owl:equivalentClass [
         a owl:Class ;
         owl:unionOf (
-            domain:isLeaf
-            domain:CurrentStackWithChildAsTop
+            domain:IsLeaf
+            domain:StackTopIsChild
         )
     ] .

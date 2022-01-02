@@ -1,6 +1,6 @@
 stop <<EOF
     at examples.btrees.BTreeIterator:83
-    --if domain:postcondition
+    --if domain:PostCondition
     --limit-sdk
     --deep=examples.btrees.BTreeNode.children
     --deep=examples.btrees.BTreeNode.keys
@@ -9,7 +9,7 @@ EOF
 
 stop <<EOF
     at examples.btrees.BTreeIterator:67
-    --if domain:postcondition
+    --if domain:PostCondition
     --limit-sdk
     --deep=examples.btrees.BTreeNode.children
     --deep=examples.btrees.BTreeNode.keys

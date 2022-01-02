@@ -69,8 +69,8 @@ public class InsertTest {
     }
 
     public static void main(String[] args) {
-        testSingleInsert();
-        testMultiInsert1();
+        // testSingleInsert();
+        // testMultiInsert1();
         testMultiInsert2();
     }
 }
