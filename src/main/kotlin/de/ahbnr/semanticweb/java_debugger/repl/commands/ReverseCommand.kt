@@ -5,7 +5,9 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.sun.jdi.ArrayReference
+import com.sun.jdi.ArrayType
 import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
@@ -61,7 +63,7 @@ class ReverseCommand(
             logger.error("Can not obtain toString() method reference. This should never happen.")
         }
 
-        when (val mapping = inverseMapping.map(node, model)) {
+        when (val mapping = inverseMapping.map(node, model, knowledgeBase.buildParameters.limiter)) {
             is ObjectReference -> {
                 logger.log("Java Object: $mapping")
 
@@ -78,6 +80,24 @@ class ReverseCommand(
 
                     logger.log("")
                     logger.log("  Array contents: [${values}]")
+
+                    val doesArrayStoreReferences =
+                        (mapping.referenceType() as? ArrayType)?.componentType() is ReferenceType
+                    if (doesArrayStoreReferences) {
+                        val strings = mapping
+                            .values
+                            .joinToString(", ") {
+                                if (it != null) {
+                                    (it as ObjectReference).invokeMethod(
+                                        jvmState.pausedThread,
+                                        toStringMethod,
+                                        emptyList(),
+                                        0
+                                    ).toString()
+                                } else "null"
+                            }
+                        logger.log("  As strings: [${strings}]")
+                    }
                 } else if (toStringMethod != null) {
                     // Be aware, that this invalidates any frame references for the paused thread
                     // and that they have to be retrieved again via frame(i)
