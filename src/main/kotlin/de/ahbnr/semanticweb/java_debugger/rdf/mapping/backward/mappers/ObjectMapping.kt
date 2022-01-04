@@ -3,6 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.backward.mappers
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmState
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import org.apache.jena.rdf.model.Literal
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.RDFNode
@@ -32,7 +33,13 @@ object ObjectMapping {
     }
 
 
-    fun map(node: RDFNode, model: Model, ns: Namespaces, jvmState: JvmState): ObjectReference? {
+    fun map(
+        node: RDFNode,
+        model: Model,
+        ns: Namespaces,
+        jvmState: JvmState,
+        limiter: MappingLimiter
+    ): ObjectReference? {
         val resource = node as? Resource ?: return null
 
         val context = MappingContext(resource, model, ns)
@@ -42,6 +49,6 @@ object ObjectMapping {
 
         val objectId = context.getObjectId() ?: return null
 
-        return jvmState.getObjectById(objectId)
+        return jvmState.getObjectById(objectId, limiter)
     }
 }

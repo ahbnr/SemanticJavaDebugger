@@ -8,10 +8,7 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.ParserException
-import org.apache.jena.riot.Lang
-import org.apache.jena.riot.RDFParser
-import org.apache.jena.riot.system.ErrorHandler
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TurtleReader
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -38,29 +35,8 @@ class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
                 $triplesString
         """.trimIndent()
 
-        RDFParser
-            .source(triplesString.byteInputStream())
-            .lang(Lang.TURTLE)
-            .errorHandler(object : ErrorHandler {
-                private fun makeLogString(message: String, line: Long, col: Long): String =
-                    "At $line:$col: $message"
-
-                override fun error(message: String, line: Long, col: Long) {
-                    logger.error("Parser Error. ${makeLogString(message, line, col)}")
-                }
-
-                override fun fatal(message: String, line: Long, col: Long) {
-                    logger.error("FATAL Parser Error. ${makeLogString(message, line, col)}")
-                    throw ParserException()
-                }
-
-                override fun warning(message: String, line: Long, col: Long) {
-                    logger.error("Parser Warning: ${makeLogString(message, line, col)}")
-                }
-            })
-            .strict(true)
-            .checking(true)
-            .parse(knowledgeBase.ontology.asGraphModel())
+        val reader = TurtleReader(triplesString.byteInputStream())
+        reader.readInto(knowledgeBase.ontology.asGraphModel())
 
         ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.buildParameters.limiter, LinterMode.Normal)
     }

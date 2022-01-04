@@ -10,6 +10,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import spoon.Launcher
+import spoon.reflect.CtModel
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
@@ -25,7 +26,7 @@ class KnowledgeBaseBuilder(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    fun build(): KnowledgeBase? {
+    private fun buildSourceModel(): CtModel {
         val spoonLauncher = Launcher()
 
         if (sourcePath != null) {
@@ -37,9 +38,11 @@ class KnowledgeBaseBuilder(
         if (!quiet)
             logger.success("Source model created.")
 
-        val sourceModel = spoonLauncher.model
+        return spoonLauncher.model
+    }
 
-        val limiter = MappingLimiter(
+    private fun buildLimiter(): MappingLimiter =
+        MappingLimiter(
             excludedPackages = if (limitSdk)
                 setOf(
                     "sun",
@@ -55,6 +58,10 @@ class KnowledgeBaseBuilder(
             shallowPackages = setOf("java"),
             deepFieldsAndVariables = deepFieldsAndVariables
         )
+
+    fun build(): KnowledgeBase? {
+        val limiter = buildLimiter()
+        val sourceModel = buildSourceModel()
 
         val buildParameters = BuildParameters(
             jvmState = jvmState,
