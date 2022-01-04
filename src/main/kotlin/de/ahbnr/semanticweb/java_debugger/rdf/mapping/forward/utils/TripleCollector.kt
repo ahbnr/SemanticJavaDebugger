@@ -14,29 +14,42 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
 
     private val collectedTriples = mutableSetOf<Triple>()
 
-    sealed class CollectionObject {
-        data class RDFList(val objects: List<Node>) : CollectionObject() {
+    sealed class BlankNodeConstruct {
+        data class RDFList(val objects: List<Node>) : BlankNodeConstruct() {
             companion object {
                 fun fromURIs(objects: List<String>) =
                     RDFList(objects.map { NodeFactory.createURI(it) })
             }
         }
 
-        data class OWLUnion(val objects: List<Node>) : CollectionObject() {
+        data class OWLUnion(val objects: List<Node>) : BlankNodeConstruct() {
             companion object {
                 fun fromURIs(objects: List<String>) =
                     OWLUnion(objects.map { NodeFactory.createURI(it) })
             }
         }
 
-        data class OWLOneOf(val objects: List<Node>) : CollectionObject() {
+        data class OWLOneOf(val objects: List<Node>) : BlankNodeConstruct() {
             companion object {
                 fun fromURIs(objects: List<String>) =
                     OWLOneOf(objects.map { NodeFactory.createURI(it) })
             }
         }
 
-        data class OWLSome(val propertyURI: String, val some: Node) : CollectionObject()
+        class OWLSome : BlankNodeConstruct {
+            val property: Node
+            val some: Node
+
+            constructor(property: Node, some: Node) {
+                this.property = property
+                this.some = some
+            }
+
+            constructor(propertyUri: String, some: Node) {
+                this.property = NodeFactory.createURI(propertyUri)
+                this.some = some
+            }
+        }
 
         sealed class CardinalityType {
             data class Exactly(val value: Int) : CardinalityType()
@@ -46,7 +59,11 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             val onPropertyUri: String,
             val onClassUri: String,
             val cardinality: CardinalityType
-        ) : CollectionObject()
+        ) : BlankNodeConstruct()
+
+        class OWLInverseProperty(
+            val basePropertyUri: String
+        ) : BlankNodeConstruct()
     }
 
     fun addStatement(subject: Node, predicate: Node, `object`: Node) {
@@ -89,22 +106,23 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         )
     }
 
-    fun addCollection(collectionObject: CollectionObject): Node =
-        when (collectionObject) {
-            is CollectionObject.RDFList -> addListStatements(
-                collectionObject.objects
+    fun addConstruct(blankNodeConstruct: BlankNodeConstruct): Node =
+        when (blankNodeConstruct) {
+            is BlankNodeConstruct.RDFList -> addListStatements(
+                blankNodeConstruct.objects
             )
-            is CollectionObject.OWLUnion -> addUnionStatements(
-                collectionObject.objects
+            is BlankNodeConstruct.OWLUnion -> addUnionStatements(
+                blankNodeConstruct.objects
             )
-            is CollectionObject.OWLOneOf -> addOneOfStatements(
-                collectionObject.objects
+            is BlankNodeConstruct.OWLOneOf -> addOneOfStatements(
+                blankNodeConstruct.objects
             )
-            is CollectionObject.OWLSome -> addSomeRestriction(collectionObject.propertyURI, collectionObject.some)
-            is CollectionObject.OWLCardinalityRestriction -> addCardinalityRestriction(collectionObject)
+            is BlankNodeConstruct.OWLSome -> addSomeRestriction(blankNodeConstruct)
+            is BlankNodeConstruct.OWLCardinalityRestriction -> addCardinalityRestriction(blankNodeConstruct)
+            is BlankNodeConstruct.OWLInverseProperty -> addInverseProperty(blankNodeConstruct)
         }
 
-    private fun addCardinalityRestriction(cardinalityRestriction: CollectionObject.OWLCardinalityRestriction): Node {
+    private fun addCardinalityRestriction(cardinalityRestriction: BlankNodeConstruct.OWLCardinalityRestriction): Node {
         val restrictionNode = NodeFactory.createBlankNode()
 
         addStatement(
@@ -126,7 +144,7 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         )
 
         when (cardinalityRestriction.cardinality) {
-            is CollectionObject.CardinalityType.Exactly ->
+            is BlankNodeConstruct.CardinalityType.Exactly ->
                 addStatement(
                     restrictionNode,
                     URIs.owl.cardinality,
@@ -140,7 +158,25 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         return restrictionNode
     }
 
-    private fun addSomeRestriction(property: String, some: Node): Node {
+    private fun addInverseProperty(inversePropertyConstruct: BlankNodeConstruct.OWLInverseProperty): Node {
+        val blankNode = NodeFactory.createBlankNode()
+
+        addStatement(
+            blankNode,
+            URIs.rdf.type,
+            URIs.owl.ObjectProperty
+        )
+
+        addStatement(
+            blankNode,
+            URIs.owl.inverseOf,
+            inversePropertyConstruct.basePropertyUri
+        )
+
+        return blankNode
+    }
+
+    private fun addSomeRestriction(owlSome: BlankNodeConstruct.OWLSome): Node {
         val restrictionNode = NodeFactory.createBlankNode()
 
         addStatement(
@@ -152,13 +188,13 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
         addStatement(
             restrictionNode,
             URIs.owl.onProperty,
-            property
+            owlSome.property
         )
 
         addStatement(
             restrictionNode,
             URIs.owl.someValuesFrom,
-            some
+            owlSome.some
         )
 
         return restrictionNode

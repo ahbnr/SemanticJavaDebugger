@@ -7,13 +7,13 @@ fun addReferenceOrNullClass(referenceTypeURI: String, tripleCollector: TripleCol
 // every reference can either be an instance or null:
 // fieldTypeSubject ∪ { java:null }
     // [ owl:unionOf ( fieldTypeSubject [ owl:oneOf ( java:null ) ] ) ] .
-    tripleCollector.addCollection(
-        TripleCollector.CollectionObject.OWLUnion(
+    tripleCollector.addConstruct(
+        TripleCollector.BlankNodeConstruct.OWLUnion(
             listOf(
                 NodeFactory.createURI(referenceTypeURI),
 
-                tripleCollector.addCollection(
-                    TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
+                tripleCollector.addConstruct(
+                    TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(listOf(URIs.java.`null`))
                 )
             )
         )

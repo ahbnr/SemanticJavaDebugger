@@ -133,8 +133,8 @@ class ClassMapper : IMapper {
                                 tripleCollector.addStatement(
                                     classURI,
                                     URIs.rdfs.subClassOf,
-                                    tripleCollector.addCollection(
-                                        TripleCollector.CollectionObject.OWLSome(
+                                    tripleCollector.addConstruct(
+                                        TripleCollector.BlankNodeConstruct.OWLSome(
                                             fieldURI,
                                             addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
                                         )
@@ -166,8 +166,8 @@ class ClassMapper : IMapper {
                                 tripleCollector.addStatement(
                                     classURI,
                                     URIs.rdfs.subClassOf,
-                                    tripleCollector.addCollection(
-                                        TripleCollector.CollectionObject.OWLSome(
+                                    tripleCollector.addConstruct(
+                                        TripleCollector.BlankNodeConstruct.OWLSome(
                                             fieldURI,
                                             NodeFactory.createURI(datatypeURI)
                                         )
@@ -209,7 +209,13 @@ class ClassMapper : IMapper {
                         fieldURI,
                         URIs.rdfs.domain,
                         // Punning: We treat the class as an individual
-                        tripleCollector.addCollection(TripleCollector.CollectionObject.OWLOneOf.fromURIs(listOf(classURI)))
+                        tripleCollector.addConstruct(
+                            TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(
+                                listOf(
+                                    classURI
+                                )
+                            )
+                        )
                     )
                 } else {
                     // an instance field is a thing defined for every object instance of the class concept via rdfs:domain

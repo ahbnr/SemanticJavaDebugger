@@ -43,8 +43,10 @@ class OntURIs(val ns: Namespaces) {
         val InverseFunctionalProperty = ns.owl + "InverseFunctionalProperty"
         val cardinality = ns.owl + "cardinality"
         val NamedIndividual = ns.owl + "NamedIndividual"
+        val equivalentClass = ns.owl + "equivalentClass"
         val unionOf = ns.owl + "unionOf"
         val oneOf = ns.owl + "oneOf"
+        val inverseOf = ns.owl + "inverseOf"
 
         val annotatedTarget = ns.owl + "annotatedTarget"
         val annotatedSource = ns.owl + "annotatedSource"

@@ -205,8 +205,8 @@ class ObjectMapper : IMapper {
                         tripleCollector.addStatement(
                             typedSequenceElementURI,
                             URIs.rdfs.subClassOf,
-                            tripleCollector.addCollection(
-                                TripleCollector.CollectionObject.OWLSome(
+                            tripleCollector.addConstruct(
+                                TripleCollector.BlankNodeConstruct.OWLSome(
                                     typedStoresPrimitiveURI, NodeFactory.createURI(datatypeURI)
                                 )
                             )
@@ -257,8 +257,8 @@ class ObjectMapper : IMapper {
                         tripleCollector.addStatement(
                             typedSequenceElementURI,
                             URIs.rdfs.subClassOf,
-                            tripleCollector.addCollection(
-                                TripleCollector.CollectionObject.OWLSome(
+                            tripleCollector.addConstruct(
+                                TripleCollector.BlankNodeConstruct.OWLSome(
                                     typedStoresReferenceURI, addReferenceOrNullClass(referenceURI)
                                 )
                             )
@@ -283,11 +283,77 @@ class ObjectMapper : IMapper {
                 tripleCollector.addStatement(
                     containerURI,
                     URIs.rdf.type,
-                    tripleCollector.addCollection(
-                        TripleCollector.CollectionObject.OWLCardinalityRestriction(
+                    tripleCollector.addConstruct(
+                        TripleCollector.BlankNodeConstruct.OWLCardinalityRestriction(
                             onPropertyUri = URIs.java.hasElement,
                             onClassUri = URIs.java.SequenceElement,
-                            cardinality = TripleCollector.CollectionObject.CardinalityType.Exactly(cardinality)
+                            cardinality = TripleCollector.BlankNodeConstruct.CardinalityType.Exactly(cardinality)
+                        )
+                    )
+                )
+
+                // The following code closes range set of hasElement for this container object
+                //
+                // Otherwise, we will not be able to do universal queries a la `hasElement only (storesReference only {null})`
+                // Apparently reasoners (at least HermiT and Openllet) can not infer from the cardinality restriction
+                //   above, that the elements of the array are restricted to those being explicitly listed.
+                //
+                // This might be because we have no unique name assumption.
+                // I.e. the reasoner can not return a result for `hasElement only {elementX}` given the facts
+                //   someArray hasElement elementX
+                //   someArray a (hasElement exactly 1 SequenceElement)
+                // because there might be some elementY such that
+                //   someArray hasElement elementY
+                // this does not violate the cardinality restriction, because it could be that
+                //   elementY sameAs elementX
+                //
+                // Still, then `hasElement only {elementX}` can return someArray because
+                // it is the same as asking `hasElment only {elementY}`.
+                //
+                // Maybe this kind of reasoning is just too complex and not implemented?
+                //
+                // As a workaround, we close the range of hasElement for this particular object explicitly:
+                //
+                //   inverse hasElement {myContainer} EquivalentTo { ...elements...}
+                //
+                // In turtle format:
+                //   [
+                //     a owl:Class ;
+                //     owl:oneOf ( ..elements... ) ;
+                //     owl:equivalentClass [
+                //       a owl:Restriction ;
+                //       owl:onProperty [
+                //          a owl:ObjectProperty ;
+                //          owl:inverseOf java:hasElement
+                //       ] ;
+                //       owl:someValuesFrom [
+                //          a owl:Class ;
+                //          owl:oneOf ( myContainer )
+                //       ]
+                //     ]
+                //   ] .
+                tripleCollector.addStatement(
+                    tripleCollector.addConstruct(
+                        TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(
+                            components
+                                .indices
+                                .map { idx -> URIs.run.genSequenceElementInstanceURI(containerRef, idx) }
+                        )
+                    ),
+                    URIs.owl.equivalentClass,
+                    tripleCollector.addConstruct(
+                        TripleCollector.BlankNodeConstruct.OWLSome(
+                            // We can NOT use a named version of hasElement here.
+                            // It does not work.
+                            //  (Probably it will always be assumed to be different from the other inversions of hasElement)
+                            tripleCollector.addConstruct(
+                                TripleCollector.BlankNodeConstruct.OWLInverseProperty(URIs.java.hasElement)
+                            ),
+                            tripleCollector.addConstruct(
+                                TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(
+                                    listOf(containerURI)
+                                )
+                            )
                         )
                     )
                 )
@@ -340,11 +406,11 @@ class ObjectMapper : IMapper {
                         tripleCollector.addStatement(
                             elementInstanceURI,
                             URIs.rdf.type,
-                            tripleCollector.addCollection(
-                                TripleCollector.CollectionObject.OWLCardinalityRestriction(
+                            tripleCollector.addConstruct(
+                                TripleCollector.BlankNodeConstruct.OWLCardinalityRestriction(
                                     onPropertyUri = URIs.java.hasSuccessor,
                                     onClassUri = URIs.java.SequenceElement,
-                                    cardinality = TripleCollector.CollectionObject.CardinalityType.Exactly(0)
+                                    cardinality = TripleCollector.BlankNodeConstruct.CardinalityType.Exactly(0)
                                 )
                             )
                         )
