@@ -2,7 +2,7 @@ package de.ahbnr.semanticweb.java_debugger.debugging
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ThreadReference
-import de.ahbnr.semanticweb.java_debugger.debugging.utils.InternalJDIUtils
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 
 /**
  * Later, we might want to implement an abstract interface over the JVM state here
@@ -29,15 +29,13 @@ class JvmState(
      *   4. Maintain a HashMap from ObjectIDs to ObjectReferences for any Jena Model
      *   5. Append the ObjectReferences to Apache Jena Nodes / Statements (is that possible?)
      */
-    fun getObjectById(objectId: Long): ObjectReference? {
-        return InternalJDIUtils.objectReferenceFromId(pausedThread.virtualMachine(), objectId)
+    fun getObjectById(objectId: Long, limiter: MappingLimiter): ObjectReference? {
+        for (obj in pausedThread.virtualMachine().allClasses().asSequence().flatMap { it.instances(Long.MAX_VALUE) }) {
+            if (obj.uniqueID() == objectId) {
+                return obj
+            }
+        }
 
-        // for (obj in allObjects()) {
-        //     if (obj.uniqueID() == objectId) {
-        //         return obj
-        //     }
-        // }
-
-        // return null
+        return null
     }
 }
