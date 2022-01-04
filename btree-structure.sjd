@@ -1,0 +1,5 @@
+stop at examples.btrees.tests.InsertTest:88
+run examples.btrees.tests.InsertTest
+reasoner Openllet
+domain examples/btrees/BTreeStructure.ttl
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys --deep=examples.btrees.BTreeIterator.stack

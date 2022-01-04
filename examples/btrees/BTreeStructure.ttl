@@ -1,0 +1,121 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/BTrees#> .
+
+java:hasElement a owl:ObjectProperty .
+java:SequenceElement a owl:Class .
+
+domain:NotNull
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:complementOf [
+            a owl:Class ;
+            owl:oneOf ( java:null )
+        ]
+    ] .
+
+domain:hasKey
+    a owl:ObjectProperty ;
+    owl:propertyChainAxiom (
+        prog:examples.btrees.BTreeNode.keys
+        java:hasElement
+        java:storesReference
+    ) .
+
+domain:hasChild
+    a owl:ObjectProperty ;
+    owl:propertyChainAxiom (
+        prog:examples.btrees.BTreeNode.children
+        java:hasElement
+        java:storesReference
+    ) .
+
+domain:chainA
+    a owl:ObjectProperty ;
+    owl:propertyChainAxiom (
+        prog:examples.btrees.BTreeNode.children
+        java:hasElement
+    ) .
+
+domain:chainB
+    a owl:ObjectProperty ;
+    owl:propertyChainAxiom (
+        java:hasElement
+        java:storesReference
+    ) .
+
+domain:hasParent
+    a owl:ObjectProperty ;
+    rdfs:range prog:examples.btrees.BTreeNode ;
+    owl:inverseOf domain:hasChild .
+
+domain:Child
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Restriction ;
+                owl:onProperty domain:hasParent ;
+                owl:someValuesFrom prog:examples.btrees.BTreeNode
+            ]
+            # [
+            #     a owl:Restriction ;
+            #     owl:onProperty [ a owl:ObjectPropery ; owl:inverseOf prog:storesReference%3Cexamples.btrees.BTreeNode%3E ] ;
+            #     owl:someValuesFrom [
+            #         a owl:Restriction ;
+            #         owl:onProperty [ a owl:ObjectPropery ; owl:inverseOf prog:hasElement%3Cexamples.btrees.BTreeNode%3E ] ;
+            #         owl:someValuesFrom [
+            #             a owl:Restriction ;
+            #             owl:onProperty [ a owl:ObjectPropery ; owl:inverseOf prog:examples.btrees.BTreeNode.children ] ;
+            #             owl:someValuesFrom prog:examples.btrees.BTreeNode
+            #         ]
+            #     ]
+            # ]
+        )
+    ] .
+
+domain:Root
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Class ;
+                owl:complementOf domain:Child
+            ]
+        )
+    ] .
+
+domain:Leaf
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Restriction ;
+                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:allValuesFrom [
+                    a owl:Restriction ;
+                    owl:onProperty java:hasElement ;
+                    owl:allValuesFrom [
+                        a owl:Restriction ;
+                        owl:onProperty java:storesReference ;
+                        owl:allValuesFrom [
+                            a owl:Class ;
+                            owl:oneOf ( java:null )
+                        ]
+                    ]
+                ]
+            ]
+        )
+    ] .
