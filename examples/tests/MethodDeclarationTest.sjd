@@ -12,7 +12,7 @@ assert triples '<<EOF
     prog:examples.tests.MethodDeclarationTest java:hasMethod prog:examples.tests.MethodDeclarationTest.void_simpleMethod%28%29 .
 'EOF
 
-assert sparql-success '<<EOF
+assert sparql success '<<EOF
     SELECT ?declLocation ?defLocation
     WHERE {
         prog:examples.tests.MethodDeclarationTest.void_simpleMethod%28%29 java:isDeclaredAt ?declLocation ;
@@ -33,7 +33,7 @@ assert triples '<<EOF
                                               java:hasMethod prog:examples.tests.MethodDeclarationTest.void_overloadedMethod%28int%29 .
 'EOF
 
-assert sparql-success '<<EOF
+assert sparql success '<<EOF
     SELECT ?declLocation1 ?declLocation2
     WHERE {
         prog:examples.tests.MethodDeclarationTest.void_overloadedMethod%28%29 java:isDeclaredAt ?declLocation1 .

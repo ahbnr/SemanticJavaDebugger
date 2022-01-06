@@ -17,7 +17,7 @@ assert triples '<<EOF
 
 section "Are values present?"
 
-assert sparql-success '<<EOF
+assert sparql success '<<EOF
     SELECT ?frame
     WHERE {
         ?frame a java:StackFrame ;
@@ -36,7 +36,7 @@ assert triples '<<EOF
                                                   java:declaresVariable prog:examples.tests.MyClass.void_scopes%28%29.localVariable_1 .
 'EOF
 
-assert sparql-success '<<EOF
+assert sparql success '<<EOF
     SELECT ?frame
     WHERE {
         ?frame a java:StackFrame ;
@@ -63,7 +63,7 @@ assert triples '<<EOF
     prog:examples.tests.MyClass.void_removedVar%28%29.localVariable java:isAtLine "28"^^xsd:int .
 'EOF
 
-assert sparql-success '<<EOF
+assert sparql success '<<EOF
     SELECT ?frame
     WHERE {
         ?frame a java:StackFrame ;

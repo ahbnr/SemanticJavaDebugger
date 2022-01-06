@@ -10,7 +10,7 @@ checkkb --is-consistent
 section "SPARQL Queries"
 
 # See if list elements are present
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?first ?second ?third
     WHERE {
         run:frame0 prog:examples.tests.IterableTest.void_main%28java.lang.String%5B%5D%29.list [

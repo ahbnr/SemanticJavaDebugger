@@ -11,7 +11,7 @@ checkkb --is-consistent
 section "Checking Basic Type Hierarchy"
 
 # There is nothing that is an array and a class
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?classArray
     WHERE {
         ?classArray a java:Class ;
@@ -20,7 +20,7 @@ assert sparql-fail -- '<<EOF
 'EOF
 
 # java.lang.Object is a class
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?object
     WHERE {
         ?object a java:Class .
@@ -29,7 +29,7 @@ assert sparql-success -- '<<EOF
 'EOF
 
 # java.lang.Object[] is an array
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?objectArray
     WHERE {
         ?objectArray a java:Array .
@@ -38,7 +38,7 @@ assert sparql-success -- '<<EOF
 'EOF
 
 # java.lang.Object[] instances are always also java.lang.Object instances
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?objectArray
     WHERE {
         ?objectArray rdfs:subClassOf prog:java.lang.Object .
@@ -47,7 +47,7 @@ assert sparql-success -- '<<EOF
 'EOF
 
 # Classes are always sub-types of java.lang.Object
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?class
     WHERE {
         ?class a java:Class .
@@ -58,7 +58,7 @@ assert sparql-fail -- '<<EOF
 'EOF
 
 # Arrays are sub-types of java.lang.Object
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?array
     WHERE {
         ?array a java:Array .
@@ -69,7 +69,7 @@ assert sparql-fail -- '<<EOF
 'EOF
 
 # Array types are also java.lang.Cloneable and java.io.Serializable
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
@@ -81,7 +81,7 @@ assert sparql-fail -- '<<EOF
 'EOF
 
 # Primitive type arrays are always sub-types of java:PrimitiveArray
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
@@ -96,7 +96,7 @@ assert sparql-fail -- '<<EOF
 'EOF
 
 # Reference type Arrays are always sub-types of Object[] arrays
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
         ?arrayType a java:Array .
@@ -112,7 +112,7 @@ assert sparql-fail -- '<<EOF
 
 section "Checking Local Class Inheritance Hierarchy"
 
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?bot1
     WHERE {
         ?bot1 a prog:examples.tests.Bot1 ;
@@ -122,7 +122,7 @@ assert sparql-success -- '<<EOF
     }
 'EOF
 
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?bot1
     WHERE {
         ?bot1 a prog:examples.tests.Bot1 ;
@@ -130,7 +130,7 @@ assert sparql-fail -- '<<EOF
     }
 'EOF
 
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?mid
     WHERE {
         ?mid a prog:examples.tests.Mid ;
@@ -139,7 +139,7 @@ assert sparql-success -- '<<EOF
     }
 'EOF
 
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?mid
     WHERE {
         ?mid a prog:examples.tests.Mid ;
@@ -147,7 +147,7 @@ assert sparql-fail -- '<<EOF
     }
 'EOF
 
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?notMid
     WHERE {
         ?notMid java:hasMethod prog:examples.tests.Mid.void_midMethod%28%29 .
@@ -158,7 +158,7 @@ assert sparql-fail -- '<<EOF
 section "Checking Local Interface Hierarchy"
 
 # Check that mid interface has all the methods inherited from the top interface
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT  ?midInterface
     WHERE {
         FILTER (?midInterface = prog:examples.tests.MidInterface) .
@@ -175,7 +175,7 @@ assert sparql-success -- '<<EOF
 'EOF
 
 # Check that the Mid class which inherits from MidInterface also has them
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT  ?midClass
     WHERE {
         FILTER (?midClass = prog:examples.tests.Mid) .
@@ -195,7 +195,7 @@ assert sparql-success -- '<<EOF
 'EOF
 
 # All individuals of a top interface should also be individuals of java.lang.Object
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?topInterface1
     WHERE {
         FILTER (?topInterface1 = prog:examples.tests.TopInterface1)

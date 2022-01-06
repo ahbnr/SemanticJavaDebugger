@@ -20,7 +20,7 @@ assert triples -- '<<EOF
 
 section "Are the static values present?"
 
-assert sparql-success -- '<<EOF
+assert sparql success -- '<<EOF
     SELECT ?string
     WHERE {
         prog:examples.tests.MyClass prog:examples.tests.MyClass.staticIntField "42"^^xsd:int ;
@@ -31,7 +31,7 @@ assert sparql-success -- '<<EOF
 
 section "Object instances do not implement static fields"
 
-assert sparql-fail -- '<<EOF
+assert sparql fail -- '<<EOF
     SELECT ?something
     WHERE {
         [] a prog:examples.tests.MyClass ;

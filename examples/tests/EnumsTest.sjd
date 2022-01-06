@@ -16,7 +16,7 @@ assert triples '<<EOF
 
 section "Check for presence of instances"
 
-assert sparql-success '<<EOF
+assert sparql success '<<EOF
     SELECT ?enumAInstance
     WHERE {
         run:frame0 prog:examples.tests.EnumsTest.void_main%28java.lang.String%5B%5D%29.a ?enumAInstance .
