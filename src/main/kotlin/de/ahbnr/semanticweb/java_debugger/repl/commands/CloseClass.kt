@@ -20,7 +20,7 @@ class CloseClass : REPLCommand(name = "close"), KoinComponent {
 
     val owlClass: String by argument()
 
-    val useReasoner by option().flag(default = false)
+    val noReasoner by option().flag(default = false)
 
     override fun run() {
         val knowledgeBase = state.knowledgeBase
@@ -40,7 +40,7 @@ class CloseClass : REPLCommand(name = "close"), KoinComponent {
             throw ProgramResult(-1)
         }
 
-        val individuals = if (!useReasoner)
+        val individuals = if (noReasoner)
             knowledgeBase.ontology
                 .classAssertionAxioms(
                     `class`
@@ -60,19 +60,21 @@ class CloseClass : REPLCommand(name = "close"), KoinComponent {
             )
         )
 
-        if (individuals.isEmpty()) {
-            "No individuals found. Hence, $owlClass is now closed to contain no individuals."
-        } else {
-            logger.log("Closed $owlClass to be restricted to the individuals ${
-                individuals
-                    .joinToString(", ") {
-                        val iri = (it as? OWLNamedIndividual)?.iri?.iriString
-                        if (iri != null)
-                            knowledgeBase.resolvePrefixNameInUri(iri)
-                        else
-                            it.toString()
-                    }
-            }.")
-        }
+        logger.log(
+            if (individuals.isEmpty()) {
+                "No individuals found. Hence, $owlClass is now closed to contain no individuals."
+            } else {
+                "Closed $owlClass to be restricted to the individuals ${
+                    individuals
+                        .joinToString(", ") {
+                            val iri = (it as? OWLNamedIndividual)?.iri?.iriString
+                            if (iri != null)
+                                knowledgeBase.asPrefixNameUri(iri)
+                            else
+                                it.toString()
+                        }
+                }."
+            }
+        )
     }
 }
