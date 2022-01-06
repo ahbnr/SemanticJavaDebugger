@@ -16,9 +16,12 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.KnowledgeBaseBuilder
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlClassExpressionEvaluator
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlEvaluator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.isReadable
 
 class StopCommand(
     val graphGenerator: GraphGenerator,
@@ -38,14 +41,54 @@ class StopCommand(
         val ifOptions by IfOptions().cooccurring()
 
         override fun run() {
-            val split = classAndLine.split(':')
+            val split = classAndLine.split(Regex(":"), 2)
 
             if (split.size != 2) {
                 this@StopCommand.logger.error(getFormattedUsage())
                 throw ProgramResult(-1)
             }
 
-            val (className, lineNumber) = split
+            val (className, lineNumberOrSearchString) = split
+            val lineNumber = lineNumberOrSearchString
+                .toIntOrNull()
+                .let {
+                    if (it == null) {
+                        val errorContextExplanation = """
+                        A string was given instead of a line number.
+                        Will try to find the source file based on the class name and search its contents for the string.
+                        The line number of the first appearance of the string will then be used.
+                    """.trimIndent()
+
+                        // Try to deduce source location from class expression.
+                        // Search the given string in the source and set the line number to the location of the string in the source
+                        val potentialSourcePath = Path.of(
+                            "${className.replace('.', File.separatorChar)}.java"
+                        )
+                        if (!potentialSourcePath.isReadable()) {
+                            this@StopCommand.logger.debug(errorContextExplanation)
+                            this@StopCommand.logger.error("Could not find source file $potentialSourcePath, or it is not readable.")
+                            throw ProgramResult(-1)
+                        }
+
+                        val file = potentialSourcePath.toFile()
+                        file.useLines { lines ->
+                            val searchResult = lines
+                                .withIndex()
+                                .find { (_, line) -> line.contains(lineNumberOrSearchString) }
+
+                            if (searchResult == null) {
+                                this@StopCommand.logger.debug(errorContextExplanation)
+                                this@StopCommand.logger.error("Could not find search string \"$lineNumberOrSearchString\" in source file $potentialSourcePath.")
+                                throw ProgramResult(-1)
+                            }
+                            val foundLine = searchResult.index + 1
+
+                            this@StopCommand.logger.debug("Using line $foundLine of $potentialSourcePath where search string \"$lineNumberOrSearchString\" was found.")
+
+                            foundLine
+                        }
+                    } else it
+                }
 
             val callback = ifOptions?.let { optionGroup ->
                 fun(): Boolean {
@@ -78,13 +121,14 @@ class StopCommand(
                         return true
                     }
 
-                    val evaluator = OwlClassExpressionEvaluator(knowledgeBase, quiet = true)
-                    val instances = evaluator.evaluate(optionGroup.`if`)
+                    val evaluator = OwlEvaluator(knowledgeBase, quiet = true)
+                    val instances = evaluator.getInstances(optionGroup.`if`)
                     if (instances == null) {
                         this@StopCommand.logger.error("Could not evaluate class expression for conditional breakpoint.")
                         return true
                     }
 
+                    // FIXME: Using isSatisfiable method of reasoner might be faster
                     if (instances.isEmpty) {
                         this@StopCommand.logger.log("Class expression `${optionGroup.`if`}` returned no results.")
                         this@StopCommand.logger.log("")
