@@ -37,17 +37,15 @@ class ModelSanityChecker : KoinComponent {
         val model = ontology.asGraphModel()
 
         checkRdfTyping(model)
-        logger.log("")
         openllintOwlSyntaxChecks(model, mappingLimiter, linterMode == LinterMode.FullReport)
-        logger.log("")
         OWL2DLProfileViolationTest(ontology)
-        logger.log("")
         openllintOwlPatternChecks(ontology)
-        logger.log("")
     }
 
     fun checkRdfTyping(model: Model) {
         val typeProperty = model.getProperty(URIs.rdf.type)
+
+        var foundLint = false
 
         // We utilize the namespace definitions of Openllet here to check for typos etc in terms from well known namespaces like "owl:Restriction"
         model
@@ -60,9 +58,13 @@ class ModelSanityChecker : KoinComponent {
                     val builtinNamespace = BuiltinNamespace.find(node.nameSpace)
                     if (builtinNamespace != null) {
                         logger.warning("Warning: The term ${node.localName} is not known in namespace ${node.nameSpace}.")
+                        foundLint = true
                     }
                 }
             }
+
+        if (foundLint)
+            logger.log("")
 
         // TODO: There is potentially a lot more sanity checks we can do
         //  (Typos, all the stuff that openllet.jena.graph.loader.DefaultGraphLoader is checking, ...)
@@ -85,6 +87,8 @@ class ModelSanityChecker : KoinComponent {
             } else {
                 lints.log()
             }
+
+            logger.log("")
         }
     }
 
@@ -101,6 +105,7 @@ class ModelSanityChecker : KoinComponent {
                 logger.log(message)
             }
             logger.warning("Internal OWL2DL Profile linter error. This can indicate some anomaly in the input data.")
+            logger.log("")
             null
         } ?: return
 
@@ -120,7 +125,6 @@ class ModelSanityChecker : KoinComponent {
                 }
             }
         if (violations.isNotEmpty()) {
-
             for (violation in violations) {
                 logger.log(violation.toString())
                 logger.log("  Affected axiom: ${violation.axiom}")
@@ -159,6 +163,7 @@ class ModelSanityChecker : KoinComponent {
                     logger.log(message)
                 }
                 logger.warning("Internal Openllint pattern checker error. This can indicate some anomaly in the input data.")
+                logger.log("")
                 null
             } ?: return
 

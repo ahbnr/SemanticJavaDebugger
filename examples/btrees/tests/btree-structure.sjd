@@ -101,9 +101,6 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
-assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
-
-assert owl entails 'local:root Type: (prog:examples.btrees.BTreeNode and not domain:ConditionThree)'
-assert owl entails 'local:leaf Type: domain:ConditionThree'
+assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
 cont
