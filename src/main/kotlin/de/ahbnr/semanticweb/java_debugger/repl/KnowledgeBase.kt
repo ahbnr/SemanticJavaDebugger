@@ -138,6 +138,7 @@ class KnowledgeBase(
             "java" to URIs.ns.java,
             "prog" to URIs.ns.prog,
             "run" to URIs.ns.run,
+            "local" to URIs.ns.local,
         )
 
         val domainURI = ontology.asGraphModel().getNsPrefixURI("domain")

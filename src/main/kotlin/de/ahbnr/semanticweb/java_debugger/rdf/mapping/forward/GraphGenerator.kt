@@ -38,6 +38,7 @@ class GraphGenerator(
 
     private fun mapProgramState(buildParameters: BuildParameters, model: Model) {
         model.setNsPrefix("run", ns.run)
+        model.setNsPrefix("local", ns.local)
 
         for (mapper in mappers) {
             mapper.extendModel(buildParameters, model)

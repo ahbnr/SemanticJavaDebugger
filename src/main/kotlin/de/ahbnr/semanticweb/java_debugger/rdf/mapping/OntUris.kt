@@ -31,6 +31,8 @@ class OntURIs(val ns: Namespaces) {
     val rdfs = RdfsURIs()
 
     inner class OwlURIs {
+        val Nothing = ns.owl + "Nothing"
+
         val Restriction = ns.owl + "Restriction"
         val onProperty = ns.owl + "onProperty"
         val onClass = ns.owl + "onClass"
@@ -52,6 +54,8 @@ class OntURIs(val ns: Namespaces) {
         val annotatedSource = ns.owl + "annotatedSource"
 
         val maxQualifiedCardinality = ns.owl + "maxQualifiedCardinality"
+
+        val sameAs = ns.owl + "sameAs"
     }
 
     val owl = OwlURIs()
@@ -190,6 +194,14 @@ class OntURIs(val ns: Namespaces) {
 
     val run = RunURIs()
 
+    inner class LocalURIs {
+        val `this` = ns.local + "this"
+
+        fun genLocalVariableURI(variable: LocalVariableInfo): String =
+            "${ns.local}${variable.id}"
+    }
+
+    val local = LocalURIs()
 
     /**
     /**
@@ -200,6 +212,7 @@ class OntURIs(val ns: Namespaces) {
      *
      * This method will properly encode them.
     */
+     *
     fun typeNameToURIFragment(className: String): String {
     /**
      * The grammar for a fragment is:

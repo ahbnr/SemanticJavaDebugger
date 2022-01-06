@@ -36,6 +36,7 @@ class StackMapper : IMapper {
             val tripleCollector = TripleCollector(triplePattern)
 
             fun addLocalVariable(
+                frameDepth: Int,
                 stackFrameURI: String,
                 variable: LocalVariableInfo,
                 value: Value?
@@ -50,6 +51,22 @@ class StackMapper : IMapper {
                         URIs.prog.genVariableDeclarationURI(variable),
                         valueObject
                     )
+
+                    // The values of the current stackframe get special, easily accessible names
+                    if (frameDepth == 0) {
+                        val localVarURI = URIs.local.genLocalVariableURI(variable)
+                        tripleCollector.addStatement(
+                            localVarURI,
+                            URIs.rdf.type,
+                            URIs.owl.NamedIndividual
+                        )
+
+                        tripleCollector.addStatement(
+                            localVarURI,
+                            URIs.owl.sameAs,
+                            valueObject
+                        )
+                    }
                 }
             }
 
@@ -83,6 +100,7 @@ class StackMapper : IMapper {
                         }
 
                         addLocalVariable(
+                            frameDepth,
                             frameSubject,
                             variableInfo,
                             value
@@ -130,6 +148,21 @@ class StackMapper : IMapper {
                             URIs.java.`this`,
                             thisObjectNode
                         )
+
+                        // For the current frame, we create a quick alias for the this object
+                        if (frameDepth == 0) {
+                            tripleCollector.addStatement(
+                                URIs.local.`this`,
+                                URIs.rdf.type,
+                                URIs.owl.NamedIndividual
+                            )
+
+                            tripleCollector.addStatement(
+                                URIs.local.`this`,
+                                URIs.owl.sameAs,
+                                thisObjectNode
+                            )
+                        }
                     } else {
                         logger.error("Could not find `this` object for frame. This should never happen.")
                     }

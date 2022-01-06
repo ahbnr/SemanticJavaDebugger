@@ -41,7 +41,7 @@ class StatsCommand(
                         if (it.`object`.isURI) yield(it.`object`.uri)
                     }
                 }
-                .filter { it.startsWith(URIs.ns.prog) || it.startsWith(URIs.ns.run) }
+                .filter { it.startsWith(URIs.ns.prog) || it.startsWith(URIs.ns.run) || it.startsWith(URIs.ns.local) }
                 .toSet()
                 .size
             logger.log("Number of prog: and run: URIs generated: $numGeneratedUris")
