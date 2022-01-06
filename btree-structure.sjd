@@ -1,5 +1,109 @@
-stop at examples.btrees.tests.InsertTest:88
-run examples.btrees.tests.InsertTest
-reasoner Openllet
+reasoner HermiT
 domain examples/btrees/BTreeStructure.ttl
-buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys --deep=examples.btrees.BTreeIterator.stack
+
+section "Node Types"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: NodeTypeTests'
+run examples.btrees.tests.StructureTest
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close domain:Child
+assert owl entails "local:root Type: domain:Root"
+assert owl entailsNot "local:root Type: domain:Child"
+assert owl entailsNot "local:root Type: domain:Leaf"
+
+assert owl entails "local:leaf Type: domain:Leaf"
+assert owl entails "local:leaf Type: domain:Child"
+assert owl entailsNot "local:leaf Type: domain:Root"
+
+assert owl entails "local:middle Type: (not domain:Root and not domain:Leaf)"
+assert owl entails "local:middle Type: domain:Child"
+
+
+
+section "Condition One"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionOneSuccess'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionOneError'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
+
+
+
+section "Condition Two"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionTwoSuccess'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionTwoError'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
+
+assert owl entails 'local:root Type: domain:ConditionTwo'
+assert owl entails 'local:leftMiddle Type: (prog:examples.btrees.BTreeNode and not domain:ConditionTwo)'
+
+
+
+section "Condition Three"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionThreeSuccess'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionThreeError'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+
+assert owl entails 'local:root Type: (prog:examples.btrees.BTreeNode and not domain:ConditionThree)'
+assert owl entails 'local:leaf Type: domain:ConditionThree'
+
+
+
+section "Valid Node Condition"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ValidNodeConditionSuccess'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ValidNodeConditionError'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+
+assert owl entails 'local:root Type: (prog:examples.btrees.BTreeNode and not domain:ConditionThree)'
+assert owl entails 'local:leaf Type: domain:ConditionThree'
+
+cont

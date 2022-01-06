@@ -3,17 +3,18 @@ package examples.btrees;
 import java.lang.SuppressWarnings;
 import java.lang.reflect.Array;
 
-class BTreeNode<K extends Comparable<? super K>> {
+// Everything is public to make tests easier
+public class BTreeNode<K extends Comparable<? super K>> {
 
     @SuppressWarnings("unchecked")
-    BTreeNode(Class clazz) {
+    public BTreeNode(Class clazz) {
         this.keys = (K[]) Array.newInstance(clazz, 2 * BTree.order - 1);
         this.children = (BTreeNode<K>[]) Array.newInstance(this.getClass(), 2 * BTree.order);
     }
 
-    K[] keys;
-    BTreeNode<K>[] children;
+    public K[] keys;
+    public BTreeNode<K>[] children;
 
     // number of keys, number of children is this size + 1
-    int size = 0;
+    public int size = 0;
 }
