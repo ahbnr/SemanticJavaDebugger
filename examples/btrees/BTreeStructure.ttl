@@ -10,16 +10,6 @@
 java:hasElement a owl:ObjectProperty .
 java:SequenceElement a owl:Class .
 
-domain:NotNull
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:complementOf [
-            a owl:Class ;
-            owl:oneOf ( java:null )
-        ]
-    ] .
-
 domain:hasKey
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
@@ -32,20 +22,6 @@ domain:hasChild
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
         prog:examples.btrees.BTreeNode.children
-        java:hasElement
-        java:storesReference
-    ) .
-
-domain:chainA
-    a owl:ObjectProperty ;
-    owl:propertyChainAxiom (
-        prog:examples.btrees.BTreeNode.children
-        java:hasElement
-    ) .
-
-domain:chainB
-    a owl:ObjectProperty ;
-    owl:propertyChainAxiom (
         java:hasElement
         java:storesReference
     ) .
@@ -66,24 +42,12 @@ domain:Child
                 owl:onProperty domain:hasParent ;
                 owl:someValuesFrom prog:examples.btrees.BTreeNode
             ]
-            # [
-            #     a owl:Restriction ;
-            #     owl:onProperty [ a owl:ObjectPropery ; owl:inverseOf prog:storesReference%3Cexamples.btrees.BTreeNode%3E ] ;
-            #     owl:someValuesFrom [
-            #         a owl:Restriction ;
-            #         owl:onProperty [ a owl:ObjectPropery ; owl:inverseOf prog:hasElement%3Cexamples.btrees.BTreeNode%3E ] ;
-            #         owl:someValuesFrom [
-            #             a owl:Restriction ;
-            #             owl:onProperty [ a owl:ObjectPropery ; owl:inverseOf prog:examples.btrees.BTreeNode.children ] ;
-            #             owl:someValuesFrom prog:examples.btrees.BTreeNode
-            #         ]
-            #     ]
-            # ]
         )
     ] .
 
 domain:Root
     a owl:Class ;
+    # A root node is a node that is not a child of any other node
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
@@ -117,5 +81,179 @@ domain:Leaf
                     ]
                 ]
             ]
+        )
+    ] .
+
+domain:NodeWithTwoChildren
+    # Restriction on complex property hasChild does not work with reasoners
+    # we have to do it stepwise
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Restriction ;
+                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:someValuesFrom [
+                    a owl:Restriction ;
+                    owl:onProperty java:hasElement ;
+                    owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                    owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty java:storesReference ;
+                        owl:someValuesFrom prog:examples.btrees.BTreeNode
+                    ]
+                ]
+            ]
+        )
+    ] .
+
+domain:HasMChildren
+    # Node that has M children where M is the order of the tree
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Restriction ;
+                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:someValuesFrom [
+                    a owl:Restriction ;
+                    owl:onProperty java:hasElement ;
+                    owl:minQualifiedCardinality "2"^^xsd:nonNegativeInteger ;
+                    owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty java:storesReference ;
+                        owl:someValuesFrom prog:examples.btrees.BTreeNode
+                    ]
+                ]
+            ]
+        )
+    ] .
+
+# There are not more than 2*M children in a B-Tree node where M is the order of the tree
+domain:ConditionOne
+    a owl:Class ;
+    # We have to model this stepwise, since we can not count complex properties ?
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Restriction ;
+                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:someValuesFrom [
+                    a owl:Restriction ;
+                    owl:onProperty java:hasElement ;
+                    owl:maxQualifiedCardinality "4"^^xsd:nonNegativeInteger ;
+                    owl:onClass [
+                        a owl:Restriction ;
+                        owl:onProperty java:storesReference ;
+                        owl:someValuesFrom prog:examples.btrees.BTreeNode
+                    ]
+                ]
+            ]
+        )
+    ] .
+
+# If a node is not a leaf and not root, it has at least M children, where M is the order of the tree
+# => Either a node is a leaf, or it is root, or it has at least M children
+domain:ConditionTwo
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:unionOf (
+            domain:Leaf
+            domain:Root
+            domain:HasMChildren
+        )
+    ] .
+
+# A root node is either a leaf or has at least two children
+domain:ConditionThree
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.btrees.BTreeNode
+            [
+                a owl:Class ;
+                owl:unionOf (
+                    # Either it is not a root node, or it must be a leaf or have at least two children
+                    [
+                        a owl:Class ;
+                        owl:complementOf domain:Root
+                    ]
+                    domain:Leaf
+                    domain:NodeWithTwoChildren
+                )
+            ]
+        )
+    ] .
+
+# Condition 4 an not be formulated
+#
+# If a node is not a leaf, then it has k keys iff it has k+1 children
+#
+# We can not make perform arithmetic or compare the sizes of arrays directly.
+# However, with some creative thinking, this can be formulated in general DL:
+#
+# Let
+#
+#   KeysToChildren := inverse BTreeNode.keys o BTreeNode.children
+#
+#   Dom(R) := R some owl:Thing
+#   Img(R) := inverse R some owl:Thing
+#
+#   rolified(C) Self EquivalentTo: C
+#
+#   "Assigning key array elements to child array elements if they have the same index"
+#
+#   SameIdx :=
+#       rolified(Img(keys))
+#     o java:hasIndex
+#     o rolified(xsd:int)
+#     o inverse java:hasIndex
+#     o rolified(Dom(BTreeNode.children))
+#
+#   NonNull := storesReference some BTreeNode
+#
+#   "Every key has a left child associated with it"
+#
+#   (Dom(BTreeNode.keys) and NonNull) EquivalentTo SameIdx some NonNull
+#
+#   "Last element of a sequence"
+#
+#   LastElement := java:hasSuccessor only (java:storesReference some {java:null})
+#
+#   LastChild := BTreeNode and ((inverse java:storesReference) some LastElement)
+#
+#   "The last child has no key associated with it"
+#
+#   LastChild EquivalentTo (inverse SameIdx some (java:storesReference some {java:null}))
+#
+# Problem: This requires chaining and rollification of indices, but this is not allowed for data values.
+#  (maybe because the space of values is infinite?)
+#
+# Possible fix: Explicitly generate finite class of indices as named individuals and assign those to
+#   SequenceElements, too
+
+# Maybe we can formulate something weaker to replace this one?
+
+
+# Condition 5: All leaves appear at the same level
+#   Can not be formulated, we dont have arithmetic to compute depth
+
+# A node is valid, if it implements all conditions
+domain:ValidNode
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            domain:ConditionOne
+            domain:ConditionTwo
+            domain:ConditionThree
         )
     ] .
