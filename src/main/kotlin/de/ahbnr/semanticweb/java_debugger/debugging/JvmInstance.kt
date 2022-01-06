@@ -56,6 +56,7 @@ class JvmInstance(
         val location = referenceType.locationsOfLine(line).firstOrNull()
         if (location == null) {
             logger.error("Can not set breakpoint: There is no line $line in class ${referenceType.name()}.")
+            logger.emphasize("Did you forget to re-compile the source?")
             return
         }
 
