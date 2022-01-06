@@ -7,7 +7,7 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlEvaluator
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -28,7 +28,7 @@ class OwlAssertCommand : REPLCommand(name = "owl"), KoinComponent {
             throw ProgramResult(-1)
         }
 
-        val evaluator = OwlEvaluator(knowledgeBase, true)
+        val evaluator = OwlExpressionEvaluator(knowledgeBase, true)
 
         val hasPassed: Boolean = when (mode) {
             isSatisfiableMode, isUnsatisfiableMode -> {

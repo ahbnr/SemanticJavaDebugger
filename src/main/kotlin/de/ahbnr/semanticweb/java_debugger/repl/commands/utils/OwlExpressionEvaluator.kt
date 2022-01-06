@@ -19,7 +19,7 @@ import org.semanticweb.owlapi.util.mansyntax.ManchesterOWLSyntaxParser
 import java.util.stream.Stream
 import kotlin.streams.asSequence
 
-class OwlEvaluator(
+class OwlExpressionEvaluator(
     val knowledgeBase: KnowledgeBase,
     val quiet: Boolean
 ) : KoinComponent {

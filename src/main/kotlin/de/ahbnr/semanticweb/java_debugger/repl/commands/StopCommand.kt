@@ -15,8 +15,9 @@ import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ClassCloser
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.KnowledgeBaseBuilder
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlEvaluator
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -36,6 +37,7 @@ class StopCommand(
             val `if`: String by option("--if").required()
             val limitSdk: Boolean by option().flag(default = false)
             val deep: List<String> by option().multiple()
+            val close: List<String> by option().multiple()
         }
 
         val ifOptions by IfOptions().cooccurring()
@@ -51,44 +53,8 @@ class StopCommand(
             val (className, lineNumberOrSearchString) = split
             val lineNumber = lineNumberOrSearchString
                 .toIntOrNull()
-                .let {
-                    if (it == null) {
-                        val errorContextExplanation = """
-                        A string was given instead of a line number.
-                        Will try to find the source file based on the class name and search its contents for the string.
-                        The line number of the first appearance of the string will then be used.
-                    """.trimIndent()
-
-                        // Try to deduce source location from class expression.
-                        // Search the given string in the source and set the line number to the location of the string in the source
-                        val potentialSourcePath = Path.of(
-                            "${className.replace('.', File.separatorChar)}.java"
-                        )
-                        if (!potentialSourcePath.isReadable()) {
-                            this@StopCommand.logger.debug(errorContextExplanation)
-                            this@StopCommand.logger.error("Could not find source file $potentialSourcePath, or it is not readable.")
-                            throw ProgramResult(-1)
-                        }
-
-                        val file = potentialSourcePath.toFile()
-                        file.useLines { lines ->
-                            val searchResult = lines
-                                .withIndex()
-                                .find { (_, line) -> line.contains(lineNumberOrSearchString) }
-
-                            if (searchResult == null) {
-                                this@StopCommand.logger.debug(errorContextExplanation)
-                                this@StopCommand.logger.error("Could not find search string \"$lineNumberOrSearchString\" in source file $potentialSourcePath.")
-                                throw ProgramResult(-1)
-                            }
-                            val foundLine = searchResult.index + 1
-
-                            this@StopCommand.logger.debug("Using line $foundLine of $potentialSourcePath where search string \"$lineNumberOrSearchString\" was found.")
-
-                            foundLine
-                        }
-                    } else it
-                }
+                ?: lineNumberByTextSearch(className, lineNumberOrSearchString)
+                ?: throw ProgramResult(-1)
 
             val callback = ifOptions?.let { optionGroup ->
                 fun(): Boolean {
@@ -121,29 +87,73 @@ class StopCommand(
                         return true
                     }
 
-                    val evaluator = OwlEvaluator(knowledgeBase, quiet = true)
-                    val instances = evaluator.getInstances(optionGroup.`if`)
-                    if (instances == null) {
+                    val classCloser = ClassCloser(
+                        knowledgeBase,
+                        noReasoner = false,
+                        quiet = true
+                    )
+                    for (classToClose in optionGroup.close) {
+                        classCloser.close(classToClose)
+                    }
+
+                    val evaluator = OwlExpressionEvaluator(knowledgeBase, quiet = true)
+                    val isSatisfiable = evaluator.isSatisfiable(optionGroup.`if`)
+                    if (isSatisfiable == null) {
                         this@StopCommand.logger.error("Could not evaluate class expression for conditional breakpoint.")
                         return true
                     }
 
-                    // FIXME: Using isSatisfiable method of reasoner might be faster
-                    if (instances.isEmpty) {
-                        this@StopCommand.logger.log("Class expression `${optionGroup.`if`}` returned no results.")
-                        this@StopCommand.logger.log("")
-                        this@StopCommand.logger.log("Conditional breakpoint hit at line $lineNumber.")
+                    if (!isSatisfiable) {
+                        this@StopCommand.logger.log("`${optionGroup.`if`}` is not satisfiable at line $lineNumber.")
+                        this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
                     }
 
-                    return instances.isEmpty
+                    return !isSatisfiable
                 }
             }
 
             try {
-                this@StopCommand.jvmDebugger.setBreakpoint(className, lineNumber.toInt(), callback)
+                this@StopCommand.jvmDebugger.setBreakpoint(className, lineNumber, callback)
             } catch (e: NumberFormatException) {
                 this@StopCommand.logger.error("Line number must be an integer: $lineNumber")
                 throw ProgramResult(-1)
+            }
+        }
+
+        private fun lineNumberByTextSearch(className: String, toFind: String): Int? {
+            val errorContextExplanation = """
+                    A string was given instead of a line number.
+                    Will try to find the source file based on the class name and search its contents for the string.
+                    The line number of the first appearance of the string will then be used.
+                """.trimIndent()
+
+            // Try to deduce source location from class expression.
+            // Search the given string in the source and set the line number to the location of the string in the source
+            val potentialSourcePath = Path.of(
+                "${className.replace('.', File.separatorChar)}.java"
+            )
+            if (!potentialSourcePath.isReadable()) {
+                this@StopCommand.logger.debug(errorContextExplanation)
+                this@StopCommand.logger.error("Could not find source file $potentialSourcePath, or it is not readable.")
+                return null
+            }
+
+            val file = potentialSourcePath.toFile()
+            return file.useLines { lines ->
+                val searchResult = lines
+                    .withIndex()
+                    .find { (_, line) -> line.contains(toFind) }
+
+                if (searchResult == null) {
+                    this@StopCommand.logger.debug(errorContextExplanation)
+                    this@StopCommand.logger.error("Could not find search string \"$toFind\" in source file $potentialSourcePath.")
+                    return@useLines null
+                }
+                val foundLine = searchResult.index + 1
+
+                this@StopCommand.logger.debug("Using line $foundLine of $potentialSourcePath where search string \"$toFind\" was found.")
+
+                foundLine
             }
         }
     }

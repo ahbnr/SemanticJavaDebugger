@@ -11,7 +11,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlEvaluator
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.streams.asSequence
@@ -40,7 +40,7 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
             throw ProgramResult(-1)
         }
 
-        val evaluator = OwlEvaluator(knowledgeBase, quiet = false)
+        val evaluator = OwlExpressionEvaluator(knowledgeBase, quiet = false)
         when (val it = moduleExtraction) {
             is SyntacticExtractionOptions -> {
                 evaluator.doSyntacticExtraction = true
