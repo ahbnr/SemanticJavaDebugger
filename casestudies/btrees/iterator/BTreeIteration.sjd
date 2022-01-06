@@ -1,0 +1,59 @@
+reasoner HermiT
+
+stop <<EOF
+    at 'casestudies.btrees.iterator.BTreeIterator:first iteration endpoint'
+    --if domain:PostCondition
+    --close domain:PostCondition
+    --limit-sdk
+    --deep=casestudies.btrees.iterator.BTreeNode.children
+    --deep=casestudies.btrees.iterator.BTreeNode.keys
+    --deep=casestudies.btrees.iterator.BTreeIterator.stack
+EOF
+
+stop <<EOF
+    at 'casestudies.btrees.iterator.BTreeIterator:second iteration endpoint'
+    --if domain:PostCondition
+    --close domain:PostCondition
+    --limit-sdk
+    --deep=casestudies.btrees.iterator.BTreeNode.children
+    --deep=casestudies.btrees.iterator.BTreeNode.keys
+    --deep=casestudies.btrees.iterator.BTreeIterator.stack
+EOF
+
+domain casestudies/btrees/iterator/BTreeIteration.ttl
+run casestudies.btrees.iterator.IteratorTest
+buildkb <<EOF
+    --limit-sdk
+    --deep=casestudies.btrees.iterator.BTreeNode.children
+    --deep=casestudies.btrees.iterator.BTreeNode.keys
+    --deep=casestudies.btrees.iterator.BTreeIterator.stack
+EOF
+
+# The conditional breakpoints will be hit for this incorrect implementation
+# Now, lets find the cause of the postcondition violation:
+
+# Lets see which nodes are the children of the current node
+owl instancesOf domain:ChildrenOfCurrentNode
+
+# TODO: For some reason Openllet SPARQL-DL fails here
+reasoner JenaOwlMicro
+# A sparql query shows the stack
+sparql -- '<<EOF
+  SELECT ?n ?idx
+  WHERE {
+    run:frame0 java:this [
+      prog:casestudies.btrees.iterator.BTreeIterator.stack [
+        java:hasElement [
+          java:hasIndex ?idx ;
+          java:storesReference [
+            prog:casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ?n
+          ]
+        ]
+      ]
+    ]
+  }
+'EOF
+
+# We can see, that the top of the stack (highest index) is not one of the children
+
+# Result: The insertion instructions for the stack seem to be swapped
