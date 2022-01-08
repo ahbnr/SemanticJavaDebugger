@@ -54,6 +54,10 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
             var targetChild = node.children[i + 1];
             if (targetChild.size == 2 * order - 1) {
                 split(toInsert.getClass(), node, i + 1);
+
+                if (toInsert.compareTo(node.keys[i + 1]) > 0) {
+                    targetChild = node.children[i + 2];
+                }
             }
 
             insertNonFull(targetChild, toInsert);
@@ -66,19 +70,26 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
 
         int centerIdx = toSplit.size / 2;
 
-        int toSplitIdx = -1;
-        for (int newNodeIdx = 0; newNodeIdx < centerIdx; ++newNodeIdx) {
-            toSplitIdx = centerIdx + 1 + newNodeIdx;
+        {
+            // Index in the toSplit node
+            int toSplitIdx = -1;
+            // Transfer keys and children to new node
+            for (int newNodeIdx = 0; newNodeIdx < centerIdx; ++newNodeIdx) {
+                toSplitIdx = centerIdx + 1 + newNodeIdx;
 
-            newNode.keys[newNodeIdx] = toSplit.keys[toSplitIdx];
-            toSplit.keys[toSplitIdx] = null;
+                newNode.keys[newNodeIdx] = toSplit.keys[toSplitIdx];
+                toSplit.keys[toSplitIdx] = null;
 
-            newNode.children[newNodeIdx] = toSplit.children[toSplitIdx];
-            toSplit.children[toSplitIdx] = null;
+                newNode.children[newNodeIdx] = toSplit.children[toSplitIdx];
+                toSplit.children[toSplitIdx] = null;
+            }
+
+            // transfer last child, right of last key
+            newNode.children[centerIdx] = toSplit.children[toSplitIdx + 1];
+            toSplit.children[toSplitIdx + 1] = null;
         }
 
-        newNode.children[centerIdx] = toSplit.children[toSplitIdx + 1];
-
+        // one key is moved to the parent node, so both remaining children have the same size
         newNode.size = centerIdx;
         toSplit.size = centerIdx;
 
@@ -86,6 +97,7 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
             parent.keys[parentIdx] = parent.keys[parentIdx - 1];
             parent.children[parentIdx + 1] = parent.children[parentIdx];
         }
+
         parent.keys[fullChildIdx] = toSplit.keys[centerIdx];
         toSplit.keys[centerIdx] = null;
 

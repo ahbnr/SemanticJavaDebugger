@@ -57,15 +57,21 @@ class BTreeIterator<K extends Comparable<? super K>> implements Iterator<K> {
         } else {
             if (currentState.idx < 0) {
                 this.stack.push(
-                        new NodeTraversalState<K>(currentState.node.children[0], -1)
-                );
-
-                this.stack.push(
                         new NodeTraversalState<K>(currentState.node, 0)
                 );
 
-                toReturn = next();
+                this.stack.push(
+                        new NodeTraversalState<K>(currentState.node.children[0], -1)
+                );
+
+                toReturn = next(); // first iteration endpoint
             } else {
+                if (currentState.idx < currentState.node.size - 1) {
+                    this.stack.push(
+                            new NodeTraversalState<K>(currentState.node, currentState.idx + 1)
+                    );
+                }
+
                 // add right child
                 this.stack.push(
                         new NodeTraversalState<K>(currentState.node.children[currentState.idx + 1], -1)
@@ -80,6 +86,6 @@ class BTreeIterator<K extends Comparable<? super K>> implements Iterator<K> {
             throw new RuntimeException("Trying to continue iteration after end of tree content.");
         }
 
-        return toReturn;
+        return toReturn; // second iteration endpoint
     }
 }

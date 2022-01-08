@@ -68,9 +68,32 @@ public class InsertTest {
         System.out.println("PASSED.");
     }
 
+    private static void testMultiInsert3() {
+        var bTree = new BTree<Integer>();
+        bTree.insert(7);
+        bTree.insert(4);
+        bTree.insert(1);
+        bTree.insert(3);
+        bTree.insert(2);
+        bTree.insert(5);
+        bTree.insert(6);
+        bTree.insert(8);
+        bTree.insert(9);
+        bTree.insert(11);
+        bTree.insert(10);
+        bTree.insert(13);
+        bTree.insert(14);
+        bTree.insert(12);
+
+        assertEquals("Multi Insert 3", Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14), bTree);
+
+        System.out.println("PASSED.");
+    }
+
     public static void main(String[] args) {
-        // testSingleInsert();
-        // testMultiInsert1();
+        testSingleInsert();
+        testMultiInsert1();
         testMultiInsert2();
+        testMultiInsert3();
     }
 }

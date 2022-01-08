@@ -3,12 +3,15 @@ package de.ahbnr.semanticweb.java_debugger.tests.system
 import de.ahbnr.semanticweb.java_debugger.tests.system.utils.runScriptTest
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
+import kotlin.test.assertEquals
 
 class BTreeStructureTests {
     @Test
     fun testKnuthConditions() {
-        runScriptTest(
-            Path.of("examples", "btrees", "tests", "btree-structure.sjd")
+        val exitCode = runScriptTest(
+            Path.of("examples", "btrees", "tests", "StructureTest.sjd")
         )
+
+        assertEquals(0, exitCode)
     }
 }

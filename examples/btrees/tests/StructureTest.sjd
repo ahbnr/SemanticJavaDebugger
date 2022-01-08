@@ -93,6 +93,7 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
+close domain:FragmentedNode
 assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
 stop at 'examples.btrees.tests.StructureTest:Test point: ValidNodeConditionError'
@@ -101,6 +102,7 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
+close domain:FragmentedNode
 assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
 cont
