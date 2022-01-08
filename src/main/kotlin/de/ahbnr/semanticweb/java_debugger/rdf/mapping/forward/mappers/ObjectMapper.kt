@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.mappers
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmObjectIterator
 import de.ahbnr.semanticweb.java_debugger.debugging.ReferenceContexts
-import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.IterableMirror
+import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.*
 import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.utils.MirroringError
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
@@ -13,6 +13,8 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.IMapper
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TripleCollector
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.ValueToNodeMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.extendsClass
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.implementsInterface
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.NodeFactory
 import org.apache.jena.graph.Triple
@@ -482,13 +484,56 @@ class ObjectMapper : IMapper {
                 }
             }
 
+            fun addPrimitiveWrapperObject(
+                objectURI: String,
+                objectReference: ObjectReference,
+                mirrorConstructor: (ObjectReference, ThreadReference) -> PrimitiveWrapperMirror<*, *>
+            ) {
+                try {
+                    val mirror = mirrorConstructor(objectReference, buildParameters.jvmState.pausedThread)
+                    val valueMirror = mirror.valueMirror()
+                    val valueNode = valueMapper.map(valueMirror)
+
+                    if (valueNode != null) {
+                        tripleCollector.addStatement(
+                            objectURI,
+                            URIs.java.hasPlainValue,
+                            valueNode
+                        )
+                    }
+                } catch (e: MirroringError) {
+                    logger.error(e.message)
+                }
+            }
+
             fun addPlainObject(objectURI: String, objectReference: ObjectReference, referenceType: ReferenceType) {
                 if (referenceType is ClassType) {
                     addFields(objectURI, objectReference, referenceType)
 
-                    val hasIterableInterface = referenceType.allInterfaces().any { it.name() == "java.lang.Iterable" }
-                    if (hasIterableInterface) {
+                    if (referenceType.implementsInterface("java.lang.Iterable")) {
                         addIterableSequence(objectURI, objectReference)
+                    }
+
+                    // If this the object is of a wrapper class for a primitive value, we extract the primitive value and directly
+                    // represent it in the knowledge base
+                    val wrapperObjectCasesX: Map<String, (ObjectReference, ThreadReference) -> PrimitiveWrapperMirror<*, *>> =
+                        mapOf(
+                            "java.lang.Byte" to ::ByteWrapperMirror,
+                            "java.lang.Short" to ::ShortWrapperMirror,
+                            "java.lang.Integer" to ::IntegerWrapperMirror,
+                            "java.lang.Long" to ::LongWrapperMirror,
+                            "java.lang.Float" to ::FloatWrapperMirror,
+                            "java.lang.Double" to ::DoubleWrapperMirror,
+                            "java.lang.Character" to ::CharacterWrapperMirror,
+                        )
+                    for ((wrapperClassName, mirrorConstructor) in wrapperObjectCasesX) {
+                        if (referenceType.extendsClass(wrapperClassName)) {
+                            addPrimitiveWrapperObject(
+                                objectURI,
+                                objectReference,
+                                mirrorConstructor
+                            )
+                        }
                     }
                 } else {
                     logger.error("Encountered regular object which is not of a class type: $objectURI of type $referenceType.")
@@ -535,7 +580,7 @@ class ObjectMapper : IMapper {
 
                 tripleCollector.addStatement(
                     objectURI,
-                    URIs.java.hasStringValue,
+                    URIs.java.hasPlainValue,
                     NodeFactory.createLiteral(stringReference.value(), XSDDatatype.XSDstring)
                 )
             }

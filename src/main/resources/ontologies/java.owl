@@ -150,11 +150,21 @@ java:hasJDWPObjectId rdf:type owl:DatatypeProperty ,
                      rdfs:range xsd:long .
 
 
-###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasStringValue
-java:hasStringValue rdf:type owl:DatatypeProperty ,
-                             owl:FunctionalProperty ;
-                    rdfs:domain prog:java.lang.String ;
-                    rdfs:range xsd:string .
+###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasPlainValue
+java:hasPlainValue rdf:type owl:DatatypeProperty ,
+                            owl:FunctionalProperty ;
+                   rdfs:domain [ rdf:type owl:Class ;
+                                 owl:unionOf ( prog:java.lang.Boolean
+                                               prog:java.lang.Byte
+                                               prog:java.lang.Character
+                                               prog:java.lang.Double
+                                               prog:java.lang.Float
+                                               prog:java.lang.Integer
+                                               prog:java.lang.Long
+                                               prog:java.lang.Short
+                                               prog:java.lang.String
+                                             )
+                               ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#hasVariableName
@@ -358,9 +368,83 @@ prog:java.io.Serializable rdf:type owl:Class ;
                           rdfs:subClassOf prog:java.lang.Object .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Boolean
+prog:java.lang.Boolean rdf:type owl:Class ;
+                       rdfs:subClassOf [ owl:intersectionOf ( prog:java.io.Serializable
+                                                              prog:java.lang.Object
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty java:hasPlainValue ;
+                                                                owl:someValuesFrom xsd:boolean
+                                                              ]
+                                                            ) ;
+                                         rdf:type owl:Class
+                                       ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Byte
+prog:java.lang.Byte rdf:type owl:Class ;
+                    rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Number
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty java:hasPlainValue ;
+                                                             owl:someValuesFrom xsd:byte
+                                                           ]
+                                                         ) ;
+                                      rdf:type owl:Class
+                                    ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Character
+prog:java.lang.Character rdf:type owl:Class ;
+                         rdfs:subClassOf [ owl:intersectionOf ( prog:java.io.Serializable
+                                                                prog:java.lang.Object
+                                                                [ rdf:type owl:Restriction ;
+                                                                  owl:onProperty java:hasPlainValue ;
+                                                                  owl:someValuesFrom xsd:unsignedShort
+                                                                ]
+                                                              ) ;
+                                           rdf:type owl:Class
+                                         ] .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Cloneable
 prog:java.lang.Cloneable rdf:type owl:Class ;
                          rdfs:subClassOf prog:java.lang.Object .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Double
+prog:java.lang.Double rdf:type owl:Class ;
+                      rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Number
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty java:hasPlainValue ;
+                                                               owl:someValuesFrom xsd:double
+                                                             ]
+                                                           ) ;
+                                        rdf:type owl:Class
+                                      ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Float
+prog:java.lang.Float rdf:type owl:Class ;
+                     rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Number
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty java:hasPlainValue ;
+                                                              owl:someValuesFrom xsd:float
+                                                            ]
+                                                          ) ;
+                                       rdf:type owl:Class
+                                     ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Integer
+prog:java.lang.Integer rdf:type owl:Class ;
+                       rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Number
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty java:hasPlainValue ;
+                                                                owl:someValuesFrom xsd:int
+                                                              ]
+                                                            ) ;
+                                         rdf:type owl:Class
+                                       ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Iterable
@@ -368,16 +452,49 @@ prog:java.lang.Iterable rdf:type owl:Class ;
                         rdfs:subClassOf prog:java.lang.Object .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Long
+prog:java.lang.Long rdf:type owl:Class ;
+                    rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Number
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty java:hasPlainValue ;
+                                                             owl:someValuesFrom xsd:long
+                                                           ]
+                                                         ) ;
+                                      rdf:type owl:Class
+                                    ] .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Number
+prog:java.lang.Number rdf:type owl:Class ;
+                      rdfs:subClassOf [ owl:intersectionOf ( prog:java.io.Serializable
+                                                             prog:java.lang.Object
+                                                           ) ;
+                                        rdf:type owl:Class
+                                      ] .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object
 prog:java.lang.Object rdf:type owl:Class ;
                       rdfs:subClassOf owl:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Short
+prog:java.lang.Short rdf:type owl:Class ;
+                     rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Number
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty java:hasPlainValue ;
+                                                              owl:someValuesFrom xsd:short
+                                                            ]
+                                                          ) ;
+                                       rdf:type owl:Class
+                                     ] .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.String
 prog:java.lang.String rdf:type owl:Class ;
                       rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Object
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty java:hasStringValue ;
+                                                               owl:onProperty java:hasPlainValue ;
                                                                owl:someValuesFrom xsd:string
                                                              ]
                                                            ) ;
@@ -389,7 +506,7 @@ prog:java.lang.String rdf:type owl:Class ;
    owl:annotatedProperty rdfs:subClassOf ;
    owl:annotatedTarget [ owl:intersectionOf ( prog:java.lang.Object
                                               [ rdf:type owl:Restriction ;
-                                                owl:onProperty java:hasStringValue ;
+                                                owl:onProperty java:hasPlainValue ;
                                                 owl:someValuesFrom xsd:string
                                               ]
                                             ) ;
@@ -444,9 +561,39 @@ prog:java.io.Serializable rdf:type owl:NamedIndividual ,
                                    java:Interface .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Boolean
+prog:java.lang.Boolean rdf:type owl:NamedIndividual ,
+                                java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Byte
+prog:java.lang.Byte rdf:type owl:NamedIndividual ,
+                             java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Character
+prog:java.lang.Character rdf:type owl:NamedIndividual ,
+                                  java:Class .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Cloneable
 prog:java.lang.Cloneable rdf:type owl:NamedIndividual ,
                                   java:Interface .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Double
+prog:java.lang.Double rdf:type owl:NamedIndividual ,
+                               java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Float
+prog:java.lang.Float rdf:type owl:NamedIndividual ,
+                              java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Integer
+prog:java.lang.Integer rdf:type owl:NamedIndividual ,
+                                java:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Iterable
@@ -454,9 +601,24 @@ prog:java.lang.Iterable rdf:type owl:NamedIndividual ,
                                  java:Interface .
 
 
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Long
+prog:java.lang.Long rdf:type owl:NamedIndividual ,
+                             java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Number
+prog:java.lang.Number rdf:type owl:NamedIndividual ,
+                               java:Class .
+
+
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Object
 prog:java.lang.Object rdf:type owl:NamedIndividual ,
                                java:Class .
+
+
+###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.Short
+prog:java.lang.Short rdf:type owl:NamedIndividual ,
+                              java:Class .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Program#java.lang.String

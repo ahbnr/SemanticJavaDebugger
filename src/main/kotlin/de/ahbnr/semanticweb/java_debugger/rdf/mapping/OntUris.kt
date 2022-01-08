@@ -111,7 +111,7 @@ class OntURIs(val ns: Namespaces) {
         val isAtStackDepth = ns.java + "isAtStackDepth"
         val hasJDWPObjectId = ns.java + "hasJDWPObjectId"
 
-        val hasStringValue = ns.java + "hasStringValue"
+        val hasPlainValue = ns.java + "hasPlainValue"
 
         val isStatic = ns.java + "isStatic"
 
