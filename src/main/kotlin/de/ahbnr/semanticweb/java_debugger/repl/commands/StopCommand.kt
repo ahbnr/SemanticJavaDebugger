@@ -5,12 +5,11 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.groups.OptionGroup
-import com.github.ajalt.clikt.parameters.groups.cooccurring
+import com.github.ajalt.clikt.parameters.groups.mutuallyExclusiveOptions
+import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.required
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
@@ -30,17 +29,22 @@ class StopCommand(
 ) : REPLCommand(name = "stop"), KoinComponent {
     val logger: Logger by inject()
 
+    sealed class ClassCondition(val classExpression: String) {
+        class IfCondition(classExpression: String) : ClassCondition(classExpression)
+        class IfNotCondition(classExpression: String) : ClassCondition(classExpression)
+    }
+
     inner class AtSubCommand : REPLCommand(name = "at") {
-        val classAndLine: String by argument()
+        private val classAndLine: String by argument()
 
-        inner class IfOptions : OptionGroup() {
-            val `if`: String by option("--if").required()
-            val limitSdk: Boolean by option().flag(default = false)
-            val deep: List<String> by option().multiple()
-            val close: List<String> by option().multiple()
-        }
+        private val condition: ClassCondition? by mutuallyExclusiveOptions(
+            option("--if").convert { ClassCondition.IfCondition(it) },
+            option("--if-not").convert { ClassCondition.IfNotCondition(it) }
+        )
 
-        val ifOptions by IfOptions().cooccurring()
+        val limitSdk: Boolean by option().flag(default = false)
+        val deep: List<String> by option().multiple()
+        val close: List<String> by option().multiple()
 
         override fun run() {
             val split = classAndLine.split(Regex(":"), 2)
@@ -56,7 +60,10 @@ class StopCommand(
                 ?: lineNumberByTextSearch(className, lineNumberOrSearchString)
                 ?: throw ProgramResult(-1)
 
-            val callback = ifOptions?.let { optionGroup ->
+            val callback = condition?.let { classCondition ->
+                val limitSdkInstance = limitSdk
+                val deepInstance = deep
+                val closeInstance = close
                 fun(): Boolean {
                     val jvm = this@StopCommand.jvmDebugger.jvm
                     if (jvm == null) {
@@ -75,8 +82,8 @@ class StopCommand(
                         sourcePath = state.sourcePath,
                         applicationDomainDefFile = state.applicationDomainDefFile,
                         jvmState = jvmState,
-                        limitSdk = optionGroup.limitSdk,
-                        deepFieldsAndVariables = optionGroup.deep.toSet(),
+                        limitSdk = limitSdkInstance,
+                        deepFieldsAndVariables = deepInstance.toSet(),
                         linterMode = LinterMode.NoLinters,
                         quiet = true
                     )
@@ -92,23 +99,36 @@ class StopCommand(
                         noReasoner = false,
                         quiet = true
                     )
-                    for (classToClose in optionGroup.close) {
+                    for (classToClose in closeInstance) {
                         classCloser.close(classToClose)
                     }
 
                     val evaluator = OwlExpressionEvaluator(knowledgeBase, quiet = true)
-                    val isSatisfiable = evaluator.isSatisfiable(optionGroup.`if`)
+                    val isSatisfiable = evaluator.isSatisfiable(classCondition.classExpression)
                     if (isSatisfiable == null) {
                         this@StopCommand.logger.error("Could not evaluate class expression for conditional breakpoint.")
                         return true
                     }
 
-                    if (!isSatisfiable) {
-                        this@StopCommand.logger.log("`${optionGroup.`if`}` is not satisfiable at line $lineNumber.")
-                        this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
-                    }
+                    return when (classCondition) {
+                        is ClassCondition.IfCondition -> {
+                            if (isSatisfiable) {
+                                this@StopCommand.logger.log("`${classCondition.classExpression}` is satisfiable at line $lineNumber.")
+                                this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                            }
 
-                    return !isSatisfiable
+                            isSatisfiable
+                        }
+
+                        is ClassCondition.IfNotCondition -> {
+                            if (!isSatisfiable) {
+                                this@StopCommand.logger.log("`${classCondition.classExpression}` is not satisfiable at line $lineNumber.")
+                                this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                            }
+
+                            !isSatisfiable
+                        }
+                    }
                 }
             }
 

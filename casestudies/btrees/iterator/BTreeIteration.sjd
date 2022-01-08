@@ -2,7 +2,7 @@ reasoner HermiT
 
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:first iteration endpoint'
-    --if domain:PostCondition
+    --if-not domain:PostCondition
     --close domain:PostCondition
     --limit-sdk
     --deep=casestudies.btrees.iterator.BTreeNode.children
@@ -12,7 +12,7 @@ EOF
 
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:second iteration endpoint'
-    --if domain:PostCondition
+    --if-not domain:PostCondition
     --close domain:PostCondition
     --limit-sdk
     --deep=casestudies.btrees.iterator.BTreeNode.children
