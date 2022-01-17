@@ -3,7 +3,7 @@ reasoner HermiT
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:first iteration endpoint'
     --if-not domain:PostCondition
-    --close domain:PostCondition
+    --close domain:NullableChildrenOfCurrentNode
     --limit-sdk
     --deep=casestudies.btrees.iterator.BTreeNode.children
     --deep=casestudies.btrees.iterator.BTreeNode.keys
@@ -13,7 +13,7 @@ EOF
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:second iteration endpoint'
     --if-not domain:PostCondition
-    --close domain:PostCondition
+    --close domain:NullableChildrenOfCurrentNode
     --limit-sdk
     --deep=casestudies.btrees.iterator.BTreeNode.children
     --deep=casestudies.btrees.iterator.BTreeNode.keys
@@ -51,7 +51,7 @@ sparql -- '<<EOF
         ]
       ]
     ]
-  }
+  } ORDER BY DESC(?idx)
 'EOF
 
 # We can see, that the top of the stack (highest index) is not one of the children

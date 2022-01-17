@@ -38,7 +38,18 @@ domain:CurrentNode
     owl:equivalentClass [
         a owl:Restriction ;
         owl:onProperty domain:currentNodeOf ;
-        owl:someValuesFrom java:StackFrame
+        owl:someValuesFrom [
+            a owl:Class ;
+            owl:oneOf ( run:frame0 )
+        ]
+    ] .
+
+domain:NullableChildrenOfCurrentNode
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty domain:hasParent ;
+        owl:someValuesFrom domain:CurrentNode
     ] .
 
 domain:ChildrenOfCurrentNode
@@ -46,11 +57,7 @@ domain:ChildrenOfCurrentNode
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            [
-                a owl:Restriction ;
-                owl:onProperty domain:hasParent ;
-                owl:someValuesFrom domain:CurrentNode
-            ]
+            domain:NullableChildrenOfCurrentNode
             [
                 a owl:Class ;
                 owl:complementOf [
@@ -61,7 +68,33 @@ domain:ChildrenOfCurrentNode
         )
     ] .
 
-domain:IsLeaf
+
+domain:Leaf
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:casestudies.btrees.iterator.BTreeNode
+            [
+                a owl:Restriction ;
+                owl:onProperty prog:casestudies.btrees.iterator.BTreeNode.children ;
+                owl:allValuesFrom [
+                    a owl:Restriction ;
+                    owl:onProperty java:hasElement ;
+                    owl:allValuesFrom [
+                        a owl:Restriction ;
+                        owl:onProperty java:storesReference ;
+                        owl:allValuesFrom [
+                            a owl:Class ;
+                            owl:oneOf ( java:null )
+                        ]
+                    ]
+                ]
+            ]
+        )
+    ] .
+
+domain:VisitingLeaf
     a owl:Class ;
     owl:equivalentClass [
         a owl:Class ;
@@ -70,8 +103,12 @@ domain:IsLeaf
               owl:oneOf ( run:frame0 )
             ]
             [ a owl:Restriction ;
-              owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator.java.lang.Comparable_next%28%29.isLeaf ;
-              owl:hasValue "true"^^xsd:boolean
+              owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator.java.lang.Comparable_next%28%29.currentState ;
+              owl:someValuesFrom [
+                a owl:Restriction ;
+                owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ;
+                owl:someValuesFrom domain:Leaf
+              ]
             ]
         )
     ] .
@@ -84,7 +121,6 @@ domain:ChildIsLastElement
         owl:someValuesFrom [
             a owl:Class ;
             owl:intersectionOf (
-                java:SequenceElement
                 [
                     a owl:Restriction ;
                     owl:onProperty java:hasSuccessor ;
@@ -129,7 +165,7 @@ domain:PostCondition
     owl:equivalentClass [
         a owl:Class ;
         owl:unionOf (
-            domain:IsLeaf
+            domain:VisitingLeaf
             domain:StackTopIsChild
         )
     ] .
