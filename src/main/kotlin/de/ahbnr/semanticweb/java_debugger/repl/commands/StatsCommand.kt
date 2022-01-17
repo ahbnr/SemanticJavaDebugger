@@ -6,7 +6,6 @@ import com.github.ajalt.clikt.core.ProgramResult
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import org.apache.jena.query.QueryFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.streams.asSequence
@@ -77,29 +76,29 @@ class StatsCommand(
             }
         }
 
-        knowledgeBase.getSparqlModel().let { infModel ->
-            val prefixes = knowledgeBase
-                .prefixNameToUri
-                .entries
-                .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
+        // knowledgeBase.getSparqlModel().let { infModel ->
+        //     val prefixes = knowledgeBase
+        //         .prefixNameToUri
+        //         .entries
+        //         .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
 
-            // Arrays are deeply inspected if a cardinality is set for their hasElement relation
-            val deepArrayQueryString = """
-                    $prefixes
-                    SELECT (count(distinct ?sizedHasElement) as ?count)
-                    WHERE {
-                        ?sizedHasElement rdfs:subPropertyOf java:hasElement ;
-                                         owl:cardinality [] .
-                    }
-            """.trimIndent()
+        //     // Arrays are deeply inspected if a cardinality is set for their hasElement relation
+        //     val deepArrayQueryString = """
+        //             $prefixes
+        //             SELECT (count(distinct ?sizedHasElement) as ?count)
+        //             WHERE {
+        //                 ?sizedHasElement rdfs:subPropertyOf java:hasElement ;
+        //                                  owl:cardinality [] .
+        //             }
+        //     """.trimIndent()
 
-            val deepArrayQuery = QueryFactory.create(deepArrayQueryString)
-            knowledgeBase.buildSparqlExecution(deepArrayQuery, infModel).use { execution ->
-                val results = execution.execSelect()
+        //     val deepArrayQuery = QueryFactory.create(deepArrayQueryString)
+        //     knowledgeBase.buildSparqlExecution(deepArrayQuery, infModel).use { execution ->
+        //         val results = execution.execSelect()
 
-                logger.log("Deep Arrays: ${results.nextSolution().get("count").asLiteral().int}")
-                logger.log("")
-            }
-        }
+        //         logger.log("Deep Arrays: ${results.nextSolution().get("count").asLiteral().int}")
+        //         logger.log("")
+        //     }
+        // }
     }
 }

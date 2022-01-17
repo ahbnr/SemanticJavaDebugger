@@ -4,8 +4,12 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.groups.OptionGroup
+import com.github.ajalt.clikt.parameters.groups.groupChoice
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ClassCloser
 import org.koin.core.component.KoinComponent
@@ -18,6 +22,14 @@ class CloseClass : REPLCommand(name = "close"), KoinComponent {
 
     val noReasoner by option().flag(default = false)
 
+    class SyntacticExtractionOptions : OptionGroup() {
+        val classRelationDepth by option().int().default(-1)
+    }
+
+    val moduleExtraction by option().groupChoice(
+        "syntactic" to SyntacticExtractionOptions()
+    )
+
     override fun run() {
         val knowledgeBase = state.knowledgeBase
         if (knowledgeBase == null) {
@@ -28,6 +40,8 @@ class CloseClass : REPLCommand(name = "close"), KoinComponent {
         val classCloser = ClassCloser(
             knowledgeBase = knowledgeBase,
             noReasoner = noReasoner,
+            doSyntacticExtraction = moduleExtraction is SyntacticExtractionOptions,
+            classRelationDepth = moduleExtraction.let { if (it is SyntacticExtractionOptions) it.classRelationDepth else -1 },
             quiet = false
         )
 

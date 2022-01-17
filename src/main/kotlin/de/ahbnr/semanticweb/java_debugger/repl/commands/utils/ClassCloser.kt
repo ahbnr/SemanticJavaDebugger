@@ -1,6 +1,7 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands.utils
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -12,6 +13,8 @@ import kotlin.streams.toList
 class ClassCloser(
     private val knowledgeBase: KnowledgeBase,
     private val noReasoner: Boolean,
+    private val doSyntacticExtraction: Boolean,
+    private val classRelationDepth: Int,
     private val quiet: Boolean
 ) : KoinComponent {
     private val logger: Logger by inject()
@@ -36,11 +39,22 @@ class ClassCloser(
                 )
                 .map { it.individual }
                 .toList()
-        else knowledgeBase
-            .getOwlClassExpressionReasoner(knowledgeBase.ontology)
-            .getInstances(`class`)
-            .flatMap { it.entities().asSequence() }
-            .toList()
+        else {
+            val ontology =
+                if (doSyntacticExtraction)
+                    extractSyntacticLocalityModule(
+                        knowledgeBase,
+                        `class`.signature().asSequence().toSet(),
+                        classRelationDepth
+                    )
+                else knowledgeBase.ontology
+
+            knowledgeBase
+                .getOwlClassExpressionReasoner(ontology)
+                .getInstances(`class`)
+                .flatMap { it.entities().asSequence() }
+                .toList()
+        }
 
         knowledgeBase.ontology.add(
             OWLFunctionalSyntaxFactory.EquivalentClasses(

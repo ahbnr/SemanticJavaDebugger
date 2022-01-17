@@ -97,6 +97,8 @@ class StopCommand(
                     val classCloser = ClassCloser(
                         knowledgeBase,
                         noReasoner = false,
+                        doSyntacticExtraction = false,
+                        classRelationDepth = -1,
                         quiet = true
                     )
                     for (classToClose in closeInstance) {
