@@ -1,5 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
+import com.sun.jdi.Location
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ThreadReference
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
@@ -10,7 +11,8 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
  */
 
 class JvmState(
-    val pausedThread: ThreadReference
+    val pausedThread: ThreadReference,
+    val location: Location
 ) {
     /**
      * Utility function to retrieve an object using its ID.

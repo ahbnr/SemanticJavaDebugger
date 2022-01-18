@@ -2,7 +2,6 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.utils
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -82,17 +81,14 @@ class OwlExpressionEvaluator(
     private fun getReasoner(signature: Stream<OWLEntity>): OWLReasoner {
         val ontology =
             if (doSyntacticExtraction) {
-                if (!quiet)
-                    logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
-
-                val module = extractSyntacticLocalityModule(
+                val extractor = SyntacticLocalityModuleExtractor(
                     knowledgeBase,
-                    signature.asSequence().toSet(),
-                    classRelationDepth
+                    classRelationDepth,
+                    quiet
                 )
-
-                if (!quiet)
-                    logger.debug("Axioms after module extraction: ${module.axiomCount}.")
+                val module = extractor.extractModule(
+                    signature.asSequence().toSet()
+                )
 
                 module
             } else knowledgeBase.ontology

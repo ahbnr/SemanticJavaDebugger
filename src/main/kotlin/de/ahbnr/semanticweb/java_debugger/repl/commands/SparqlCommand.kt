@@ -10,9 +10,8 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
-import org.apache.jena.query.QueryFactory
-import org.apache.jena.query.QueryParseException
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ModuleExtractionOptions
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.SparqlExecutor
 import org.apache.jena.query.ResultSetFormatter
 import org.apache.jena.rdf.model.RDFNode
 import org.koin.core.component.KoinComponent
@@ -38,62 +37,47 @@ class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
             throw ProgramResult(-1)
         }
 
-        val prefixes = knowledgeBase
-            .prefixNameToUri
-            .entries
-            .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
+        val executor = SparqlExecutor(
+            knowledgeBase,
+            moduleExtractionOptions = when (val it = moduleExtraction) {
+                is SyntacticExtractionOptions -> ModuleExtractionOptions.SyntacticExtraction(
+                    classRelationDepth = it.classRelationDepth
+                )
 
-        val queryString = """
-                $prefixes
-                $rawSparqlExpression
-        """.trimIndent()
+                else -> ModuleExtractionOptions.NoExtraction
+            }
+        )
 
-        try {
-            val query = QueryFactory.create(queryString)
+        val execution = executor
+            .execute(rawSparqlExpression)
+            ?: throw ProgramResult(-1)
 
-            val ontology = when (val it = moduleExtraction) {
-                is SyntacticExtractionOptions -> {
-                    logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
-                    val module =
-                        extractSyntacticLocalityModule(knowledgeBase, query.queryPattern, it.classRelationDepth)
-                    logger.debug("Axioms after module extraction: ${module.axiomCount}.")
-                    module
-                }
+        execution.use {
+            val rewindableResultSet = it.execSelect().rewindable()
 
-                else -> knowledgeBase.ontology
+            ResultSetFormatter.out(logger.logStream(), rewindableResultSet, it.query)
+            rewindableResultSet.reset()
+
+            for (variable in it.query.resultVars) {
+                knowledgeBase.removeVariable("?$variable")
             }
 
-            val model = knowledgeBase.getSparqlModel(ontology)
+            var idx = 0;
+            val nameMap = mutableMapOf<String, RDFNode>()
+            rewindableResultSet.forEachRemaining { solution ->
+                solution.varNames().forEachRemaining { variableName ->
+                    val indexedName = if (idx == 0) "?$variableName" else "?$variableName$idx"
 
-            knowledgeBase.buildSparqlExecution(query, model).use { execution ->
-                val results = execution.execSelect().rewindable()
-                ResultSetFormatter.out(logger.logStream(), results, query)
-                results.reset()
-
-                for (variable in query.resultVars) {
-                    knowledgeBase.removeVariable("?$variable")
+                    nameMap[indexedName] = solution.get(variableName)
                 }
-
-                var idx = 0;
-                val nameMap = mutableMapOf<String, RDFNode>()
-                results.forEachRemaining { solution ->
-                    solution.varNames().forEachRemaining { variableName ->
-                        val indexedName = if (idx == 0) "?$variableName" else "?$variableName$idx"
-
-                        nameMap[indexedName] = solution.get(variableName)
-                    }
-                    ++idx
-                }
-                nameMap.forEach { (name, value) -> knowledgeBase.setVariable(name, value) }
-
-                if (nameMap.isNotEmpty()) {
-                    logger.log("The solution variables are available under the following names:")
-                    logger.log(nameMap.keys.joinToString(", "))
-                }
+                ++idx
             }
-        } catch (e: QueryParseException) {
-            logger.error(e.message ?: "Could not parse query.")
-            throw ProgramResult(-1)
+            nameMap.forEach { (name, value) -> knowledgeBase.setVariable(name, value) }
+
+            if (nameMap.isNotEmpty()) {
+                logger.log("The solution variables are available under the following names:")
+                logger.log(nameMap.keys.joinToString(", "))
+            }
         }
     }
 }

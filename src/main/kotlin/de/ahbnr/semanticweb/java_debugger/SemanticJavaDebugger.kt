@@ -104,7 +104,7 @@ class SemanticJavaDebugger : CliktCommand() {
                     terminal = terminal,
                     commands = listOf(
                         AddTriplesCommand(),
-                        AssertCommand(),
+                        AssertCommand(jvmDebugger),
                         BuildKBCommand(jvmDebugger, graphGen),
                         CheckKBCommand(graphGen),
                         CloseClass(),

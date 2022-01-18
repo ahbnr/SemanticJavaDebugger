@@ -14,14 +14,9 @@ import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ClassCloser
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.KnowledgeBaseBuilder
-import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.isReadable
 
 class StopCommand(
     val graphGenerator: GraphGenerator,
@@ -29,17 +24,26 @@ class StopCommand(
 ) : REPLCommand(name = "stop"), KoinComponent {
     val logger: Logger by inject()
 
-    sealed class ClassCondition(val classExpression: String) {
-        class IfCondition(classExpression: String) : ClassCondition(classExpression)
-        class IfNotCondition(classExpression: String) : ClassCondition(classExpression)
+    sealed class BreakpointCondition(val expression: String) {
+        sealed class OwlDlCondition(classExpression: String) : BreakpointCondition(classExpression) {
+            class IfSatisfiableCondition(classExpression: String) : OwlDlCondition(classExpression)
+            class IfUnsatisfiableCondition(classExpression: String) : OwlDlCondition(classExpression)
+        }
+
+        sealed class SparqlCondition(sparqlExpression: String) : BreakpointCondition(sparqlExpression) {
+            class IfSparqlAnyCondition(sparqlExpression: String) : SparqlCondition(sparqlExpression)
+            class IfSparqlNoneCondition(sparqlExpression: String) : SparqlCondition(sparqlExpression)
+        }
     }
 
     inner class AtSubCommand : REPLCommand(name = "at") {
-        private val classAndLine: String by argument()
+        private val sourceLocation: String by argument()
 
-        private val condition: ClassCondition? by mutuallyExclusiveOptions(
-            option("--if").convert { ClassCondition.IfCondition(it) },
-            option("--if-not").convert { ClassCondition.IfNotCondition(it) }
+        private val condition: BreakpointCondition? by mutuallyExclusiveOptions(
+            option("--if-satisfiable").convert { BreakpointCondition.OwlDlCondition.IfSatisfiableCondition(it) },
+            option("--if-unsatisfiable").convert { BreakpointCondition.OwlDlCondition.IfUnsatisfiableCondition(it) },
+            option("--if-sparql-any").convert { BreakpointCondition.SparqlCondition.IfSparqlAnyCondition(it) },
+            option("--if-sparql-none").convert { BreakpointCondition.SparqlCondition.IfSparqlNoneCondition(it) }
         )
 
         val limitSdk: Boolean by option().flag(default = false)
@@ -47,20 +51,13 @@ class StopCommand(
         val close: List<String> by option().multiple()
 
         override fun run() {
-            val split = classAndLine.split(Regex(":"), 2)
+            val sourceLocationParser = SourceLocationParser()
+            val parsedSourceLocation =
+                sourceLocationParser
+                    .parse(sourceLocation)
+                    ?: throw ProgramResult(-1)
 
-            if (split.size != 2) {
-                this@StopCommand.logger.error(getFormattedUsage())
-                throw ProgramResult(-1)
-            }
-
-            val (className, lineNumberOrSearchString) = split
-            val lineNumber = lineNumberOrSearchString
-                .toIntOrNull()
-                ?: lineNumberByTextSearch(className, lineNumberOrSearchString)
-                ?: throw ProgramResult(-1)
-
-            val callback = condition?.let { classCondition ->
+            val callback = condition?.let { breakpointCondition ->
                 val limitSdkInstance = limitSdk
                 val deepInstance = deep
                 val closeInstance = close
@@ -105,79 +102,87 @@ class StopCommand(
                         classCloser.close(classToClose)
                     }
 
-                    val evaluator = OwlExpressionEvaluator(knowledgeBase, quiet = true)
-                    val isSatisfiable = evaluator.isSatisfiable(classCondition.classExpression)
-                    if (isSatisfiable == null) {
-                        this@StopCommand.logger.error("Could not evaluate class expression for conditional breakpoint.")
-                        return true
-                    }
-
-                    return when (classCondition) {
-                        is ClassCondition.IfCondition -> {
-                            if (isSatisfiable) {
-                                this@StopCommand.logger.log("`${classCondition.classExpression}` is satisfiable at line $lineNumber.")
-                                this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                    return when (breakpointCondition) {
+                        is BreakpointCondition.OwlDlCondition -> {
+                            val evaluator = OwlExpressionEvaluator(knowledgeBase, quiet = true)
+                            val isSatisfiable = evaluator.isSatisfiable(breakpointCondition.expression)
+                            if (isSatisfiable == null) {
+                                this@StopCommand.logger.error("Could not evaluate class expression for conditional breakpoint.")
+                                return true
                             }
 
-                            isSatisfiable
+                            when (breakpointCondition) {
+                                is BreakpointCondition.OwlDlCondition.IfSatisfiableCondition -> {
+                                    if (isSatisfiable) {
+                                        this@StopCommand.logger.log("`${breakpointCondition.expression}` is satisfiable at $parsedSourceLocation.")
+                                        this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                                    }
+
+                                    isSatisfiable
+                                }
+
+                                is BreakpointCondition.OwlDlCondition.IfUnsatisfiableCondition -> {
+                                    if (!isSatisfiable) {
+                                        this@StopCommand.logger.log("`${breakpointCondition.expression}` is not satisfiable at $parsedSourceLocation.")
+                                        this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                                    }
+
+                                    !isSatisfiable
+                                }
+                            }
                         }
 
-                        is ClassCondition.IfNotCondition -> {
-                            if (!isSatisfiable) {
-                                this@StopCommand.logger.log("`${classCondition.classExpression}` is not satisfiable at line $lineNumber.")
-                                this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                        is BreakpointCondition.SparqlCondition -> {
+                            val executor = SparqlExecutor(
+                                knowledgeBase,
+                                moduleExtractionOptions = ModuleExtractionOptions.NoExtraction
+                            )
+
+                            val execution = executor.execute(breakpointCondition.expression)
+                            if (execution == null) {
+                                this@StopCommand.logger.error("Could not evaluate sparql expression for conditional breakpoint.")
+                                return true
                             }
 
-                            !isSatisfiable
+                            val hasSolution = execution.use {
+                                it.execSelect().hasNext()
+                            }
+
+                            when (breakpointCondition) {
+                                is BreakpointCondition.SparqlCondition.IfSparqlAnyCondition -> {
+                                    if (hasSolution) {
+                                        this@StopCommand.logger.log("The SPARQL expression")
+                                        this@StopCommand.logger.log(breakpointCondition.expression)
+                                        this@StopCommand.logger.log("...yields results at $parsedSourceLocation")
+                                        this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                                    }
+
+                                    hasSolution
+                                }
+
+                                is BreakpointCondition.SparqlCondition.IfSparqlNoneCondition -> {
+                                    if (!hasSolution) {
+                                        this@StopCommand.logger.log("The SPARQL expression")
+                                        this@StopCommand.logger.log(breakpointCondition.expression)
+                                        this@StopCommand.logger.log("...yields no results at $parsedSourceLocation")
+                                        this@StopCommand.logger.emphasize("Conditional breakpoint hit!")
+                                    }
+
+                                    !hasSolution
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            try {
-                this@StopCommand.jvmDebugger.setBreakpoint(className, lineNumber, callback)
-            } catch (e: NumberFormatException) {
-                this@StopCommand.logger.error("Line number must be an integer: $lineNumber")
-                throw ProgramResult(-1)
-            }
-        }
-
-        private fun lineNumberByTextSearch(className: String, toFind: String): Int? {
-            val errorContextExplanation = """
-                    A string was given instead of a line number.
-                    Will try to find the source file based on the class name and search its contents for the string.
-                    The line number of the first appearance of the string will then be used.
-                """.trimIndent()
-
-            // Try to deduce source location from class expression.
-            // Search the given string in the source and set the line number to the location of the string in the source
-            val potentialSourcePath = Path.of(
-                "${className.replace('.', File.separatorChar)}.java"
+            this@StopCommand.jvmDebugger.setBreakpoint(
+                parsedSourceLocation.className,
+                parsedSourceLocation.line,
+                callback
             )
-            if (!potentialSourcePath.isReadable()) {
-                this@StopCommand.logger.debug(errorContextExplanation)
-                this@StopCommand.logger.error("Could not find source file $potentialSourcePath, or it is not readable.")
-                return null
-            }
-
-            val file = potentialSourcePath.toFile()
-            return file.useLines { lines ->
-                val searchResult = lines
-                    .withIndex()
-                    .find { (_, line) -> line.contains(toFind) }
-
-                if (searchResult == null) {
-                    this@StopCommand.logger.debug(errorContextExplanation)
-                    this@StopCommand.logger.error("Could not find search string \"$toFind\" in source file $potentialSourcePath.")
-                    return@useLines null
-                }
-                val foundLine = searchResult.index + 1
-
-                this@StopCommand.logger.debug("Using line $foundLine of $potentialSourcePath where search string \"$toFind\" was found.")
-
-                foundLine
-            }
         }
+
     }
 
     init {

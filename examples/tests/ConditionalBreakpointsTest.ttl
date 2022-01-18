@@ -1,0 +1,22 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/ConditionalBreakpointsTest#> .
+
+domain:Some
+    rdf:type owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            prog:examples.tests.Optional
+            [
+                a owl:Restriction ;
+                owl:onProperty prog:examples.tests.Optional.value ;
+                owl:someValuesFrom prog:java.lang.Object
+            ]
+        )
+    ] .

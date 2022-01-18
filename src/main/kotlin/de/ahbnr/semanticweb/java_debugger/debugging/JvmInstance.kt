@@ -88,7 +88,7 @@ class JvmInstance(
             for (event in eventSet!!) {
                 when (event) {
                     is BreakpointEvent -> {
-                        state = JvmState(event.thread())
+                        state = JvmState(event.thread(), event.location())
                         paused = true
                     }
                     is VMDisconnectEvent -> {

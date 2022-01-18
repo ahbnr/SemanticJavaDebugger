@@ -1,7 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands.utils
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.optimization.extractSyntacticLocalityModule
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -41,13 +40,13 @@ class ClassCloser(
                 .toList()
         else {
             val ontology =
-                if (doSyntacticExtraction)
-                    extractSyntacticLocalityModule(
-                        knowledgeBase,
-                        `class`.signature().asSequence().toSet(),
-                        classRelationDepth
+                if (doSyntacticExtraction) {
+                    val extractor = SyntacticLocalityModuleExtractor(knowledgeBase, classRelationDepth, quiet)
+
+                    extractor.extractModule(
+                        `class`.signature().asSequence().toSet()
                     )
-                else knowledgeBase.ontology
+                } else knowledgeBase.ontology
 
             knowledgeBase
                 .getOwlClassExpressionReasoner(ontology)
