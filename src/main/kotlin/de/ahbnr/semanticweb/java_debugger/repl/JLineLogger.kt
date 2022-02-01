@@ -11,64 +11,69 @@ import java.nio.charset.Charset
 class JLineLogger(
     private val terminal: Terminal
 ) : Logger {
-    override fun debug(line: String) {
-        terminal.writer().println(
+    private fun printWithStyle(line: String, style: AttributedStyle?, appendNewline: Boolean) {
+        val toPrint = if (style != null) {
             AttributedStringBuilder()
-                .style(AttributedStyle.DEFAULT.foreground(146, 131, 116))
+                .style(style)
                 .append(line)
                 .style(AttributedStyle.DEFAULT)
                 .toAnsi(terminal)
-        )
+        } else line
+
+        if (appendNewline)
+            terminal.writer().println(toPrint)
+        else
+            terminal.writer().print(toPrint)
+
         terminal.flush()
     }
 
-    override fun log(line: String) {
-        terminal.writer().println(line)
-        terminal.flush()
+    override fun debug(line: String, appendNewline: Boolean) {
+        printWithStyle(
+            line,
+            AttributedStyle.DEFAULT.foreground(146, 131, 116),
+            appendNewline
+        )
     }
 
-    override fun emphasize(line: String) {
-        terminal.writer().println(
-            AttributedStringBuilder()
-                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
-                .append(line)
-                .style(AttributedStyle.DEFAULT)
-                .toAnsi(terminal)
+    override fun log(line: String, appendNewline: Boolean) {
+        printWithStyle(
+            line,
+            null,
+            appendNewline
         )
-        terminal.flush()
     }
 
-    override fun success(line: String) {
-        terminal.writer().println(
-            AttributedStringBuilder()
-                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
-                .append(line)
-                .style(AttributedStyle.DEFAULT)
-                .toAnsi(terminal)
+    override fun emphasize(line: String, appendNewline: Boolean) {
+        printWithStyle(
+            line,
+            AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN),
+            appendNewline
         )
-        terminal.flush()
     }
 
-    override fun warning(line: String) {
-        terminal.writer().println(
-            AttributedStringBuilder()
-                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW))
-                .append(line)
-                .style(AttributedStyle.DEFAULT)
-                .toAnsi(terminal)
+    override fun success(line: String, appendNewline: Boolean) {
+        printWithStyle(
+            line,
+            AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN),
+            appendNewline
         )
-        terminal.flush()
     }
 
-    override fun error(line: String) {
-        terminal.writer().println(
-            AttributedStringBuilder()
-                .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.RED))
-                .append(line)
-                .style(AttributedStyle.DEFAULT)
-                .toAnsi(terminal)
+    override fun warning(line: String, appendNewline: Boolean) {
+        printWithStyle(
+            line,
+            AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW),
+            appendNewline
         )
-        terminal.flush()
+    }
+
+    override fun error(line: String, appendNewline: Boolean) {
+        printWithStyle(
+            line,
+            AttributedStyle.DEFAULT.foreground(AttributedStyle.RED),
+            appendNewline
+        )
     }
 
     override fun logStream(): OutputStream {

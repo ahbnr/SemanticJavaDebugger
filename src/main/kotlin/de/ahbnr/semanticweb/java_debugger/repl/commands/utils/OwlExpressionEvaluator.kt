@@ -41,11 +41,39 @@ class OwlExpressionEvaluator(
         return manchesterParser
     }
 
+    private fun replaceVariables(expression: String): String =
+        // Replace every occurence of a variable with the associated IRI
+        expression.replace(
+            Regex("\\?[^\\s]+")
+        ) { match ->
+            val varName = match.value
+            val rdfNode = knowledgeBase.getVariable(varName)
+            val iri = if (rdfNode != null && rdfNode.isURIResource) {
+                // Workaround: Use prefixed IRI when possible, since manchester parser seems not to accept <...> IRIs in all cases
+                //   might be a bug in the parser
+                val rawUri = rdfNode.asResource().uri
+                val prefixedUri = knowledgeBase.asPrefixNameUri(rawUri)
+                if (prefixedUri != rawUri)
+                    prefixedUri
+                else
+                    "<$rawUri>"
+            } else {
+                logger.error("There is no variable $varName.")
+                null
+            }
+
+            iri ?: varName
+        }
+
     private fun parseAxiomExpression(manchesterAxiomExpression: String): OWLAxiom? {
         val parser = buildParser()
 
         val axiom = try {
-            parser.setStringToParse(manchesterAxiomExpression)
+            parser.setStringToParse(
+                replaceVariables(
+                    manchesterAxiomExpression
+                )
+            )
             parser.parseAxiom()
         } catch (e: ParserException) {
             val message = e.message
@@ -64,7 +92,9 @@ class OwlExpressionEvaluator(
         val parser = buildParser()
 
         val classExpression = try {
-            parser.parseClassExpression(manchesterClassExpression)
+            parser.parseClassExpression(
+                replaceVariables(manchesterClassExpression)
+            )
         } catch (e: ParserException) {
             val message = e.message
             if (message != null) {

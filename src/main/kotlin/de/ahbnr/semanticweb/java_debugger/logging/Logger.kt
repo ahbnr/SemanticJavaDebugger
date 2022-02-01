@@ -3,12 +3,12 @@ package de.ahbnr.semanticweb.java_debugger.logging
 import java.io.OutputStream
 
 interface Logger {
-    fun debug(line: String)
-    fun log(line: String)
-    fun emphasize(line: String)
-    fun success(line: String)
-    fun warning(line: String)
-    fun error(line: String)
+    fun debug(line: String, appendNewline: Boolean = true)
+    fun log(line: String, appendNewline: Boolean = true)
+    fun emphasize(line: String, appendNewline: Boolean = true)
+    fun success(line: String, appendNewline: Boolean = true)
+    fun warning(line: String, appendNewline: Boolean = true)
+    fun error(line: String, appendNewline: Boolean = true)
 
     fun logStream(): OutputStream
     fun warningStream(): OutputStream

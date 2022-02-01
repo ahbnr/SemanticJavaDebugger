@@ -28,10 +28,11 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
     )
 
     private val instancesOfMode = "instancesOf"
+    private val entailsMode = "entails"
     private val isSatisfiableMode = "isSatisfiable"
-    val mode by argument().choice(instancesOfMode, isSatisfiableMode)
+    val mode by argument().choice(instancesOfMode, entailsMode, isSatisfiableMode)
 
-    val rawClassExpression: String by argument()
+    val rawDlExpression: String by argument()
 
     override fun run() {
         val knowledgeBase = state.knowledgeBase
@@ -50,33 +51,52 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
 
         when (mode) {
             instancesOfMode -> {
-                val instances = evaluator.getInstances(rawClassExpression) ?: throw ProgramResult(-1)
+                val instances = evaluator.getInstances(rawDlExpression) ?: throw ProgramResult(-1)
 
                 if (instances.isEmpty) {
                     logger.log("Found no instances for this class.")
                 } else {
-                    for (instance in instances) {
-                        logger.log(
-                            instance
-                                .entities()
-                                .asSequence()
-                                .joinToString(", ") {
-                                    val prefixUriAndName =
-                                        knowledgeBase.uriToPrefixName.entries.find { (uri, prefixName) ->
-                                            it.iri.startsWith(uri)
-                                        }
-                                    if (prefixUriAndName != null) {
-                                        val (prefixUri, prefixName) = prefixUriAndName
+                    val individuals = instances
+                        .asSequence()
+                        .flatMap { it.entities().asSequence() }
 
-                                        it.iri.replaceRange(prefixUri.indices, "$prefixName:")
-                                    } else it.iri
-                                }
-                        )
+                    for ((individualIdx, individual) in individuals.withIndex()) {
+                        val prefixUriAndName =
+                            knowledgeBase.uriToPrefixName.entries.find { (uri, _) ->
+                                individual.iri.startsWith(uri)
+                            }
+
+                        val prefixedIri = if (prefixUriAndName != null) {
+                            val (prefixUri, prefixName) = prefixUriAndName
+
+                            individual.iri.replaceRange(prefixUri.indices, "$prefixName:").toString()
+                        } else individual.iri.toString()
+
+
+                        logger.log(prefixedIri, appendNewline = false)
+
+                        val rdfGraph = knowledgeBase.ontology.asGraphModel()
+                        val rdfResource = rdfGraph.getResource(individual.iri.toString())
+                        if (rdfGraph.containsResource(rdfResource)) {
+                            val varName = "?i$individualIdx"
+                            knowledgeBase.setVariable(varName, rdfResource)
+
+                            logger.debug(" as $varName")
+                        } else
+                            logger.warning(" (no RDF node found)")
                     }
                 }
             }
+            entailsMode -> {
+                val entails = evaluator.isEntailed(rawDlExpression) ?: throw ProgramResult(-1)
+                if (entails) {
+                    logger.success("true")
+                } else {
+                    logger.error("false")
+                }
+            }
             isSatisfiableMode -> {
-                val isSatisfiable = evaluator.isSatisfiable(rawClassExpression) ?: throw ProgramResult(-1)
+                val isSatisfiable = evaluator.isSatisfiable(rawDlExpression) ?: throw ProgramResult(-1)
                 if (isSatisfiable) {
                     logger.success("true")
                 } else {
