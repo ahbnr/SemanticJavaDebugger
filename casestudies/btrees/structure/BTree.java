@@ -100,9 +100,5 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
 
         parent.keys[fullChildIdx] = toSplit.keys[centerIdx];
         toSplit.keys[centerIdx] = null;
-
-        parent.children[fullChildIdx + 1] = newNode;
-
-        parent.size = parent.size + 1;
     }
 }

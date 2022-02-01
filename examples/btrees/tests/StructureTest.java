@@ -25,6 +25,21 @@ public class StructureTest {
         return nodeArray;
     }
 
+    private static <K extends Comparable<? super K>> void assertEquals(
+            List<K> expected,
+            List<K> actual
+    ) {
+        if (expected.size() != actual.size()) {
+            throw new RuntimeException("Differing sizes: Expected " + expected.size() + ". Actual: " + actual.size() + ".\nFull Comparison: Expected: " + expected.toString() + " Actual: " + actual.toString());
+        }
+
+        for (int i = 0; i < expected.size(); ++i) {
+            if (expected.get(i).compareTo(actual.get(i)) != 0) {
+                throw new RuntimeException("Differing entry at index " + i + ".\nFull Comparison: Expected: " + expected.toString() + " Actual: " + actual.toString());
+            }
+        }
+    }
+
     public static void NodeTypeTests() {
         var root = newNode();
         root.children[0] = newNode();
@@ -119,6 +134,18 @@ public class StructureTest {
         System.out.println("Test point: ValidNodeConditionError");
     }
 
+    public static void brokenSplitTest() {
+        var tree = new BTree<Integer>();
+        tree.breakSplit = true;
+
+        var expected = Arrays.asList(0, 1, 2, 3);
+        for (var e : expected) {
+            tree.insert(e);
+        }
+
+        System.out.println("Test point: brokenSplitTest");
+    }
+
     public static void main(String[] args) {
         NodeTypeTests();
 
@@ -133,5 +160,7 @@ public class StructureTest {
 
         ValidNodeConditionSuccess();
         ValidNodeConditionError();
+
+        brokenSplitTest();
     }
 }

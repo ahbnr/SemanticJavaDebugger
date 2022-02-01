@@ -138,8 +138,6 @@ domain:HasMChildren
 domain:ConditionOne
     a owl:Class ;
     # We have to model this stepwise, since we can not count complex properties ?
-    # No => The real problem is, that hasChild is not closed. And it is also impossible (proof?) to close it, since
-    #   (syntactically) property chains can not be on the right hand side of a subPropertyOf axiom.
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
@@ -246,143 +244,7 @@ domain:ConditionThree
 # Maybe we can formulate something weaker to replace this one?
 
 # We can for example check some low-level structural properties, that is, the key and child arrays are not fragmented,
-# they have a continues initial block of entries, and then only null values:
-
-# This is the hard way of defining it:
-# domain:ElementOfNullBlock
-#     a owl:Class ;
-#     owl:equivalentClass [
-#         a owl:Class ;
-#         owl:intersectionOf (
-#             [
-#                 a owl:Restriction ;
-#                 owl:onProperty java:storesReference ;
-#                 owl:someValuesFrom [
-#                     a owl:Class ;
-#                     owl:oneOf ( java:null )
-#                 ]
-#             ]
-#             [
-#                 a owl:Restriction ;
-#                 owl:onProperty java:hasSuccessor ;
-#                 owl:allValuesFrom domain:ElementOfNullBlock
-#             ]
-#         )
-#     ] .
-#
-# domain:ElementOfContinuousBlock
-#     a owl:Class ;
-#     owl:equivalentClass [
-#         a owl:Class ;
-#         owl:intersectionOf (
-#             [
-#                 a owl:Restriction ;
-#                 owl:onProperty java:storesReference ;
-#                 owl:someValuesFrom prog:java.lang.Object
-#             ]
-#             [
-#                 a owl:Restriction ;
-#                 owl:onProperty java:hasSuccessor ;
-#                 owl:allValuesFrom [
-#                     a owl:Class ;
-#                     owl:unionOf (
-#                         domain:ElementOfContinuousBlock
-#                         domain:ElementOfNullBlock
-#                     )
-#                 ]
-#             ]
-#         )
-#     ] .
-#
-# domain:ContinuousArray
-#     a owl:Class ;
-#     owl:equivalentClass [
-#         a owl:Restriction ;
-#         owl:onProperty java:hasElement ;
-#         owl:someValuesFrom [
-#             a owl:Class ;
-#             owl:unionOf (
-#                 domain:ElementOfNullBlock
-#                 domain:ElementOfContinuousBlock
-#             )
-#         ]
-#     ] .
-
-# It might be easier to ask for an array, which does not have a null element with a non-null successor.
-# (no circular definitions)
-# The relations should be closed enough for this negation to work
-
-domain:NullElementWithObjectSuccessor
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:intersectionOf (
-            [
-                a owl:Restriction ;
-                owl:onProperty java:storesReference ;
-                owl:someValuesFrom [
-                    a owl:Class ;
-                    owl:oneOf ( java:null )
-                ]
-            ]
-            [
-                a owl:Restriction ;
-                owl:onProperty java:hasSuccessor ;
-                owl:someValuesFrom [
-                    a owl:Restriction ;
-                    owl:onProperty java:storesReference ;
-                    owl:someValuesFrom prog:java.lang.Object
-                ]
-            ]
-        )
-    ] .
-
-domain:NonContinuousSequence
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Restriction ;
-        owl:onProperty java:hasElement ;
-        owl:someValuesFrom domain:NullElementWithObjectSuccessor
-    ] .
-
-domain:NodeWithFragmentedKeys
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Restriction ;
-        owl:onProperty prog:casestudies.btrees.structure.BTreeNode.keys ;
-        owl:someValuesFrom domain:NonContinuousSequence
-    ] .
-
-domain:NodeWithFragmentedChildren
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Restriction ;
-        owl:onProperty prog:casestudies.btrees.structure.BTreeNode.children ;
-        owl:someValuesFrom domain:NonContinuousSequence
-    ] .
-
-domain:FragmentedNode
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:unionOf (
-            domain:NodeWithFragmentedKeys
-            domain:NodeWithFragmentedChildren
-        )
-    ] .
-
-domain:ContinuousArrayCondition
-    a owl:Class ;
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
-            [
-                a owl:Class ;
-                owl:complementOf domain:FragmentedNode
-            ]
-        )
-    ] .
+# they have a continues initial block of entries, and then only null values.
 
 # Condition 5: All leaves appear at the same level
 #   Can not be formulated, we dont have arithmetic to compute depth
@@ -396,6 +258,5 @@ domain:ValidNode
             domain:ConditionOne
             domain:ConditionTwo
             domain:ConditionThree
-            domain:ContinuousArrayCondition
         )
     ] .

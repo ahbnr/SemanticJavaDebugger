@@ -105,4 +105,15 @@ close domain:Child
 close domain:FragmentedNode
 assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
+section "Split Error"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: brokenSplitTest'
+cont
+
+buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+close domain:FragmentedNode
+assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+
 cont

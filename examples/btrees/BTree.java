@@ -15,6 +15,8 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
         return new BTreeIterator<K>(root);
     }
 
+    public boolean breakSplit = false;
+
     public void insert(K key) {
         if (root == null) {
             root = new BTreeNode<K>(key.getClass());
@@ -101,8 +103,9 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
         parent.keys[fullChildIdx] = toSplit.keys[centerIdx];
         toSplit.keys[centerIdx] = null;
 
-        parent.children[fullChildIdx + 1] = newNode;
-
-        parent.size = parent.size + 1;
+        if (!breakSplit) {
+            parent.children[fullChildIdx + 1] = newNode;
+            parent.size = parent.size + 1;
+        }
     }
 }

@@ -1,33 +1,42 @@
 reasoner HermiT
 domain casestudies/btrees/structure/BTreeStructure.ttl
 
-stop at 'casestudies.btrees.structure.StructureTest:Test point: Node Conditions'
+stop at 'casestudies.btrees.structure.StructureTest:Test Point'
 run casestudies.btrees.structure.StructureTest
 
 buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
-
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 close domain:Child
-close domain:FragmentedNode
 
-# We will see, that this tree structure violates our conditions
+# We can see that there is a node which is not valid
 owl isSatisfiable 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
 
-# The question remains, why this is the case / which conditions are violated.
+# Let's ask for all nodes
+owl instancesOf prog:casestudies.btrees.structure.BTreeNode
 
-# The grandchild node has more than 2*M children
-close domain:ConditionOne
-owl instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ConditionOne'
+# Which ones are valid?
+owl instancesOf domain:ValidNode
 
-# Child is not a root and not a leaf, but it does not have at least M children
-close domain:ConditionTwo
-owl instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ConditionTwo'
+# Ok, so we now know the non-valid node (this way of querying is faster than querying for the class containing the negation)
+# (But for the sake of automation, we now still query it directly to store the result in a variable)
+owl instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
 
-# root is not a leaf, but it also does not have at least two children
-close domain:ConditionThree
-owl instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ConditionThree'
+# What condition does it violate? Lets check
 
-# Child does not store its children as a continuous block at the start of its child array
-owl instancesOf 'domain:FragmentedNode'
+owl entails '?i0 Type: domain:ConditionOne'
+# Condition One holds
+
+owl entails '?i0 Type: domain:ConditionTwo'
+# Condition Two holds
+
+owl entails '?i0 Type: domain:ConditionThree'
+# Condition Three does not hold!
+# Hence, ?i0 must be a root node which is neither a leaf nor does it have at least two children
+
+# Further inspection with SPARQL reveals that there are only two nodes and a key value is missing
+reasoner Openllet
+sparql 'SELECT ?n ?k WHERE { ?n domain:hasKey [ java:hasPlainValue ?k ]}'
+
+# We can conclude, that the new node created during splitting got lost
 
 cont
