@@ -50,9 +50,12 @@ class ClassCloser(
 
             knowledgeBase
                 .getOwlClassExpressionReasoner(ontology)
-                .getInstances(`class`)
-                .flatMap { it.entities().asSequence() }
-                .toList()
+                .use { reasoner ->
+                    reasoner
+                        .getInstances(`class`)
+                        .flatMap { it.entities().asSequence() }
+                        .toList()
+                }
         }
 
         knowledgeBase.ontology.add(

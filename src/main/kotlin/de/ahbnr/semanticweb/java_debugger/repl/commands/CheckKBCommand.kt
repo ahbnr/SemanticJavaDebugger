@@ -93,46 +93,48 @@ class CheckKBCommand(
             val originalTracingSetting = OpenlletOptions.USE_TRACING
             OpenlletOptions.USE_TRACING = true
             try {
-                val reasoner = knowledgeBase.getConsistencyReasoner()
+                knowledgeBase
+                    .getConsistencyReasoner()
+                    .use { reasoner ->
+                        logger.log("Performing consistency check...")
+                        val isConsistent = reasoner.isConsistent
+                        if (isConsistent) {
+                            logger.success("Knowledge base is consistent.")
+                        } else {
+                            logger.error("Knowledge base is inconsistent!")
 
-                logger.log("Performing consistency check...")
-                val isConsistent = reasoner.isConsistent
-                if (isConsistent) {
-                    logger.success("Knowledge base is consistent.")
-                } else {
-                    logger.error("Knowledge base is inconsistent!")
+                            if (reasoner is OpenlletReasoner) {
+                                val renderer = ManchesterSyntaxExplanationRenderer()
+                                val out = PrintWriter(logger.logStream())
+                                renderer.startRendering(out)
 
-                    if (reasoner is OpenlletReasoner) {
-                        val renderer = ManchesterSyntaxExplanationRenderer()
-                        val out = PrintWriter(logger.logStream())
-                        renderer.startRendering(out)
+                                val explainer = PelletExplanation(reasoner)
+                                logger.emphasize("Why is the knowledge base inconsistent?")
+                                logger.emphasize("")
+                                renderer.render(explainer.inconsistencyExplanations)
 
-                        val explainer = PelletExplanation(reasoner)
-                        logger.emphasize("Why is the knowledge base inconsistent?")
-                        logger.emphasize("")
-                        renderer.render(explainer.inconsistencyExplanations)
+                                renderer.endRendering()
+                            } else {
+                                logger.debug("(Explanations are available when using Openllet reasoner.)")
+                            }
+                        }
 
-                        renderer.endRendering()
-                    } else {
-                        logger.debug("(Explanations are available when using Openllet reasoner.)")
+                        if (checkForUnsatisfiableClasses) {
+                            if (!isConsistent) {
+                                logger.error("Can only do a full check if Ontology is consistent.")
+                                throw ProgramResult(-1)
+                            }
+
+                            // FIXME: Am I using Hermit correctly here?
+                            val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom
+                            if (unsat.isEmpty()) {
+                                logger.success("No unsatisfiable concepts except the default bottom concepts.")
+                            } else {
+                                logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
+                                logger.error(unsat.toString())
+                            }
+                        }
                     }
-                }
-
-                if (checkForUnsatisfiableClasses) {
-                    if (!isConsistent) {
-                        logger.error("Can only do a full check if Ontology is consistent.")
-                        throw ProgramResult(-1)
-                    }
-
-                    // FIXME: Am I using Hermit correctly here?
-                    val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom
-                    if (unsat.isEmpty()) {
-                        logger.success("No unsatisfiable concepts except the default bottom concepts.")
-                    } else {
-                        logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
-                        logger.error(unsat.toString())
-                    }
-                }
             } finally {
                 OpenlletOptions.USE_TRACING = originalTracingSetting
             }

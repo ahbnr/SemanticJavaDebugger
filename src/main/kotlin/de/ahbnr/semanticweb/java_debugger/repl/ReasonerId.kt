@@ -74,18 +74,21 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             val manager = OntManagers.createManager()
             val ontologyCopy = manager.copyOntology(baseOntology, OntologyCopy.DEEP)
 
-            val reasoner = this.getOwlApiReasoner(ontologyCopy)
+            return this
+                .getOwlApiReasoner(ontologyCopy)
+                .asCloseable()
+                .use { reasoner ->
+                    val dataFactory = manager.owlDataFactory
+                    val inferenceGenerator = InferredOntologyGenerator(reasoner)
 
-            val dataFactory = manager.owlDataFactory
-            val inferenceGenerator = InferredOntologyGenerator(reasoner)
+                    logger.debug("Warning: The current reasoner ($name) does not support on-demand inference on Jena models. Thus, all inferences must first be realized before it can be used here. This can take a long time.")
 
-            logger.debug("Warning: The current reasoner ($name) does not support on-demand inference on Jena models. Thus, all inferences must first be realized before it can be used here. This can take a long time.")
+                    // perform all possible inferences
+                    // (This can probably be implemented much more efficiently by adapting Jenas reasoner interface)
+                    inferenceGenerator.fillOntology(dataFactory, ontologyCopy)
 
-            // perform all possible inferences
-            // (This can probably be implemented much more efficiently by adapting Jenas reasoner interface)
-            inferenceGenerator.fillOntology(dataFactory, ontologyCopy)
-
-            return ontologyCopy.asGraphModel()
+                    ontologyCopy.asGraphModel()
+                }
         }
     }
 

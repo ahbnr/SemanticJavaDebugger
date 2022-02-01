@@ -139,26 +139,28 @@ class SyntacticLocalityModuleExtractor(
             ModuleType.STAR
         )
 
-        val reasoner = knowledgeBase.getSyntacticModuleExtractionReasoner()
+        return knowledgeBase
+            .getSyntacticModuleExtractionReasoner()
+            .use { reasoner ->
+                if (!quiet)
+                    logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
+                val reducedAxioms = extractor.extract(signature, depth, depth, if (depth == 0) null else reasoner)
+                if (!quiet)
+                    logger.debug("Axioms after module extraction: ${reducedAxioms.size}.")
 
-        if (!quiet)
-            logger.debug("Axioms before module extraction: ${knowledgeBase.ontology.axiomCount}.")
-        val reducedAxioms = extractor.extract(signature, depth, depth, if (depth == 0) null else reasoner)
-        if (!quiet)
-            logger.debug("Axioms after module extraction: ${reducedAxioms.size}.")
+                val ontManager = OntManagers.createManager()
+                val module = ontManager.createOntology(reducedAxioms) as Ontology
 
-        val ontManager = OntManagers.createManager()
-        val module = ontManager.createOntology(reducedAxioms) as Ontology
+                // val printModel = module.asGraphModel()
+                // printModel.setNsPrefixes(knowledgeBase.ontology.asGraphModel().nsPrefixMap)
+                // RDFWriter
+                //     .create(printModel)
+                //     .lang(Lang.TURTLE)
+                //     .format(RDFFormat.TURTLE_PRETTY)
+                //     .output("reduced.ttl")
 
-        // val printModel = module.asGraphModel()
-        // printModel.setNsPrefixes(knowledgeBase.ontology.asGraphModel().nsPrefixMap)
-        // RDFWriter
-        //     .create(printModel)
-        //     .lang(Lang.TURTLE)
-        //     .format(RDFFormat.TURTLE_PRETTY)
-        //     .output("reduced.ttl")
-
-        return module
+                module
+            }
     }
 }
 

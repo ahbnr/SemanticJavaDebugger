@@ -12,7 +12,6 @@ import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.reasoner.rulesys.GenericRuleReasoner
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 
 class KnowledgeBase(
@@ -117,14 +116,14 @@ class KnowledgeBase(
     fun getJenaValidationModel(): InfModel =
         jenaValidationReasoner.inferJenaModel(ontology)
 
-    private fun getOwlApiReasoner(reasonerId: OwlApiReasonerProvider, baseOntology: Ontology): OWLReasoner =
-        reasonerId.getOwlApiReasoner(baseOntology)
+    private fun getOwlApiReasoner(reasonerId: OwlApiReasonerProvider, baseOntology: Ontology): CloseableOWLReasoner =
+        reasonerId.getOwlApiReasoner(baseOntology).asCloseable()
 
-    fun getConsistencyReasoner(): OWLReasoner = getOwlApiReasoner(consistencyReasoner, ontology)
-    fun getOwlClassExpressionReasoner(baseOntology: Ontology): OWLReasoner =
+    fun getConsistencyReasoner(): CloseableOWLReasoner = getOwlApiReasoner(consistencyReasoner, ontology)
+    fun getOwlClassExpressionReasoner(baseOntology: Ontology): CloseableOWLReasoner =
         getOwlApiReasoner(owlClassExpressionReasoner, baseOntology)
 
-    fun getSyntacticModuleExtractionReasoner(): OWLReasoner =
+    fun getSyntacticModuleExtractionReasoner(): CloseableOWLReasoner =
         getOwlApiReasoner(syntacticModuleExtractionReasoner, ontology)
 
     val prefixNameToUri: Map<String, String>

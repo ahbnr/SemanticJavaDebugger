@@ -2,6 +2,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.utils
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.java_debugger.repl.CloseableOWLReasoner
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -13,7 +14,6 @@ import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.reasoner.InconsistentOntologyException
 import org.semanticweb.owlapi.reasoner.NodeSet
-import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.util.mansyntax.ManchesterOWLSyntaxParser
 import java.util.stream.Stream
 import kotlin.streams.asSequence
@@ -108,7 +108,7 @@ class OwlExpressionEvaluator(
         return classExpression
     }
 
-    private fun getReasoner(signature: Stream<OWLEntity>): OWLReasoner {
+    private fun getReasoner(signature: Stream<OWLEntity>): CloseableOWLReasoner {
         val ontology =
             if (doSyntacticExtraction) {
                 val extractor = SyntacticLocalityModuleExtractor(
@@ -143,30 +143,33 @@ class OwlExpressionEvaluator(
     fun isSatisfiable(manchesterClassExpression: String): Boolean? {
         val classExpression = parseClassExpression(manchesterClassExpression) ?: return null
 
-        val reasoner = getReasoner(classExpression.signature())
-
-        return handleReasonerErrors {
-            reasoner.isSatisfiable(classExpression)
-        }
+        return getReasoner(classExpression.signature())
+            .use { reasoner ->
+                handleReasonerErrors {
+                    reasoner.isSatisfiable(classExpression)
+                }
+            }
     }
 
     fun getInstances(manchesterClassExpression: String): NodeSet<OWLNamedIndividual>? {
         val classExpression = parseClassExpression(manchesterClassExpression) ?: return null
 
-        val reasoner = getReasoner(classExpression.signature())
-
-        return handleReasonerErrors {
-            reasoner.getInstances(classExpression)
-        }
+        return getReasoner(classExpression.signature())
+            .use { reasoner ->
+                handleReasonerErrors {
+                    reasoner.getInstances(classExpression)
+                }
+            }
     }
 
     fun isEntailed(manchesterAxiomExpression: String): Boolean? {
         val axiom = parseAxiomExpression(manchesterAxiomExpression) ?: return null
 
-        val reasoner = getReasoner(axiom.signature())
-
-        return handleReasonerErrors {
-            reasoner.isEntailed(axiom)
-        }
+        return getReasoner(axiom.signature())
+            .use { reasoner ->
+                handleReasonerErrors {
+                    reasoner.isEntailed(axiom)
+                }
+            }
     }
 }
