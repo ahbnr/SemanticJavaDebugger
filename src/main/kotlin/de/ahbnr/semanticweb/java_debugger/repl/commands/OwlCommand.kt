@@ -14,7 +14,9 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.streams.asSequence
+import org.semanticweb.owlapi.apibinding.OWLFunctionalSyntaxFactory
+import org.semanticweb.owlapi.model.OWLNamedIndividual
+import kotlin.streams.toList
 
 class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
     private val logger: Logger by inject()
@@ -28,9 +30,19 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
     )
 
     private val instancesOfMode = "instancesOf"
+    private val representativeInstancesOfMode = "representativeInstancesOf"
     private val entailsMode = "entails"
     private val isSatisfiableMode = "isSatisfiable"
-    val mode by argument().choice(instancesOfMode, entailsMode, isSatisfiableMode)
+    private val isClosedMode = "isClosed"
+    private val signatureMode = "signature"
+    val mode by argument().choice(
+        representativeInstancesOfMode,
+        instancesOfMode,
+        entailsMode,
+        isSatisfiableMode,
+        isClosedMode,
+        signatureMode
+    )
 
     val rawDlExpression: String by argument()
 
@@ -50,17 +62,20 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
         }
 
         when (mode) {
-            instancesOfMode -> {
-                val instances = evaluator.getInstances(rawDlExpression) ?: throw ProgramResult(-1)
+            instancesOfMode, representativeInstancesOfMode -> {
+                val instances =
+                    when (mode) {
+                        instancesOfMode -> evaluator.getInstances(rawDlExpression)?.entities()
+                        representativeInstancesOfMode -> evaluator.getRepresentativeInstances(rawDlExpression)
+                        else -> null
+                    }
+                        ?.toList()
+                        ?: throw ProgramResult(-1)
 
-                if (instances.isEmpty) {
+                if (instances.isEmpty()) {
                     logger.log("Found no instances for this class.")
                 } else {
-                    val individuals = instances
-                        .asSequence()
-                        .flatMap { it.entities().asSequence() }
-
-                    for ((individualIdx, individual) in individuals.withIndex()) {
+                    for ((individualIdx, individual) in instances.withIndex()) {
                         val prefixUriAndName =
                             knowledgeBase.uriToPrefixName.entries.find { (uri, _) ->
                                 individual.iri.startsWith(uri)
@@ -101,6 +116,36 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
                     logger.success("true")
                 } else {
                     logger.error("false")
+                }
+            }
+            isClosedMode -> {
+                // TODO: Can this be done more efficiently?
+
+                val classExpression = evaluator.parseClassExpression(rawDlExpression) ?: throw ProgramResult(-1)
+
+                val instances = evaluator
+                    .getInstances(classExpression)
+                    ?.entities()
+                    ?.toArray { size -> arrayOfNulls<OWLNamedIndividual>(size) }
+                    ?: throw ProgramResult(-1)
+
+                val isClosedAxiom = OWLFunctionalSyntaxFactory.SubClassOf(
+                    classExpression,
+                    OWLFunctionalSyntaxFactory.ObjectOneOf(*instances)
+                )
+
+                val isClosed = evaluator.isEntailed(isClosedAxiom) ?: throw ProgramResult(-1)
+                if (isClosed) {
+                    logger.success("true")
+                } else {
+                    logger.error("false")
+                }
+            }
+            signatureMode -> {
+                val classExpression = evaluator.parseClassExpression(rawDlExpression) ?: throw ProgramResult(-1)
+
+                for (owlEntity in classExpression.signature()) {
+                    logger.log(owlEntity.toString())
                 }
             }
         }

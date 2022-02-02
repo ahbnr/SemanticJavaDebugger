@@ -14,6 +14,7 @@ import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.reasoner.InconsistentOntologyException
 import org.semanticweb.owlapi.reasoner.NodeSet
+import org.semanticweb.owlapi.reasoner.impl.OWLNamedIndividualNodeSet
 import org.semanticweb.owlapi.util.mansyntax.ManchesterOWLSyntaxParser
 import java.util.stream.Stream
 import kotlin.streams.asSequence
@@ -88,7 +89,7 @@ class OwlExpressionEvaluator(
         return axiom
     }
 
-    private fun parseClassExpression(manchesterClassExpression: String): OWLClassExpression? {
+    fun parseClassExpression(manchesterClassExpression: String): OWLClassExpression? {
         val parser = buildParser()
 
         val classExpression = try {
@@ -151,25 +152,51 @@ class OwlExpressionEvaluator(
             }
     }
 
+    fun getRepresentitiveInstances(classExpression: OWLClassExpression): Stream<OWLNamedIndividual>? =
+        getReasoner(classExpression.signature())
+            .use { reasoner ->
+                handleReasonerErrors {
+                    reasoner.representativeInstances(classExpression)
+                }
+            }
+
+    fun getRepresentativeInstances(manchesterClassExpression: String): Stream<OWLNamedIndividual>? {
+        val classExpression = parseClassExpression(manchesterClassExpression) ?: return null
+
+        return getRepresentitiveInstances(classExpression)
+    }
+
+    fun getInstances(classExpression: OWLClassExpression): NodeSet<OWLNamedIndividual>? =
+        getReasoner(classExpression.signature())
+            .use { reasoner ->
+                handleReasonerErrors {
+                    // We make a quick satisfiability check.
+                    // Those are usually faster than listing instances and we can return the empty set if the class
+                    // is not satisfiable
+                    // FIXME: Why is this the case?
+                    if (reasoner.isSatisfiable(classExpression))
+                        reasoner.getInstances(classExpression)
+                    else OWLNamedIndividualNodeSet()
+                }
+            }
+
     fun getInstances(manchesterClassExpression: String): NodeSet<OWLNamedIndividual>? {
         val classExpression = parseClassExpression(manchesterClassExpression) ?: return null
 
-        return getReasoner(classExpression.signature())
-            .use { reasoner ->
-                handleReasonerErrors {
-                    reasoner.getInstances(classExpression)
-                }
-            }
+        return getInstances(classExpression)
     }
 
-    fun isEntailed(manchesterAxiomExpression: String): Boolean? {
-        val axiom = parseAxiomExpression(manchesterAxiomExpression) ?: return null
-
-        return getReasoner(axiom.signature())
+    fun isEntailed(axiom: OWLAxiom): Boolean? =
+        getReasoner(axiom.signature())
             .use { reasoner ->
                 handleReasonerErrors {
                     reasoner.isEntailed(axiom)
                 }
             }
+
+    fun isEntailed(manchesterAxiomExpression: String): Boolean? {
+        val axiom = parseAxiomExpression(manchesterAxiomExpression) ?: return null
+
+        return isEntailed(axiom)
     }
 }
