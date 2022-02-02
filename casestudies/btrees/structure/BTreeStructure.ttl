@@ -18,19 +18,6 @@ domain:hasKey
         java:storesReference
     ) .
 
-domain:hasChild
-    a owl:ObjectProperty ;
-    owl:propertyChainAxiom (
-        prog:casestudies.btrees.structure.BTreeNode.children
-        java:hasElement
-        java:storesReference
-    ) .
-
-domain:hasParent
-    a owl:ObjectProperty ;
-    rdfs:range prog:casestudies.btrees.structure.BTreeNode ;
-    owl:inverseOf domain:hasChild .
-
 domain:Child
     a owl:Class ;
     owl:equivalentClass [
@@ -39,8 +26,27 @@ domain:Child
             prog:casestudies.btrees.structure.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty domain:hasParent ;
-                owl:someValuesFrom prog:casestudies.btrees.structure.BTreeNode
+                owl:onProperty [
+                    a owl:ObjectProperty ;
+                    owl:inverseOf java:storesReference
+                ] ;
+                owl:someValuesFrom
+                [
+                    a owl:Restriction ;
+                    owl:onProperty [
+                        a owl:ObjectProperty ;
+                        owl:inverseOf java:hasElement
+                    ] ;
+                    owl:someValuesFrom
+                    [
+                        a owl:Restriction ;
+                        owl:onProperty [
+                            a owl:ObjectProperty ;
+                            owl:inverseOf prog:casestudies.btrees.structure.BTreeNode.children
+                        ] ;
+                        owl:someValuesFrom prog:casestudies.btrees.structure.BTreeNode
+                    ]
+                ]
             ]
         )
     ] .

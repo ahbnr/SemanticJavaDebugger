@@ -9,11 +9,10 @@ public class StructureTest {
     public static void main(String[] args) {
         var tree = new BTree<Integer>();
 
-        var expected = Arrays.asList(0, 1, 2, 3);
-        for (var e : expected) {
-            tree.insert(e);
-        }
+        for (var i : Arrays.asList(0, 1, 2, 3)) tree.insert(i);
 
         System.out.println("Test Point");
+
+        for (var i : tree) System.out.println(i);
     }
 }

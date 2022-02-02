@@ -6,7 +6,6 @@ run casestudies.btrees.structure.StructureTest
 
 buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
-close domain:Child
 
 # We can see that there is a node which is not valid
 owl isSatisfiable 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
