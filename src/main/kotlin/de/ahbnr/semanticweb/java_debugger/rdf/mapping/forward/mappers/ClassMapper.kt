@@ -130,16 +130,19 @@ class ClassMapper : IMapper {
 
                             if (!field.isStatic) {
                                 // We force all individuals of the class to implement the field
-                                tripleCollector.addStatement(
-                                    classURI,
-                                    URIs.rdfs.subClassOf,
-                                    tripleCollector.addConstruct(
-                                        TripleCollector.BlankNodeConstruct.OWLSome(
-                                            fieldURI,
-                                            addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
-                                        )
-                                    )
-                                )
+                                // FIXME: This creates a lot of subClass axioms. Inefficient.
+                                //   It is a form of closure axiom. Should we really enforce this?
+                                //   It does create reasoning overhead
+                                // tripleCollector.addStatement(
+                                //     classURI,
+                                //     URIs.rdfs.subClassOf,
+                                //     tripleCollector.addConstruct(
+                                //         TripleCollector.BlankNodeConstruct.OWLSome(
+                                //             fieldURI,
+                                //             addReferenceOrNullClass(URIs.prog.genReferenceTypeURI(fieldType.type))
+                                //         )
+                                //     )
+                                // )
                             }
                         }
                         is PrimitiveType -> {
@@ -163,16 +166,19 @@ class ClassMapper : IMapper {
 
                             if (!field.isStatic) {
                                 // We force all individuals of the class to implement these fields
-                                tripleCollector.addStatement(
-                                    classURI,
-                                    URIs.rdfs.subClassOf,
-                                    tripleCollector.addConstruct(
-                                        TripleCollector.BlankNodeConstruct.OWLSome(
-                                            fieldURI,
-                                            NodeFactory.createURI(datatypeURI)
-                                        )
-                                    )
-                                )
+                                // FIXME: This creates a lot of subClass axioms. Inefficient.
+                                //   It is a form of closure axiom. Should we really enforce this?
+                                //   It does create reasoning overhead
+                                // tripleCollector.addStatement(
+                                //     classURI,
+                                //     URIs.rdfs.subClassOf,
+                                //     tripleCollector.addConstruct(
+                                //         TripleCollector.BlankNodeConstruct.OWLSome(
+                                //             fieldURI,
+                                //             NodeFactory.createURI(datatypeURI)
+                                //         )
+                                //     )
+                                // )
                             }
                         }
                         else -> {
