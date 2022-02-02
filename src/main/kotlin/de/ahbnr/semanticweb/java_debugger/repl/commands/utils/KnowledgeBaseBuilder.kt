@@ -35,7 +35,7 @@ class KnowledgeBaseBuilder(
             logger.debug("No path to source. Can not augment knowledge base with source structure.")
         }
         spoonLauncher.buildModel()
-        if (!quiet)
+        if (!quiet && sourcePath != null)
             logger.success("Source model created.")
 
         return spoonLauncher.model
@@ -47,12 +47,17 @@ class KnowledgeBaseBuilder(
                 setOf(
                     "sun",
                     "jdk",
-                    "java.util.concurrent",
                     "java.security",
                     "java.lang.reflect",
                     "java.lang.ref",
                     "java.lang.module",
                     "java.lang.invoke",
+                    "java.lang.annotation",
+                    "java.lang.module",
+                    "java.lang.reflect",
+                    "java.net",
+                    "java.nio",
+                    "java.util.concurrent",
                 )
             else setOf(),
             shallowPackages = setOf("java"),

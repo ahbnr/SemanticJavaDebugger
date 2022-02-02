@@ -10,7 +10,8 @@ import de.ahbnr.semanticweb.java_debugger.utils.expandResourceToModel
 import de.ahbnr.semanticweb.java_debugger.utils.toPrettyString
 import org.apache.jena.rdf.model.*
 import org.apache.jena.riot.Lang
-import org.apache.jena.riot.RDFDataMgr
+import org.apache.jena.riot.RDFFormat
+import org.apache.jena.riot.RDFWriter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -53,7 +54,11 @@ class InspectCommand() : REPLCommand(name = "inspect"), KoinComponent {
         when {
             node.isResource -> {
                 val resource = node.asResource()
-                RDFDataMgr.write(logger.logStream(), expandResourceToModel(resource, URIs.ns), Lang.TTL)
+                RDFWriter.create()
+                    .lang(Lang.TURTLE)
+                    .format(RDFFormat.TURTLE_PRETTY)
+                    .source(expandResourceToModel(resource, URIs.ns))
+                    .output(logger.logStream())
                 // for (property in resource.listProperties()) {
                 //     logger.log(property.toPrettyString(model))
                 // }

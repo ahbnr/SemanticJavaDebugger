@@ -18,7 +18,7 @@ fun expandResourceToModel(baseResource: Resource, ns: Namespaces, noBlankDefault
     )
 
     fun addProperties(node: RDFNode): RDFNode? =
-        node.visitWith(object: RDFVisitor {
+        node.visitWith(object : RDFVisitor {
             override fun visitBlank(blank: Resource, id: AnonId): Any? {
                 if (addedResources.contains(blank.id)) {
                     return null
@@ -46,18 +46,30 @@ fun expandResourceToModel(baseResource: Resource, ns: Namespaces, noBlankDefault
 
                 return blankCopy
             }
+
             override fun visitLiteral(l: Literal) = targetModel.createTypedLiteral(l.value, l.datatype)
             override fun visitURI(r: Resource, uri: String) = targetModel.createResource(uri)
         }) as RDFNode?
+
+    val baseResourceCopy = targetModel.createResource(baseResource.uri)
 
     for (property in baseResource.listProperties()) {
         val objectCopy = addProperties(property.`object`)
 
         if (objectCopy != null) {
-            targetModel.createResource(baseResource.uri)
+            baseResourceCopy
                 .addProperty(property.predicate, objectCopy)
         }
     }
+
+    // for (statement in baseResource.model.listStatements(SimpleSelector(null, null, baseResource))) {
+    //     targetModel
+    //         .createResource(statement.subject.uri)
+    //         .addProperty(
+    //             targetModel.createProperty(statement.predicate.uri),
+    //             baseResourceCopy
+    //         )
+    // }
 
     return targetModel
 }
