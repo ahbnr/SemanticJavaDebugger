@@ -262,11 +262,9 @@ java:Method rdf:type owl:Class .
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#Object
 java:Object rdf:type owl:Class ;
-            rdfs:subClassOf [ rdf:type owl:Restriction ;
-                              owl:onProperty java:hasJDWPObjectId ;
-                              owl:someValuesFrom xsd:long
-                            ] ;
-            rdfs:comment "TODO: Do we need this, if we have java:ReferenceType?"^^rdfs:Literal .
+            rdfs:comment "Removed closure axiom: hasJDWPObjectId some xsd:long"^^rdfs:Literal ,
+                         "Removed closure axiom: java:hasJDWPObjectId"^^rdfs:Literal ,
+                         "TODO: Do we need this, if we have java:ReferenceType?"^^rdfs:Literal .
 
 
 ###  https://github.com/ahbnr/SemanticJavaDebugger/Java#PrimitiveArray
