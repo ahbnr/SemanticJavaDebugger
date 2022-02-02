@@ -17,10 +17,12 @@ import org.apache.jena.reasoner.Reasoner
 import org.apache.jena.reasoner.ReasonerRegistry
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.semanticweb.HermiT.Configuration
 import org.semanticweb.HermiT.ReasonerFactory
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.parameters.OntologyCopy
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration
 import org.semanticweb.owlapi.util.InferredOntologyGenerator
 import uk.ac.manchester.cs.jfact.JFactFactory
 
@@ -34,7 +36,7 @@ interface JenaReasonerProvider : JenaModelInferrer {
 }
 
 interface OwlApiReasonerProvider : JenaModelInferrer {
-    fun getOwlApiReasoner(baseOntology: OWLOntology): OWLReasoner
+    fun getOwlApiReasoner(baseOntology: OWLOntology, reasonerConfiguration: OWLReasonerConfiguration?): OWLReasoner
 }
 
 sealed class ReasonerId(val name: String) : JenaModelInferrer {
@@ -61,13 +63,38 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
 
     sealed class PureOwlApiReasoner(name: String) : ReasonerId(name), OwlApiReasonerProvider {
         object HermiT : PureOwlApiReasoner("HermiT") {
-            override fun getOwlApiReasoner(baseOntology: OWLOntology): OWLReasoner =
-                ReasonerFactory().createReasoner(baseOntology)
+            override fun getOwlApiReasoner(
+                baseOntology: OWLOntology,
+                reasonerConfiguration: OWLReasonerConfiguration?
+            ): OWLReasoner =
+                if (reasonerConfiguration == null)
+                    ReasonerFactory().createReasoner(baseOntology)
+                else {
+                    val hermitConfig = Configuration()
+                    hermitConfig.freshEntityPolicy = reasonerConfiguration.freshEntityPolicy
+                    hermitConfig.individualNodeSetPolicy = reasonerConfiguration.individualNodeSetPolicy
+                    hermitConfig.reasonerProgressMonitor = reasonerConfiguration.progressMonitor
+                    hermitConfig.individualTaskTimeout = reasonerConfiguration.timeOut
+
+                    // TODO: Necessary due to anySimpleType definition.
+                    //   Fix this.
+                    // Maybe set at least a warning monitor instead
+                    // hermitConfig.warningMonitor = Configuration.WarningMonitor { logger.warning(it) }
+                    hermitConfig.ignoreUnsupportedDatatypes = true
+
+                    ReasonerFactory().createReasoner(baseOntology, hermitConfig)
+                }
         }
 
         object JFact : PureOwlApiReasoner("JFact") {
-            override fun getOwlApiReasoner(baseOntology: OWLOntology): OWLReasoner =
-                JFactFactory().createReasoner(baseOntology)
+            override fun getOwlApiReasoner(
+                baseOntology: OWLOntology,
+                reasonerConfiguration: OWLReasonerConfiguration?
+            ): OWLReasoner =
+                if (reasonerConfiguration == null)
+                    JFactFactory().createReasoner(baseOntology)
+                else
+                    JFactFactory().createReasoner(baseOntology, reasonerConfiguration)
         }
 
         override fun inferJenaModel(baseOntology: Ontology): Model {
@@ -75,7 +102,7 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             val ontologyCopy = manager.copyOntology(baseOntology, OntologyCopy.DEEP)
 
             return this
-                .getOwlApiReasoner(ontologyCopy)
+                .getOwlApiReasoner(ontologyCopy, null)
                 .asCloseable()
                 .use { reasoner ->
                     val dataFactory = manager.owlDataFactory
@@ -102,8 +129,16 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
      *  * http://webont.org/owled/2007/PapersPDF/submission_23.pdf
      */
     object Openllet : ReasonerId("Openllet"), JenaReasonerProvider, OwlApiReasonerProvider {
-        override fun getOwlApiReasoner(baseOntology: OWLOntology): OpenlletReasoner {
-            val reasoner = OpenlletReasonerFactory.getInstance().createReasoner(baseOntology)
+        override fun getOwlApiReasoner(
+            baseOntology: OWLOntology,
+            reasonerConfiguration: OWLReasonerConfiguration?
+        ): OpenlletReasoner {
+            val factory = OpenlletReasonerFactory.getInstance()
+            val reasoner =
+                if (reasonerConfiguration == null)
+                    factory.createReasoner(baseOntology)
+                else factory.createReasoner(baseOntology, reasonerConfiguration)
+
             // TODO: Not sure if this is necessary
             reasoner.prepareReasoner()
 

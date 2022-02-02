@@ -12,6 +12,8 @@ import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.reasoner.rulesys.GenericRuleReasoner
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.semanticweb.owlapi.reasoner.ReasonerProgressMonitor
+import org.semanticweb.owlapi.reasoner.SimpleConfiguration
 
 
 class KnowledgeBase(
@@ -117,7 +119,16 @@ class KnowledgeBase(
         jenaValidationReasoner.inferJenaModel(ontology)
 
     private fun getOwlApiReasoner(reasonerId: OwlApiReasonerProvider, baseOntology: Ontology): CloseableOWLReasoner =
-        reasonerId.getOwlApiReasoner(baseOntology).asCloseable()
+        reasonerId.getOwlApiReasoner(
+            baseOntology,
+            if (state.logReasoner)
+                SimpleConfiguration(object : ReasonerProgressMonitor {
+                    override fun reasonerTaskStarted(taskName: String) {
+                        logger.debug("Reasoner: Started task \"$taskName\".")
+                    }
+                })
+            else null
+        ).asCloseable()
 
     fun getConsistencyReasoner(): CloseableOWLReasoner = getOwlApiReasoner(consistencyReasoner, ontology)
     fun getOwlClassExpressionReasoner(baseOntology: Ontology): CloseableOWLReasoner =
