@@ -8,16 +8,9 @@ buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --dee
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 
 # We can see that there is a node which is not valid
-owl isSatisfiable 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
+owl entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
 
-# Let's ask for all nodes
-owl instancesOf prog:casestudies.btrees.structure.BTreeNode
-
-# Which ones are valid?
-owl instancesOf domain:ValidNode
-
-# Ok, so we now know the non-valid node (this way of querying is faster than querying for the class containing the negation)
-# (But for the sake of automation, we now still query it directly to store the result in a variable)
+# Ok, then let's ask which nodes are not valid:
 owl instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
 
 # What condition does it violate? Lets check
