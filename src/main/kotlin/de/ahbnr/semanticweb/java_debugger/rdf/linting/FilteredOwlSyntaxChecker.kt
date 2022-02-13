@@ -24,6 +24,8 @@ class FilteredOwlSyntaxChecker(
     private val annotationSourceProperty = model.getProperty(URIs.owl.annotatedSource)
     private val annotationTargetProperty = model.getProperty(URIs.owl.annotatedTarget)
 
+    private val chainsPropertiesProperty = model.getProperty(URIs.macros.chainsProperties)
+
     private fun filterUntyped(toFilter: Set<RDFNode>): Set<RDFNode> =
         toFilter.filter {
             // by namespace
@@ -33,7 +35,10 @@ class FilteredOwlSyntaxChecker(
                     // https://www.w3.org/2007/OWL/wiki/Quick_Reference_Guide#Annotations
                     // This is fine and should not trigger a warning
                     !model.contains(null, annotationTargetProperty, it) &&
-                    !model.contains(null, annotationSourceProperty, it)
+                    !model.contains(null, annotationSourceProperty, it) &&
+                    // The chainsProperties property has a rdf list (untyped b-node) on the right-hand side.
+                    // This is fine:
+                    !model.contains(null, chainsPropertiesProperty, it)
         }.toSet()
 
     companion object {

@@ -8,14 +8,17 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.Namespaces
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TurtleReader
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.macros.Chain
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.UniversalKnowledgeBaseParser
 import org.apache.jena.rdf.model.Model
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.semanticweb.owlapi.model.UnloadableImportException
+import org.semanticweb.owlapi.util.AutoIRIMapper
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
-import java.io.SequenceInputStream
+import java.nio.file.Path
 
 class ParserException() : Exception()
 
@@ -25,15 +28,25 @@ class GraphGenerator(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    private fun readIntoModel(model: Model, inputStream: InputStream) {
-        val reader = TurtleReader(inputStream)
-        reader.readInto(model)
+    private val macros = arrayOf(Chain())
+
+    private fun readIntoModel(fileName: String?, model: Model, inputStream: InputStream) {
+        val reader = UniversalKnowledgeBaseParser(model, fileName, inputStream)
+        reader.readIntoModel()
     }
 
     private fun loadJavaOntology(model: Model) {
-        val owlInputStream = javaClass.getResourceAsStream("/ontologies/java.owl")
+        val resourcePath = "/ontologies/java.ttl"
+        val inputStream = javaClass.getResourceAsStream(resourcePath)
 
-        readIntoModel(model, owlInputStream!!)
+        readIntoModel(resourcePath, model, inputStream!!)
+    }
+
+    private fun loadMacrosOntology(model: Model) {
+        val resourcePath = "/ontologies/macros.ttl"
+        val inputStream = javaClass.getResourceAsStream(resourcePath)
+
+        readIntoModel(resourcePath, model, inputStream!!)
     }
 
     private fun mapProgramState(buildParameters: BuildParameters, model: Model) {
@@ -50,20 +63,8 @@ class GraphGenerator(
         model: Model
     ) {
         if (applicationDomainRulesPath != null) {
-            val prefixStream = model
-                .nsPrefixMap
-                .entries
-                .joinToString("\n") { (prefixName, prefixUri) -> "@prefix $prefixName: <$prefixUri> ." }
-                .byteInputStream()
-
             val fileStream = FileInputStream(File(applicationDomainRulesPath))
-
-            val domainInputStream = SequenceInputStream(
-                prefixStream,
-                fileStream
-            )
-
-            readIntoModel(model, domainInputStream)
+            readIntoModel(applicationDomainRulesPath, model, fileStream)
         }
     }
 
@@ -72,9 +73,10 @@ class GraphGenerator(
         applicationDomainRulesPath: String?, /* turtle format file */
         linterMode: LinterMode
     ): Ontology? {
-        // var model = ModelFactory.createDefaultModel()
-
         val ontManager = OntManagers.createManager()
+        // Also search imports in current working directory
+        ontManager.iriMappers.add(AutoIRIMapper(Path.of("").toFile(), false))
+
         val ontology = ontManager.createOntology()
 
         val model: Model = ontology.asGraphModel()
@@ -83,13 +85,32 @@ class GraphGenerator(
             // Load Java ontology
             loadJavaOntology(model)
 
+            // Load Macros ontology
+            loadMacrosOntology(model)
+
             // Map program state
             mapProgramState(buildParameters, model)
 
             // Load application domain knowledge
             loadApplicationDomain(applicationDomainRulesPath, model)
+
+            // Load imports
+            ontology
+                .importsDeclarations()
+                .forEach {
+                    try {
+                        ontology.owlOntologyManager.loadOntology(it.iri)
+                    } catch (e: UnloadableImportException) {
+                        logger.error(e.message ?: "Could not load one of the imported ontologies.")
+                    }
+                }
+
+            // Execute Macros
+            for (macro in macros) {
+                macro.executeAll(ontology.asGraphModel())
+            }
         } catch (e: ParserException) {
-            logger.log("Aborted model building due to fatal parser error.")
+            logger.error("Aborted model building due to fatal parser error.")
             return null
         }
 

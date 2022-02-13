@@ -31,6 +31,7 @@ class OntURIs(val ns: Namespaces) {
     val rdfs = RdfsURIs()
 
     inner class OwlURIs {
+        val Thing = ns.owl + "Thing"
         val Nothing = ns.owl + "Nothing"
 
         val Restriction = ns.owl + "Restriction"
@@ -202,6 +203,12 @@ class OntURIs(val ns: Namespaces) {
     }
 
     val local = LocalURIs()
+
+    inner class MacrosURIs {
+        val chainsProperties = ns.macros + "chainsProperties"
+    }
+
+    val macros = MacrosURIs()
 
     /**
     /**

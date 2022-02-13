@@ -15,7 +15,9 @@ data class Namespaces(
     // the runtime program domain model (Java objects etc.)
     val run: String,
     // variables in the current stack frame
-    val local: String
+    val local: String,
+    // macro library
+    val macros: String,
 )
 
 fun genDefaultNs(): Namespaces {
@@ -36,7 +38,8 @@ fun genDefaultNs(): Namespaces {
         // FIXME: Check if these are really appropriate:
         java = "https://github.com/ahbnr/SemanticJavaDebugger/Java#",
         prog = "https://github.com/ahbnr/SemanticJavaDebugger/Program#",
-        run = "https://github.com/ahbnr/SemanticJavaDebugger/Run${System.currentTimeMillis()}#",
-        local = "https://github.com/ahbnr/SemanticJavaDebugger/Local${System.currentTimeMillis()}#"
+        run = "https://github.com/ahbnr/SemanticJavaDebugger/Run#",
+        local = "https://github.com/ahbnr/SemanticJavaDebugger/Local#",
+        macros = "https://github.com/ahbnr/SemanticJavaDebugger/Macros#",
     )
 }
