@@ -2,8 +2,12 @@
 
 set -e
 
-./gradlew -q classes
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+WORKING_DIR=$(pwd)
 
+
+cd "$SCRIPT_DIR"
+./gradlew -q classes
 # Based on https://stackoverflow.com/a/45858448
 while read line; do
     if [[ $line =~ ^[[:blank:]]*([^[:blank:]]+)[[:blank:]]*=(.*)$ ]]; then
@@ -13,5 +17,6 @@ while read line; do
         declare $var="$val"
      fi
 done < <( ./gradlew runInfo )
+cd "$WORKING_DIR"
 
 java -cp "$CLASSPATH" --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED $MAINCLASS
