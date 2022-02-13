@@ -151,10 +151,7 @@ class KnowledgeBase(
             "local" to URIs.ns.local,
         )
 
-        val domainURI = ontology.asGraphModel().getNsPrefixURI("domain")
-        if (domainURI != null) {
-            prefixNameToUri["domain"] = domainURI
-        }
+        prefixNameToUri.putAll(ontology.asGraphModel().nsPrefixMap)
 
         this.prefixNameToUri = prefixNameToUri
     }
@@ -220,6 +217,8 @@ class KnowledgeBase(
             variableStore.getOrDefault(variableOrUri, null)
         } else {
             // We treat it as an IRI otherwise
-            ontology?.asGraphModel()?.getIndividual(resolvePrefixNameInUri(variableOrUri))
+            ontology
+                .asGraphModel()
+                ?.getResource(resolvePrefixNameInUri(variableOrUri))
         }
 }
