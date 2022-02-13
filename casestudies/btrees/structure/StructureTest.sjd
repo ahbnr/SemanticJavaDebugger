@@ -1,9 +1,7 @@
-reasoner HermiT
-domain casestudies/btrees/structure/BTreeStructure.ttl
-
 stop at 'casestudies.btrees.structure.StructureTest:Test Point'
 run casestudies.btrees.structure.StructureTest
 
+domain casestudies/btrees/structure/BTreeStructure.ttl
 buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 
@@ -26,9 +24,36 @@ owl entails '?i0 Type: domain:ConditionThree'
 # Hence, ?i0 must be a root node which is neither a leaf nor does it have at least two children
 
 # Further inspection with SPARQL reveals that there are only two nodes and a key value is missing
-reasoner Openllet
-sparql 'SELECT ?n ?k WHERE { ?n domain:hasKey [ java:hasPlainValue ?k ]}'
+sparql '<<EOF
+    SELECT ?n ?k WHERE {
+        ?n prog:casestudies.btrees.structure.BTreeNode.keys [
+            java:hasElement [
+                java:storesReference [ java:hasPlainValue ?k ]
+            ]
+        ] .
+    }
+'EOF
 
-# We can conclude, that the new node created during splitting got lost
+# We can conclude, that one of the new nodes created during splitting must have gotten lost.
+# We confirm this with a few additional inspections:
 
+cont
+
+stop at 'casestudies.btrees.structure.BTree:BEFORE SPLIT'
+run casestudies.btrees.structure.StructureTest
+
+# No error before splitting
+buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
+close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
+owl entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+
+# But conditions are violated after splitting:
+stop at 'casestudies.btrees.structure.BTree:AFTER SPLIT'
+cont
+
+buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
+close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
+owl entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+
+cont
 cont
