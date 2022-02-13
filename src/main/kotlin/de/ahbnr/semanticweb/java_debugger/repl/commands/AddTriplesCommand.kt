@@ -7,14 +7,12 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.ModelSanityChecker
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TurtleReader
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.UniversalKnowledgeBaseParser
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
     private val logger: Logger by inject()
-    private val URIs: OntURIs by inject()
 
     val triplesString: String by argument()
 
@@ -35,8 +33,12 @@ class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
                 $triplesString
         """.trimIndent()
 
-        val reader = TurtleReader(triplesString.byteInputStream())
-        reader.readInto(knowledgeBase.ontology.asGraphModel())
+        val reader = UniversalKnowledgeBaseParser(
+            knowledgeBase.ontology.asGraphModel(),
+            "triples.ttl",
+            triplesString.byteInputStream()
+        )
+        reader.readIntoModel()
 
         ModelSanityChecker().fullCheck(knowledgeBase.ontology, knowledgeBase.buildParameters.limiter, LinterMode.Normal)
     }

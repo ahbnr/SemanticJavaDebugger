@@ -36,11 +36,7 @@ class ReverseCommand(
             throw ProgramResult(-1)
         }
 
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("You must first extract a knowledge base. Run buildkb.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = state.tryGetKnowledgeBase()
 
         val model = knowledgeBase.ontology.asGraphModel()
         val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)

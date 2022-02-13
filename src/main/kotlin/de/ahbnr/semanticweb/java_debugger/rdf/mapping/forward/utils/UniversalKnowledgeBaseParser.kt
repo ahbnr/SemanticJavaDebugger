@@ -23,7 +23,7 @@ class UniversalKnowledgeBaseParser(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    fun readWithJena(lang: Lang): Boolean {
+    private fun readWithJena(lang: Lang): Boolean {
         try {
             val parsingModel = ModelFactory.createDefaultModel()
 
@@ -63,7 +63,8 @@ class UniversalKnowledgeBaseParser(
 
     private fun readWithOwlApi(): Boolean {
         val loadingManager = OntManagers.createManager()
-        loadingManager.ontologyLoaderConfiguration.missingImportHandlingStrategy = MissingImportHandlingStrategy.SILENT
+        loadingManager.ontologyLoaderConfiguration =
+            loadingManager.ontologyLoaderConfiguration.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT)
 
         return try {
             // If Jena parsers fail, try OWLAPI parsers, since the file might be in functional syntax or manchester
@@ -80,9 +81,9 @@ class UniversalKnowledgeBaseParser(
         }
     }
 
-    fun readInto() {
+    fun readIntoModel() {
         if (fileName == null || fileName.endsWith("owl")) {
-            if (readWithOwlApi(model)) return
+            if (readWithOwlApi()) return
         }
 
         val guessedLang = when (FileUtils.guessLang(fileName)) {
@@ -98,7 +99,7 @@ class UniversalKnowledgeBaseParser(
         }
 
         if (guessedLang != null) {
-            if (readWithJena(guessedLang, model)) return
+            if (readWithJena(guessedLang)) return
             else {
                 logger.warning("Jena parser for $guessedLang failed. Will now try all available Jena parsers.")
             }
@@ -126,7 +127,7 @@ class UniversalKnowledgeBaseParser(
         )
 
         for (lang in langsToTry) {
-            if (readWithJena(lang, model)) return
+            if (readWithJena(lang)) return
         }
 
         logger.error("Tried all parsers. Could not parse file.")

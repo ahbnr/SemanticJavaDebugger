@@ -9,7 +9,7 @@ import com.github.owlcs.ontapi.OntManagers
 import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.TurtleReader
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.UniversalKnowledgeBaseParser
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -37,8 +37,8 @@ class ReadKBCommand(
         val ontology = ontManager.createOntology()
         val model = ontology.asGraphModel()
 
-        val reader = TurtleReader(kbfile.inputStream())
-        reader.readInto(model)
+        val reader = UniversalKnowledgeBaseParser(model, kbfile.name, kbfile.inputStream())
+        reader.readIntoModel()
 
         val newKnowledgeBase = KnowledgeBase(
             ontology,
