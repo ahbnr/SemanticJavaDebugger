@@ -16,7 +16,7 @@ import java.io.File
 class DumpKBCommand : REPLCommand(name = "dumpkb"), KoinComponent {
     val logger: Logger by inject()
 
-    val file: File by argument().file(mustBeWritable = true)
+    val file: File by argument().file()
 
     override fun run() {
         val knowledgeBase = state.knowledgeBase
