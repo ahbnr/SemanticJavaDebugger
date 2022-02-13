@@ -6,15 +6,11 @@ import de.ahbnr.semanticweb.java_debugger.repl.CloseableOWLReasoner
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.semanticweb.owlapi.apibinding.OWLFunctionalSyntaxFactory
 import org.semanticweb.owlapi.manchestersyntax.parser.ManchesterOWLSyntaxParserImpl
 import org.semanticweb.owlapi.manchestersyntax.renderer.ParserException
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLEntity
-import org.semanticweb.owlapi.model.OWLNamedIndividual
+import org.semanticweb.owlapi.model.*
 import org.semanticweb.owlapi.reasoner.InconsistentOntologyException
-import org.semanticweb.owlapi.reasoner.NodeSet
-import org.semanticweb.owlapi.reasoner.impl.OWLNamedIndividualNodeSet
 import org.semanticweb.owlapi.util.mansyntax.ManchesterOWLSyntaxParser
 import java.util.stream.Stream
 import kotlin.streams.asSequence
@@ -152,7 +148,7 @@ class OwlExpressionEvaluator(
             }
     }
 
-    fun getRepresentitiveInstances(classExpression: OWLClassExpression): Stream<OWLNamedIndividual>? =
+    fun getRepresentativeInstances(classExpression: OWLClassExpression): Stream<OWLNamedIndividual>? =
         getReasoner(classExpression.signature())
             .use { reasoner ->
                 handleReasonerErrors {
@@ -163,10 +159,10 @@ class OwlExpressionEvaluator(
     fun getRepresentativeInstances(manchesterClassExpression: String): Stream<OWLNamedIndividual>? {
         val classExpression = parseClassExpression(manchesterClassExpression) ?: return null
 
-        return getRepresentitiveInstances(classExpression)
+        return getRepresentativeInstances(classExpression)
     }
 
-    fun getInstances(classExpression: OWLClassExpression): NodeSet<OWLNamedIndividual>? =
+    fun getInstances(classExpression: OWLClassExpression): Stream<OWLNamedIndividual>? =
         getReasoner(classExpression.signature())
             .use { reasoner ->
                 handleReasonerErrors {
@@ -175,12 +171,12 @@ class OwlExpressionEvaluator(
                     // is not satisfiable
                     // FIXME: Why is this the case?
                     if (reasoner.isSatisfiable(classExpression))
-                        reasoner.getInstances(classExpression)
-                    else OWLNamedIndividualNodeSet()
+                        reasoner.instances(classExpression)
+                    else Stream.empty()
                 }
             }
 
-    fun getInstances(manchesterClassExpression: String): NodeSet<OWLNamedIndividual>? {
+    fun getInstances(manchesterClassExpression: String): Stream<OWLNamedIndividual>? {
         val classExpression = parseClassExpression(manchesterClassExpression) ?: return null
 
         return getInstances(classExpression)
@@ -198,5 +194,30 @@ class OwlExpressionEvaluator(
         val axiom = parseAxiomExpression(manchesterAxiomExpression) ?: return null
 
         return isEntailed(axiom)
+    }
+
+    fun getClassesOf(individual: OWLNamedIndividual): Stream<OWLClass>? =
+        getReasoner(individual.signature())
+            .use { reasoner ->
+                handleReasonerErrors {
+                    // FIXME: Is there a quicker way than searching the superclasses of a nominal?
+                    reasoner.superClasses(
+                        OWLFunctionalSyntaxFactory.ObjectOneOf(individual)
+                    )
+                }
+            }
+
+    fun getClassesOf(prefixedIndividualIri: String): Stream<OWLClass>? {
+        val resolvedIndividualIri = knowledgeBase.resolvePrefixNameInUri(prefixedIndividualIri)
+
+        val individual = knowledgeBase.ontology.asGraphModel().getIndividual(resolvedIndividualIri)
+        if (individual == null) {
+            logger.error("There is no such named individual.")
+            return null
+        }
+
+        return getClassesOf(
+            OWLFunctionalSyntaxFactory.NamedIndividual(IRI.create(resolvedIndividualIri))
+        )
     }
 }

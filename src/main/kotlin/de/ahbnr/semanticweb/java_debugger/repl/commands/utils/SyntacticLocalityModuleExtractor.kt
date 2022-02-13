@@ -137,6 +137,8 @@ class SyntacticLocalityModuleExtractor(
             knowledgeBase.ontology.owlOntologyManager,
             knowledgeBase.ontology,
             ModuleType.STAR
+            // The options for this parameter are somewhat explained in this article:
+            //  "Modularity and OWL", Section 4.2.3, Clark & Parsia 2008, https://cbiit-download.nci.nih.gov/evs/Protege/Docs/ClassificationServicesProjectDocuments/v1.0/Reference/nci-modularity.pdf
         )
 
         return knowledgeBase
