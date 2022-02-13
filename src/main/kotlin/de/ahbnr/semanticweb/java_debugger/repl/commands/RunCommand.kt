@@ -18,10 +18,6 @@ class RunCommand(
     private val classOrSource: String by argument()
 
     override fun run() {
-        state.sourcePath = null
-
-        var classpath = Paths.get("") // CWD
-
         val className =
             if (classOrSource.endsWith(".java")) {
                 val sourcePath = Paths.get(classOrSource)
@@ -36,7 +32,7 @@ class RunCommand(
                 logger.success("Compiled!")
 
                 state.sourcePath = sourcePath
-                classpath = state.compilerTmpDir
+                state.classPath = state.compilerTmpDir
 
                 sourcePath
                     .toString()
@@ -44,8 +40,12 @@ class RunCommand(
                     .replace('/', '.')
             } else classOrSource
 
+        if (state.classPath == null) {
+            state.classPath = Paths.get("") // CWD
+        }
+
         logger.log("Launching Java program.")
-        jvmDebugger.launchVM(className, classpath.absolutePathString())
+        jvmDebugger.launchVM(className, state.classPath!!.absolutePathString())
         jvmDebugger.jvm?.resume()
     }
 }

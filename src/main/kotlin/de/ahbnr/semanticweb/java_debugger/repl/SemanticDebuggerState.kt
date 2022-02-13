@@ -25,6 +25,8 @@ class SemanticDebuggerState(
         }
     var targetReasoner: ReasonerId = ReasonerId.PureJenaReasoner.JenaOwlMicro
 
+    var classPath: Path? = null
+
     @OptIn(ExperimentalTime::class)
     var lastCommandDuration: Duration? = null
 
