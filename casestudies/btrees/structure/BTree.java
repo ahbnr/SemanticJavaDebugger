@@ -22,7 +22,7 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
             root.size = 1;
         } else {
             if (root.size == 2 * order - 1) {
-                var newNode = new BTreeNode<K>(key.getClass());
+                var newNode = new BTreeNode<K>(key.getClass()); // BEFORE SPLIT
                 newNode.children[0] = root;
                 root = newNode;
 
@@ -99,7 +99,7 @@ public class BTree<K extends Comparable<? super K>> implements Iterable<K> {
         }
 
         parent.keys[fullChildIdx] = toSplit.keys[centerIdx];
-        toSplit.keys[centerIdx] = null;
+        toSplit.keys[centerIdx] = null; // AFTER SPLIT
 
         // Critical statements missing in this implementation
         // parent.children[fullChildIdx + 1] = newNode;

@@ -10,16 +10,9 @@
 java:hasElement a owl:ObjectProperty .
 java:SequenceElement a owl:Class .
 
-domain:hasKey
-    a owl:ObjectProperty ;
-    owl:propertyChainAxiom (
-        prog:casestudies.btrees.structure.BTreeNode.keys
-        java:hasElement
-        java:storesReference
-    ) .
-
-domain:Child
+domain:Root
     a owl:Class ;
+    # A root node is a node that is not a child of any other node
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
@@ -30,37 +23,23 @@ domain:Child
                     a owl:ObjectProperty ;
                     owl:inverseOf java:storesReference
                 ] ;
-                owl:someValuesFrom
+                owl:allValuesFrom
                 [
                     a owl:Restriction ;
                     owl:onProperty [
                         a owl:ObjectProperty ;
                         owl:inverseOf java:hasElement
                     ] ;
-                    owl:someValuesFrom
+                    owl:allValuesFrom
                     [
                         a owl:Restriction ;
                         owl:onProperty [
                             a owl:ObjectProperty ;
                             owl:inverseOf prog:casestudies.btrees.structure.BTreeNode.children
                         ] ;
-                        owl:someValuesFrom prog:casestudies.btrees.structure.BTreeNode
+                        owl:allValuesFrom owl:Nothing
                     ]
                 ]
-            ]
-        )
-    ] .
-
-domain:Root
-    a owl:Class ;
-    # A root node is a node that is not a child of any other node
-    owl:equivalentClass [
-        a owl:Class ;
-        owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
-            [
-                a owl:Class ;
-                owl:complementOf domain:Child
             ]
         )
     ] .
