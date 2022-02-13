@@ -1,0 +1,132 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix macros: <https://github.com/ahbnr/SemanticJavaDebugger/Macros#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/PizzaSubscriptionService#> .
+@prefix pizza: <http://www.co-ode.org/ontologies/pizza/pizza.owl#> .
+
+java:hasElement a owl:ObjectProperty .
+java:SequenceElement a owl:Class .
+
+<http://www.co-ode.org/ontologies/pizza> a owl:Ontology .
+
+<https://github.com/ahbnr/SemanticJavaDebugger/PizzaSubscriptionService>
+    a owl:Ontology ;
+    owl:imports <http://www.co-ode.org/ontologies/pizza> .
+
+pizza:Pizza
+    a owl:Class ;
+    owl:equivalentClass prog:de.ahbnr.pizzasubscriptionservice.Pizza .
+
+pizza:hasBase
+    a owl:ObjectProperty ;
+    owl:equivalentProperty prog:de.ahbnr.pizzasubscriptionservice.Pizza.base .
+
+# This makes hasTopping non-simple => at-least / at-most restrictions become invalid
+# pizza:hasTopping
+#     a owl:ObjectProperty ;
+#     owl:propertyChainAxiom  ( prog:de.ahbnr.pizzasubscriptionservice.Pizza.toppings java:hasElement java:storesReference ) .
+
+pizza:hasTopping
+    a owl:ObjectProperty ;
+    a owl:NamedIndividual ;
+    macros:chainsProperties (
+        prog:de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+        # TODO: Infer sub-properties?
+        prog:hasElement%3Cde.ahbnr.pizzasubscriptionservice.Topping%3E
+        prog:storesReference%3Cde.ahbnr.pizzasubscriptionservice.Topping%3E
+    ) .
+
+# Bases
+pizza:DeepPanBase
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Base.DeepPan
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:ThinAndCrispyBase
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Base.ThinAndCrispy
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+# Toppings
+pizza:ChickenTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Chicken
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:GorgonzolaTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Gorgonzola
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:MushroomTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Mushroom
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:OnionTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Onion
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:PrawnsTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Prawns
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:SpinachTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Spinach
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
