@@ -139,6 +139,9 @@ class JvmObjectIterator(
                 yieldAll(
                     recursivelyIterateObject(value)
                 )
+
+                // Now that we have a field context, maybe the object is eligible for deep iteration
+                yieldAll(tryDeepIteration(value))
             }
 
             // Reference types themselves are also objects
