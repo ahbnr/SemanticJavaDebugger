@@ -5,28 +5,20 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.choice
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import org.apache.jena.query.ParameterizedSparqlString
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class SparqlAssertCommand : REPLCommand(name = "sparql"), KoinComponent {
-    private val logger: Logger by inject()
-
     private val successMode = "success"
     private val failMode = "fail"
     val mode: String by argument().choice(successMode, failMode)
     val assertionExpression: String by argument()
 
     override fun run() {
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val model = knowledgeBase.getSparqlModel()
 

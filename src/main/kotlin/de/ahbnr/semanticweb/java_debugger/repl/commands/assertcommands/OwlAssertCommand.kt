@@ -5,15 +5,11 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.choice
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class OwlAssertCommand : REPLCommand(name = "owl"), KoinComponent {
-    private val logger: Logger by inject()
-
     private val isSatisfiableMode = "isSatisfiable"
     private val isUnsatisfiableMode = "isUnsatisfiable"
     private val entailsMode = "entails"
@@ -22,11 +18,7 @@ class OwlAssertCommand : REPLCommand(name = "owl"), KoinComponent {
     private val manchesterSyntaxExpression: String by argument()
 
     override fun run() {
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val evaluator = OwlExpressionEvaluator(knowledgeBase, true)
 

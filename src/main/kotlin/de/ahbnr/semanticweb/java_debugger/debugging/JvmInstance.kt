@@ -13,6 +13,7 @@ import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.Closeable
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -43,7 +44,10 @@ class JvmInstance(
 
     private fun redirectStream(inputStream: InputStream, outputStream: OutputStream) {
         val thread = Thread {
-            inputStream.transferTo(outputStream)
+            try {
+                inputStream.transferTo(outputStream)
+            } catch (e: IOException) { // ignore "Stream closed" exceptions. This can always happen when the JVM is killed
+            }
         }
         thread.priority =
             Thread.MAX_PRIORITY - 1 // needs high priority to display all messages before the debugger exits
@@ -120,8 +124,9 @@ class JvmInstance(
         try {
             // We probably shouldnt kill the VM. What if it is an external VM we connected to?
             // vm.resume()
-            // vm.exit(-1)
-            vm.dispose()
+            // vm.dispose()
+
+            vm.exit(-1)
         } catch (e: VMDisconnectedException) {
             // can happen if VM crashed internally, so we can ignore this.
         } finally {

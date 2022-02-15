@@ -5,17 +5,13 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.file
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFFormat
 import org.apache.jena.riot.RDFWriter
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.io.File
 
 class DumpKBCommand : REPLCommand(name = "dumpkb"), KoinComponent {
-    val logger: Logger by inject()
-
     val file: File by argument().file()
 
     override fun run() {

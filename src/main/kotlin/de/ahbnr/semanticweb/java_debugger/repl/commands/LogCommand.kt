@@ -5,13 +5,9 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.types.choice
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class LogCommand : REPLCommand(name = "log"), KoinComponent {
-    private val logger: Logger by inject()
-
     private val ontologyChangesMode = "ontology-changes"
     private val reasonerMode = "reasoner"
     private val mode by argument().choice(ontologyChangesMode, reasonerMode)

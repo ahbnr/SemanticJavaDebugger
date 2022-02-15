@@ -154,8 +154,12 @@ class JvmDebugger : Closeable, KoinComponent {
         )
     }
 
-    override fun close() {
+    fun kill() {
         jvm?.close()
         jvm = null
+    }
+
+    override fun close() {
+        kill()
     }
 }

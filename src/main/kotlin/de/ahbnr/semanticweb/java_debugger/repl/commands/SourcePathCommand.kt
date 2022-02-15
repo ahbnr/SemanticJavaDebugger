@@ -4,14 +4,10 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.path
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.nio.file.Path
 
 class SourcePathCommand : REPLCommand(name = "sourcepath"), KoinComponent {
-    private val logger: Logger by inject()
-
     val path: Path by argument().path(mustExist = true, mustBeReadable = true)
 
     override fun run() {

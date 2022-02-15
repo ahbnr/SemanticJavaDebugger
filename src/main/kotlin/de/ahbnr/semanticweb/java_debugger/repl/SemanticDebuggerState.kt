@@ -1,6 +1,5 @@
 package de.ahbnr.semanticweb.java_debugger.repl
 
-import com.github.ajalt.clikt.core.ProgramResult
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -68,15 +67,4 @@ class SemanticDebuggerState(
         }
 
     var logReasoner: Boolean = false
-
-    fun tryGetKnowledgeBase(): KnowledgeBase {
-        val knowledgeBase = this.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
-
-        return knowledgeBase
-    }
-
 }

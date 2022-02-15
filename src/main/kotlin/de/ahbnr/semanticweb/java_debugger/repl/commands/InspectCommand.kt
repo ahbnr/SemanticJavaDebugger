@@ -4,7 +4,6 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.utils.expandResourceToModel
 import de.ahbnr.semanticweb.java_debugger.utils.toPrettyString
@@ -16,13 +15,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class InspectCommand() : REPLCommand(name = "inspect"), KoinComponent {
-    val logger: Logger by inject()
     val URIs: OntURIs by inject()
 
     val variableOrIRI: String by argument()
 
     override fun run() {
-        val knowledgeBase = state.tryGetKnowledgeBase()
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val model = knowledgeBase.ontology.asGraphModel()
 

@@ -6,14 +6,10 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.types.choice
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.ReasonerId
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class ReasonerCommand : REPLCommand(name = "reasoner"), KoinComponent {
-    val logger: Logger by inject()
-
     val reasonerName: String? by argument().choice(*ReasonerId.availableReasoners.map { it.name }.toTypedArray())
         .optional()
 

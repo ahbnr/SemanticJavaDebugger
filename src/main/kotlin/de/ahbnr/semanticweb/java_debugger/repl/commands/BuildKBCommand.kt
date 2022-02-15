@@ -6,36 +6,20 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.KnowledgeBaseBuilder
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class BuildKBCommand(
-    val jvmDebugger: JvmDebugger,
     val graphGenerator: GraphGenerator
 ) : REPLCommand(name = "buildkb"), KoinComponent {
-    val logger: Logger by inject()
-
     val limitSdk: Boolean by option().flag(default = false)
     val fullLintingReport: Boolean by option().flag(default = false)
     val deep: List<String> by option().multiple()
 
     override fun run() {
-        val jvm = jvmDebugger.jvm
-        if (jvm == null) {
-            logger.error("No JVM is running.")
-            throw ProgramResult(-1)
-        }
-
-        val jvmState = jvm.state
-        if (jvmState == null) {
-            logger.error("JVM is currently not paused.")
-            throw ProgramResult(-1)
-        }
+        val jvmState = tryGetJvmState()
 
         val builder = KnowledgeBaseBuilder(
             graphGenerator = graphGenerator,

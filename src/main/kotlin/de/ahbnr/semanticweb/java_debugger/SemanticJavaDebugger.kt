@@ -70,25 +70,26 @@ class SemanticJavaDebugger : CliktCommand() {
             )
         compilerTmpDir.createDirectories()
 
-        @Suppress("USELESS_CAST")
-        startKoin {
-            modules(
-                module {
-                    single { JLineLogger(terminal) as Logger }
-                    single { OntURIs(ns) }
-                    single {
-                        SemanticDebuggerState(
-                            compilerTmpDir = compilerTmpDir
-                        )
+        JvmDebugger().use { jvmDebugger ->
+            @Suppress("USELESS_CAST")
+            startKoin {
+                modules(
+                    module {
+                        single { JLineLogger(terminal) as Logger }
+                        single { OntURIs(ns) }
+                        single {
+                            SemanticDebuggerState(
+                                compilerTmpDir = compilerTmpDir
+                            )
+                        }
+                        single { jvmDebugger }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        try {
-            JavaAccessModifierDatatype.register()
+            try {
+                JavaAccessModifierDatatype.register()
 
-            JvmDebugger().use { jvmDebugger ->
                 val graphGen = GraphGenerator(
                     ns,
                     listOf(
@@ -104,30 +105,31 @@ class SemanticJavaDebugger : CliktCommand() {
                     terminal = terminal,
                     commands = listOf(
                         AddTriplesCommand(),
-                        AssertCommand(jvmDebugger),
-                        BuildKBCommand(jvmDebugger, graphGen),
+                        AssertCommand(),
+                        BuildKBCommand(graphGen),
                         CheckKBCommand(graphGen),
                         ClassPathCommand(),
                         CloseClass(),
-                        ContCommand(jvmDebugger),
+                        ContCommand(),
                         DomainCommand(),
                         DumpKBCommand(),
                         InspectCommand(),
-                        ReverseCommand(jvmDebugger),
+                        KillCommand(),
+                        ReverseCommand(),
                         RhsChainCommand(),
-                        LocalsCommand(jvmDebugger),
+                        LocalsCommand(),
                         LogCommand(),
                         OwlCommand(),
                         readCommand,
-                        ReadKBCommand(jvmDebugger, graphGen),
+                        ReadKBCommand(),
                         ReasonerCommand(),
-                        RunCommand(jvmDebugger),
+                        RunCommand(),
                         SectionCommand(),
                         ShaclCommand(graphGen),
                         SourcePathCommand(),
                         SparqlCommand(),
-                        StatsCommand(graphGen),
-                        StopCommand(graphGen, jvmDebugger),
+                        StatsCommand(),
+                        StopCommand(graphGen),
                         TimeCommand()
                     )
                 )
@@ -143,9 +145,9 @@ class SemanticJavaDebugger : CliktCommand() {
                 }
 
                 returnCode = if (wasSuccessful) 0 else -1
+            } finally {
+                stopKoin()
             }
-        } finally {
-            stopKoin()
         }
     }
 }

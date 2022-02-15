@@ -2,26 +2,16 @@
 
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
-import com.github.ajalt.clikt.core.ProgramResult
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.streams.asSequence
 
-class StatsCommand(
-    private val graphGenerator: GraphGenerator
-) : REPLCommand(name = "stats"), KoinComponent {
-    private val logger: Logger by inject()
+class StatsCommand : REPLCommand(name = "stats"), KoinComponent {
     private val URIs: OntURIs by inject()
 
     override fun run() {
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = tryGetKnowledgeBase()
 
         logger.log("Number of ontology axioms: ${knowledgeBase.ontology.axiomCount}")
 

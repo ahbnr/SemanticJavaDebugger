@@ -5,7 +5,6 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import openllet.core.OpenlletOptions
 import openllet.jena.PelletInfGraph
@@ -13,15 +12,12 @@ import openllet.owlapi.OpenlletReasoner
 import openllet.owlapi.explanation.PelletExplanation
 import openllet.owlapi.explanation.io.manchester.ManchesterSyntaxExplanationRenderer
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.io.PrintWriter
 
 
 class CheckKBCommand(
     private val graphGenerator: GraphGenerator
 ) : REPLCommand(name = "checkkb"), KoinComponent {
-    val logger: Logger by inject()
-
     val checkIfConsistent: Boolean by option("--is-consistent").flag(default = false)
     val checkForUnsatisfiableClasses: Boolean by option("--has-unsatisfiable-classes").flag(default = false)
 

@@ -10,20 +10,14 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.*
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class StopCommand(
     val graphGenerator: GraphGenerator,
-    val jvmDebugger: JvmDebugger
 ) : REPLCommand(name = "stop"), KoinComponent {
-    val logger: Logger by inject()
-
     sealed class BreakpointCondition(val expression: String) {
         sealed class OwlDlCondition(expression: String) : BreakpointCondition(expression) {
             sealed class SatisfiabilityCondition(classExpression: String) : OwlDlCondition(classExpression) {

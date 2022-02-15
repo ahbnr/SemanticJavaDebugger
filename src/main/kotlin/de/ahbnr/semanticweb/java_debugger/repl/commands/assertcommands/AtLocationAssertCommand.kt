@@ -4,19 +4,12 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.SourceLocationParser
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class AtLocationAssertCommand(
-    val jvmDebugger: JvmDebugger
-) : REPLCommand(name = "at"), KoinComponent {
-    private val logger: Logger by inject()
-
-    val sourceLocation: String by argument()
+class AtLocationAssertCommand : REPLCommand(name = "at"), KoinComponent {
+    private val sourceLocation: String by argument()
 
     override fun run() {
         val sourceLocationParser = SourceLocationParser()

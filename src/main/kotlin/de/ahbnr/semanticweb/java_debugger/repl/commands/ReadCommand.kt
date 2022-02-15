@@ -5,14 +5,10 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.file
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.REPL
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class ReadCommand : REPLCommand(name = "read"), KoinComponent {
-    val logger: Logger by inject()
-
     var repl: REPL? = null
 
     val commandFile by argument().file(mustExist = true, mustBeReadable = true)

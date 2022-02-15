@@ -6,20 +6,11 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.owlcs.ontapi.OntManagers
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.UniversalKnowledgeBaseParser
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class ReadKBCommand(
-    val jvmDebugger: JvmDebugger,
-    val graphGenerator: GraphGenerator
-) : REPLCommand(name = "readkb"), KoinComponent {
-    val logger: Logger by inject()
-
+class ReadKBCommand : REPLCommand(name = "readkb"), KoinComponent {
     val kbfile by argument().file(
         mustExist = true,
         mustBeReadable = true

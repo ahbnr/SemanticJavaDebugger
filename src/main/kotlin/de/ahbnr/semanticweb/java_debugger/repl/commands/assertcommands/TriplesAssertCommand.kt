@@ -4,26 +4,18 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.SimpleSelector
 import org.apache.jena.riot.RDFLanguages
 import org.apache.jena.riot.RDFParser
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class TriplesAssertCommand : REPLCommand(name = "triples"), KoinComponent {
-    private val logger: Logger by inject()
-
     val triples: String by argument()
 
     override fun run() {
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val model = knowledgeBase.getTripleListingModel()
 

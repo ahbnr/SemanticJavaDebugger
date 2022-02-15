@@ -9,17 +9,13 @@ import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ModuleExtractionOptions
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.SparqlExecutor
 import org.apache.jena.query.ResultSetFormatter
 import org.apache.jena.rdf.model.RDFNode
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
-    private val logger: Logger by inject()
-
     class SyntacticExtractionOptions : OptionGroup() {
         val classRelationDepth by option().int().default(-1)
     }
@@ -31,11 +27,7 @@ class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
     val rawSparqlExpression: String by argument()
 
     override fun run() {
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val executor = SparqlExecutor(
             knowledgeBase,

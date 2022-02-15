@@ -10,14 +10,10 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ClassCloser
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class CloseClass : REPLCommand(name = "close"), KoinComponent {
-    private val logger: Logger by inject()
-
     val owlClass: String by argument()
 
     val noReasoner by option().flag(default = false)

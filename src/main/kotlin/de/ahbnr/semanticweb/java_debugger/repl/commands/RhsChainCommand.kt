@@ -5,7 +5,6 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
@@ -23,7 +22,6 @@ import org.semanticweb.owlapi.model.OWLObjectProperty
  * For now this implementation just exists to test out the construction.
  */
 class RhsChainCommand : REPLCommand(name = "rhschain"), KoinComponent {
-    private val logger: Logger by inject()
     private val URIs: OntURIs by inject()
 
     val lhs: String by argument()
@@ -133,7 +131,7 @@ class RhsChainCommand : REPLCommand(name = "rhschain"), KoinComponent {
     }
 
     override fun run() {
-        val knowledgeBase = state.tryGetKnowledgeBase()
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val properties = (listOf(lhs, rhs1, rhs2) + rhsRemainder)
             .map {

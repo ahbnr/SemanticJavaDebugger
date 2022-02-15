@@ -3,16 +3,12 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.apache.commons.lang3.time.DurationFormatUtils
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import kotlin.time.ExperimentalTime
 
 class TimeCommand(
 ) : REPLCommand(name = "time"), KoinComponent {
-    private val logger: Logger by inject()
-
     @OptIn(ExperimentalTime::class)
     override fun run() {
         val commandDuration = state.lastCommandDuration

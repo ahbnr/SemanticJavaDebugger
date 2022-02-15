@@ -5,8 +5,6 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.ObjectReference
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.LocalVariableInfo
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.utils.MethodInfo
@@ -15,25 +13,11 @@ import org.apache.jena.rdf.model.ResourceFactory
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class LocalsCommand(
-    private val jvmDebugger: JvmDebugger
-) : REPLCommand(name = "locals"), KoinComponent {
-    private val logger: Logger by inject()
+class LocalsCommand : REPLCommand(name = "locals"), KoinComponent {
     private val URIs: OntURIs by inject()
 
-
     override fun run() {
-        val jvm = jvmDebugger.jvm
-        if (jvm == null) {
-            logger.error("No JVM is running.")
-            throw ProgramResult(-1)
-        }
-
-        val jvmState = jvm.state
-        if (jvmState == null) {
-            logger.error("JVM is currently not paused.")
-            throw ProgramResult(-1)
-        }
+        val jvmState = tryGetJvmState()
 
         if (jvmState.pausedThread.frameCount() == 0) {
             logger.error("JVM has not started yet.")

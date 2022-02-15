@@ -8,35 +8,20 @@ import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.backward.BackwardMapper
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class ReverseCommand(
-    val jvmDebugger: JvmDebugger
-) : REPLCommand(name = "reverse"), KoinComponent {
-    val logger: Logger by inject()
+class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
     val URIs: OntURIs by inject()
 
     val variableOrIRI: String by argument()
 
     override fun run() {
-        val jvm = jvmDebugger.jvm
-        if (jvm == null) {
-            logger.error("No JVM is running.")
-            throw ProgramResult(-1)
-        }
-
-        val jvmState = jvm.state
-        if (jvmState == null) {
-            logger.error("JVM is currently not paused.")
-            throw ProgramResult(-1)
-        }
-
-        val knowledgeBase = state.tryGetKnowledgeBase()
+        val jvm = tryGetJvm()
+        val jvmState = tryGetJvmState()
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val model = knowledgeBase.ontology.asGraphModel()
         val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)

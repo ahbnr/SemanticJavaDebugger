@@ -10,17 +10,13 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.int
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.semanticweb.owlapi.apibinding.OWLFunctionalSyntaxFactory
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import kotlin.streams.asSequence
 
 class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
-    private val logger: Logger by inject()
-
     class SyntacticExtractionOptions : OptionGroup() {
         val classRelationDepth by option().int().default(-1)
     }
@@ -49,7 +45,7 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
     val rawDlExpression: String by argument()
 
     override fun run() {
-        val knowledgeBase = state.tryGetKnowledgeBase()
+        val knowledgeBase = tryGetKnowledgeBase()
 
         val evaluator = OwlExpressionEvaluator(knowledgeBase, quiet = false)
         when (val it = moduleExtraction) {

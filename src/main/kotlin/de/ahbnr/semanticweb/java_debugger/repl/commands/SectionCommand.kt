@@ -4,13 +4,9 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class SectionCommand : REPLCommand(name = "section"), KoinComponent {
-    private val logger: Logger by inject()
-
     private val sectionText: String? by argument().optional()
 
     override fun run() {

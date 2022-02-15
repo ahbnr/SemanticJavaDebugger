@@ -3,18 +3,11 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
-import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
-class RunCommand(
-    private val jvmDebugger: JvmDebugger
-) : REPLCommand(name = "run"), KoinComponent {
-    val logger: Logger by inject()
-
+class RunCommand : REPLCommand(name = "run"), KoinComponent {
     private val classOrSource: String by argument()
 
     override fun run() {

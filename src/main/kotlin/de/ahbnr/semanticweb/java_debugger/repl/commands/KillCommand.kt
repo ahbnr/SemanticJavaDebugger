@@ -5,17 +5,13 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import org.koin.core.component.KoinComponent
 
-class ContCommand : REPLCommand(name = "cont"), KoinComponent {
+class KillCommand : REPLCommand(name = "kill"), KoinComponent {
     override fun run() {
-        val jvm = jvmDebugger.jvm
-
-        if (jvm == null) {
+        if (jvmDebugger.jvm == null) {
             logger.error("There is no JVM running.")
             throw ProgramResult(-1)
         }
 
-        logger.debug("Resuming program and deleting old knowledge base.")
-        jvm.resume()
-        this.state.knowledgeBase = null
+        jvmDebugger.kill()
     }
 }

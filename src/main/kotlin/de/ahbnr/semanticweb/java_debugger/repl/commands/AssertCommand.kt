@@ -3,22 +3,19 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.subcommands
-import de.ahbnr.semanticweb.java_debugger.debugging.JvmDebugger
 import de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands.AtLocationAssertCommand
 import de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands.OwlAssertCommand
 import de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands.SparqlAssertCommand
 import de.ahbnr.semanticweb.java_debugger.repl.commands.assertcommands.TriplesAssertCommand
 import org.koin.core.component.KoinComponent
 
-class AssertCommand(
-    val jvmDebugger: JvmDebugger
-) : REPLCommand(name = "assert"), KoinComponent {
+class AssertCommand : REPLCommand(name = "assert"), KoinComponent {
     init {
         subcommands(
             SparqlAssertCommand(),
             TriplesAssertCommand(),
             OwlAssertCommand(),
-            AtLocationAssertCommand(jvmDebugger)
+            AtLocationAssertCommand()
         )
     }
 
