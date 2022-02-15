@@ -19,4 +19,5 @@ while read line; do
 done < <( ./gradlew runInfo )
 cd "$WORKING_DIR"
 
-java -cp "$CLASSPATH" --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED $MAINCLASS
+# shellcheck disable=SC2068
+java -cp "$CLASSPATH" --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED $MAINCLASS $@
