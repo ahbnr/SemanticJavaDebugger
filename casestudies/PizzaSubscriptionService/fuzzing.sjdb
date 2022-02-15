@@ -1,0 +1,39 @@
+section 'Set Paths & Reasoner'
+
+sourcepath src/main/java
+classpath build/classes/java/main
+domain glue.ttl
+reasoner HermiT
+
+section 'Set Breakpoint & Run Fuzzer'
+stop at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza <<EOF
+     --if-not-entailed='local:pizza Type: pizza:InterestingPizza'
+     --limit-sdk
+     --deep=de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+EOF
+
+run de.ahbnr.pizzasubscriptionservice.Fuzzer
+
+buildkb <<EOF
+    --limit-sdk
+    --deep=de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+    --deep=de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main(java.lang.String[]).trace
+EOF
+reverse local:pizza
+
+reasoner JenaOwlMicro
+sparql '<<EOF
+    SELECT ?o
+    WHERE {
+        ?f <https://github.com/ahbnr/SemanticJavaDebugger/Program#de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main%28java.lang.String%5B%5D%29.trace> [
+            java:hasElement [
+                java:storesReference ?o
+            ]
+        ]
+    }
+'EOF
+
+reasoner HermiT
+reverse ?o*
+
+kill

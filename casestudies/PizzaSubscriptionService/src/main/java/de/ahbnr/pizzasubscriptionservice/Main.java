@@ -5,13 +5,13 @@ public class Main {
         final var pizzaGen = new PizzaGenerator();
 
         final var myUser = new UserProfile();
-        myUser.addRestriction(DietRestriction.Vegan);
+        myUser.isVegan = true;
 
         pizzaGen.generatePizza(myUser);
         pizzaGen.generatePizza(myUser);
         pizzaGen.generatePizza(myUser);
 
-        myUser.removeRestriction(DietRestriction.Vegan);
+        myUser.isVegan = false;
 
         pizzaGen.generatePizza(myUser);
     }

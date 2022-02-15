@@ -2,50 +2,33 @@ package de.ahbnr.pizzasubscriptionservice;
 
 import java.util.*;
 
-public class UserProfile implements DeepCopyable<UserProfile> {
-    private Set<DietRestriction> restrictions = new HashSet<>();
-    private LinkedList<Pizza> recentlyDeliveredPizzas = new LinkedList<>();
+class UserProfile {
+    boolean isVegan;
+    LinkedList<Pizza> recentlyDelivered = new LinkedList<>();
 
-    public List<Pizza> getRecentlyDeliveredPizzas() {
-        return recentlyDeliveredPizzas;
-    }
-
-    public Set<DietRestriction> getRestrictions() {
-        return this.restrictions;
-    }
-
-    public void addRestriction(DietRestriction restriction) {
-        restrictions.add(restriction);
-    }
-
-    public void removeRestriction(DietRestriction restriction) {
-        restrictions.remove(restriction);
-    }
-
-    public void deliverPizza(Pizza pizza) {
+    void deliverPizza(Pizza pizza) {
         System.out.println("Delivered pizza: " + pizza.toString());
 
-        if (recentlyDeliveredPizzas.size() >= 3) {
-            recentlyDeliveredPizzas.removeLast();
+        if (recentlyDelivered.size() >= 3) {
+            recentlyDelivered.removeLast();
         }
 
-        recentlyDeliveredPizzas.addFirst(pizza);
+        recentlyDelivered.addFirst(pizza);
     }
 
     @Override
     public String toString() {
         return "UserProfile{" +
-                "restrictions=" + restrictions +
-                ", recentlyDeliveredPizzas=" + recentlyDeliveredPizzas +
+                "isVegan=" + isVegan +
+                ", recentlyDelivered=" + recentlyDelivered +
                 '}';
     }
 
-    @Override
     public UserProfile deepCopy() {
         final var copy = new UserProfile();
 
-        copy.restrictions = new HashSet<>(this.restrictions);
-        copy.recentlyDeliveredPizzas = new LinkedList<>(this.recentlyDeliveredPizzas);
+        copy.isVegan = this.isVegan;
+        copy.recentlyDelivered = new LinkedList<>(this.recentlyDelivered);
 
         return copy;
     }

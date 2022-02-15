@@ -19,13 +19,14 @@ public class PizzaGenerator {
 
         var usableToppings = allToppings
                 .stream()
-                .filter(topping -> topping.satisfiesRestrictions(user.getRestrictions()));
+                .filter(topping -> !user.isVegan || topping.isVegan);
 
         final List<Topping> toppings;
-        if (!user.getRestrictions().contains(DietRestriction.Vegan)) {
+        if (!user.isVegan) {
             final var recentlyUsedToppings = user
-                    .getRecentlyDeliveredPizzas().stream()
-                    .flatMap(pizza -> pizza.getToppings().stream())
+                    .recentlyDelivered
+                    .stream()
+                    .flatMap(pizza -> pizza.toppings.stream())
                     .collect(Collectors.toSet());
             final var nonRecentlyUsedToppings = usableToppings
                     .filter(topping -> !recentlyUsedToppings.contains(topping))
@@ -33,7 +34,7 @@ public class PizzaGenerator {
 
             final Stream<Topping> minimumToppings;
             {
-                final var toppingPartition = nonRecentlyUsedToppings.stream().collect(Collectors.partitioningBy(topping -> topping.satisfiesRestriction(DietRestriction.Vegan)));
+                final var toppingPartition = nonRecentlyUsedToppings.stream().collect(Collectors.partitioningBy(topping -> topping.isVegan));
                 final var veganToppings = toppingPartition.get(true);
                 final var nonVeganToppings = toppingPartition.get(false);
 

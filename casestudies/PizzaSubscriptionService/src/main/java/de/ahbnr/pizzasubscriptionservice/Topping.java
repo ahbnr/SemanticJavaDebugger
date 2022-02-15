@@ -1,30 +1,32 @@
 package de.ahbnr.pizzasubscriptionservice;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 public enum Topping {
     Chicken(),
+    Ham(),
+    HotSpicedBeef(),
+    PeperoniSausage(),
+
     Gorgonzola(),
+    Mozzarella(),
+    GoatsCheese(),
+    Parmesan(),
+    FourCheeses(),
+
+    Anchovies(),
+    MixedSeafood(),
     Prawns(),
-    Mushroom(DietRestriction.Vegan),
-    Onion(DietRestriction.Vegan),
-    Spinach(DietRestriction.Vegan);
 
-    private final Set<DietRestriction> satisfiedRestrictions;
+    Mushroom(true),
+    Onion(true),
+    Spinach(true);
 
-    Topping(DietRestriction... satisfiedRestrictions) {
-        this.satisfiedRestrictions = new HashSet<>();
-        Collections.addAll(this.satisfiedRestrictions, satisfiedRestrictions);
+    final boolean isVegan;
+
+    Topping() {
+        this(false);
     }
 
-    public Boolean satisfiesRestriction(DietRestriction restriction) {
-        return this.satisfiedRestrictions.contains(restriction);
-    }
-
-    public Boolean satisfiesRestrictions(Collection<DietRestriction> restrictions) {
-        return this.satisfiedRestrictions.containsAll(restrictions);
+    Topping(boolean isVegan) {
+        this.isVegan = isVegan;
     }
 }
