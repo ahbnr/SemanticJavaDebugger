@@ -8,6 +8,20 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PizzaGenerator {
+    private List<Topping> getNotRecentlyUsedToppings(UserProfile user, List<Topping> allToppings) {
+        final var recentlyUsedToppings = user
+                .recentlyDelivered
+                .stream()
+                .limit(user.isVegan ? 1 : 3)
+                .flatMap(pizza -> pizza.toppings.stream())
+                .collect(Collectors.toSet());
+
+        return allToppings
+                .stream()
+                .filter(topping -> !recentlyUsedToppings.contains(topping))
+                .collect(Collectors.toList());
+    }
+
     public void generatePizza(UserProfile user) {
         final var randomGen = new Random();
 
@@ -17,37 +31,26 @@ public class PizzaGenerator {
         final var allToppings = Arrays.asList(Topping.values());
         Collections.shuffle(allToppings);
 
-        var usableToppings = allToppings
-                .stream()
-                .filter(topping -> !user.isVegan || topping.isVegan);
+        final Stream<Topping> usableToppings;
+        {
+            final var notRecentlyUsedToppings = getNotRecentlyUsedToppings(user, allToppings);
 
-        final List<Topping> toppings;
-        if (!user.isVegan) {
-            final var recentlyUsedToppings = user
-                    .recentlyDelivered
-                    .stream()
-                    .flatMap(pizza -> pizza.toppings.stream())
-                    .collect(Collectors.toSet());
-            final var nonRecentlyUsedToppings = usableToppings
-                    .filter(topping -> !recentlyUsedToppings.contains(topping))
-                    .collect(Collectors.toList());
+            final var toppingPartition = notRecentlyUsedToppings.stream().collect(Collectors.partitioningBy(topping -> topping.isVegan));
+            final var veganToppings = toppingPartition.get(true);
+            final var nonVeganToppings = toppingPartition.get(false);
 
-            final Stream<Topping> minimumToppings;
-            {
-                final var toppingPartition = nonRecentlyUsedToppings.stream().collect(Collectors.partitioningBy(topping -> topping.isVegan));
-                final var veganToppings = toppingPartition.get(true);
-                final var nonVeganToppings = toppingPartition.get(false);
-
-                minimumToppings = Stream.concat(
+            if (user.isVegan) {
+                usableToppings = veganToppings.stream();
+            } else {
+                final var minimumToppings = Stream.concat(
                         nonVeganToppings.stream().limit(1),
                         veganToppings.stream().limit(1)
                 );
-            }
 
-            toppings = Stream.concat(minimumToppings, nonRecentlyUsedToppings.stream()).distinct().limit(3).collect(Collectors.toList());
-        } else {
-            toppings = usableToppings.limit(3).collect(Collectors.toList());
+                usableToppings = Stream.concat(minimumToppings, notRecentlyUsedToppings.stream());
+            }
         }
+        final var toppings = usableToppings.distinct().limit(3).collect(Collectors.toList());
 
         final var pizza = new Pizza(base, toppings);
 

@@ -9,7 +9,7 @@ public class Fuzzer {
         var pizzaGen = new PizzaGenerator();
         var trace = new LinkedList<UserProfile>();
 
-        int maxUsers = 2;
+        int maxUsers = 10;
         int numRounds = 10;
 
         for (int i = 0; i < maxUsers; ++i) {

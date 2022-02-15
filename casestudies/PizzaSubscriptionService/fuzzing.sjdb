@@ -23,14 +23,16 @@ reverse local:pizza
 
 reasoner JenaOwlMicro
 sparql '<<EOF
-    SELECT ?o
+    SELECT ?i ?o
     WHERE {
         ?f <https://github.com/ahbnr/SemanticJavaDebugger/Program#de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main%28java.lang.String%5B%5D%29.trace> [
             java:hasElement [
-                java:storesReference ?o
+                java:storesReference ?o ;
+                java:hasIndex ?i
             ]
         ]
     }
+    ORDER BY ?i
 'EOF
 
 reasoner HermiT

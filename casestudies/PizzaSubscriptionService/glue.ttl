@@ -236,3 +236,58 @@ pizza:SpinachTopping
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
+
+pizza:GarlicTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Garlic
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:OliveTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Olive
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:PepperTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Pepper
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:CaperTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Caper
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
+
+pizza:TomatoTopping
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty [
+            a owl:ObjectProperty ;
+            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Tomato
+        ] ;
+        owl:someValuesFrom owl:Thing
+    ] .
