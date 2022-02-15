@@ -2,6 +2,8 @@
 
 set -e
 
+echo "Initializing sjdb..."
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 WORKING_DIR=$(pwd)
 
@@ -19,5 +21,4 @@ while read line; do
 done < <( ./gradlew runInfo )
 cd "$WORKING_DIR"
 
-# shellcheck disable=SC2068
-java -cp "$CLASSPATH" --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED $MAINCLASS $@
+java -cp "$CLASSPATH" --add-opens jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED $MAINCLASS "$@"
