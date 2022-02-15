@@ -23,7 +23,6 @@ class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
         val jvmState = tryGetJvmState()
         val knowledgeBase = tryGetKnowledgeBase()
 
-        val model = knowledgeBase.ontology.asGraphModel()
         val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)
 
         if (node == null) {
@@ -31,7 +30,7 @@ class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
             throw ProgramResult(-1)
         }
 
-        val inverseMapping = BackwardMapper(URIs.ns, jvmState)
+        val inverseMapping = BackwardMapper(jvmState)
 
         // Need to obtain the toString method from java.lang.Object
         // because array reference types do not return any methods
@@ -44,7 +43,7 @@ class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
             logger.error("Can not obtain toString() method reference. This should never happen.")
         }
 
-        when (val mapping = inverseMapping.map(node, model, knowledgeBase.buildParameters.limiter)) {
+        when (val mapping = inverseMapping.map(node, knowledgeBase, knowledgeBase.buildParameters.limiter)) {
             is ObjectReference -> {
                 logger.log("Java Object: $mapping")
 
