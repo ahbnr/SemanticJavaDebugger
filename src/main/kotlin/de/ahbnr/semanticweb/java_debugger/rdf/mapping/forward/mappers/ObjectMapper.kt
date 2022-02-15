@@ -334,14 +334,16 @@ class ObjectMapper : IMapper {
                 //       ]
                 //     ]
                 //   ] .
+                val componentIris = components
+                    .indices
+                    .map { idx -> URIs.run.genSequenceElementInstanceURI(containerRef, idx) }
                 tripleCollector.addStatement(
-                    tripleCollector.addConstruct(
-                        TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(
-                            components
-                                .indices
-                                .map { idx -> URIs.run.genSequenceElementInstanceURI(containerRef, idx) }
-                        )
-                    ),
+                    if (componentIris.isEmpty())
+                        NodeFactory.createURI(URIs.owl.Nothing)
+                    else
+                        tripleCollector.addConstruct(
+                            TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(componentIris)
+                        ),
                     URIs.owl.equivalentClass,
                     tripleCollector.addConstruct(
                         TripleCollector.BlankNodeConstruct.OWLSome(
