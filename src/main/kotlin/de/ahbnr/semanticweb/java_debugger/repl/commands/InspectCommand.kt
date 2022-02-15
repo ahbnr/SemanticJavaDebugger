@@ -14,54 +14,57 @@ import org.apache.jena.riot.RDFWriter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class InspectCommand() : REPLCommand(name = "inspect"), KoinComponent {
-    val URIs: OntURIs by inject()
-
-    val variableOrIRI: String by argument()
+class InspectCommand : REPLCommand(name = "inspect"), KoinComponent {
+    private val URIs: OntURIs by inject()
+    private val variableOrIRI: String by argument()
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
 
-        val model = knowledgeBase.ontology.asGraphModel()
+        val rdfGraph = knowledgeBase.ontology.asGraphModel()
 
-        val storedNode = knowledgeBase.resolveVariableOrUri(variableOrIRI)
-        if (storedNode == null) {
+        val storedNodes = knowledgeBase.resolveVariableOrUri(variableOrIRI)
+        if (storedNodes.isEmpty()) {
             logger.error("No node is known under this name.")
             throw ProgramResult(-1)
         }
 
-        // the stored node might be part of a more complex inference / reasoner model.
-        // E.g. it might be the result of a Openllet SPARQL-DL query.
-        // Inspecting such nodes can take a long time, hence we try to use the node from the plain model
-        // instead, where possible:
-        val node: RDFNode = storedNode.visitWith(object : RDFVisitor {
-            override fun visitLiteral(l: Literal): RDFNode = storedNode
-            override fun visitBlank(r: Resource, id: AnonId): RDFNode = storedNode
-            override fun visitURI(r: Resource, uri: String): RDFNode =
-                if (model.containsResource(ResourceFactory.createResource(uri))) {
-                    model.getResource(uri)
-                } else {
-                    storedNode
+        for ((identifier, storedNode) in storedNodes) {
+            logger.debug("$identifier:")
+
+            // the stored node might be part of a more complex inference / reasoner model.
+            // E.g. it might be the result of a Openllet SPARQL-DL query.
+            // Inspecting such nodes can take a long time, hence we try to use the node from the plain model
+            // instead, where possible:
+            val node: RDFNode = storedNode.visitWith(object : RDFVisitor {
+                override fun visitLiteral(l: Literal): RDFNode = storedNode
+                override fun visitBlank(r: Resource, id: AnonId): RDFNode = storedNode
+                override fun visitURI(r: Resource, uri: String): RDFNode =
+                    if (rdfGraph.containsResource(ResourceFactory.createResource(uri))) {
+                        rdfGraph.getResource(uri)
+                    } else {
+                        storedNode
+                    }
+            }) as RDFNode
+
+            when {
+                node.isResource -> {
+                    val resource = node.asResource()
+                    RDFWriter.create()
+                        .lang(Lang.TURTLE)
+                        .format(RDFFormat.TURTLE_PRETTY)
+                        .source(expandResourceToModel(resource, URIs.ns))
+                        .output(logger.logStream())
+                    // for (property in resource.listProperties()) {
+                    //     logger.log(property.toPrettyString(model))
+                    // }
                 }
-        }) as RDFNode
+                else -> {
+                    logger.log(node.toPrettyString(rdfGraph))
+                }
+            }
 
-        when {
-            node.isResource -> {
-                val resource = node.asResource()
-                RDFWriter.create()
-                    .lang(Lang.TURTLE)
-                    .format(RDFFormat.TURTLE_PRETTY)
-                    .source(expandResourceToModel(resource, URIs.ns))
-                    .output(logger.logStream())
-                // for (property in resource.listProperties()) {
-                //     logger.log(property.toPrettyString(model))
-                // }
-            }
-            else -> {
-                logger.log(node.toPrettyString(model))
-            }
+            logger.log("")
         }
-
-        logger.log("")
     }
 }

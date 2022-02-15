@@ -14,19 +14,17 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
-    val URIs: OntURIs by inject()
-
-    val variableOrIRI: String by argument()
+    private val URIs: OntURIs by inject()
+    private val variableOrIRI: String by argument()
 
     override fun run() {
         val jvm = tryGetJvm()
         val jvmState = tryGetJvmState()
         val knowledgeBase = tryGetKnowledgeBase()
 
-        val node = knowledgeBase.resolveVariableOrUri(variableOrIRI)
-
-        if (node == null) {
-            logger.error("No such node is known.")
+        val nodes = knowledgeBase.resolveVariableOrUri(variableOrIRI)
+        if (nodes.isEmpty()) {
+            logger.error("No such RDF node is known.")
             throw ProgramResult(-1)
         }
 
@@ -43,58 +41,62 @@ class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
             logger.error("Can not obtain toString() method reference. This should never happen.")
         }
 
-        when (val mapping = inverseMapping.map(node, knowledgeBase, knowledgeBase.buildParameters.limiter)) {
-            is ObjectReference -> {
-                logger.log("Java Object: $mapping")
+        for ((identifier, node) in nodes) {
+            logger.debug("$identifier:")
 
-                for ((field, value) in mapping.getValues(mapping.referenceType().allFields())) {
-                    if (!field.isStatic) {
-                        logger.log("  ${field.name()} = $value")
+            when (val mapping = inverseMapping.map(node, knowledgeBase, knowledgeBase.buildParameters.limiter)) {
+                is ObjectReference -> {
+                    logger.log("Java Object: $mapping")
+
+                    for ((field, value) in mapping.getValues(mapping.referenceType().allFields())) {
+                        if (!field.isStatic) {
+                            logger.log("  ${field.name()} = $value")
+                        }
                     }
-                }
 
-                if (mapping is ArrayReference) {
-                    val values = mapping
-                        .values
-                        .joinToString(", ") { it?.toString() ?: "null" }
-
-                    logger.log("")
-                    logger.log("  Array contents: [${values}]")
-
-                    val doesArrayStoreReferences =
-                        (mapping.referenceType() as? ArrayType)?.componentType() is ReferenceType
-                    if (doesArrayStoreReferences) {
-                        val strings = mapping
+                    if (mapping is ArrayReference) {
+                        val values = mapping
                             .values
-                            .joinToString(", ") {
-                                if (it != null) {
-                                    (it as ObjectReference).invokeMethod(
-                                        jvmState.pausedThread,
-                                        toStringMethod,
-                                        emptyList(),
-                                        0
-                                    ).toString()
-                                } else "null"
-                            }
-                        logger.log("  As strings: [${strings}]")
+                            .joinToString(", ") { it?.toString() ?: "null" }
+
+                        logger.log("")
+                        logger.log("  Array contents: [${values}]")
+
+                        val doesArrayStoreReferences =
+                            (mapping.referenceType() as? ArrayType)?.componentType() is ReferenceType
+                        if (doesArrayStoreReferences) {
+                            val strings = mapping
+                                .values
+                                .joinToString(", ") {
+                                    if (it != null) {
+                                        (it as ObjectReference).invokeMethod(
+                                            jvmState.pausedThread,
+                                            toStringMethod,
+                                            emptyList(),
+                                            0
+                                        ).toString()
+                                    } else "null"
+                                }
+                            logger.log("  As strings: [${strings}]")
+                        }
+                    } else if (toStringMethod != null) {
+                        // Be aware, that this invalidates any frame references for the paused thread
+                        // and that they have to be retrieved again via frame(i)
+                        val stringRepresentation = mapping.invokeMethod(
+                            jvmState.pausedThread,
+                            toStringMethod,
+                            emptyList(),
+                            0
+                        )
+
+                        logger.log("")
+                        logger.log("  toString(): $stringRepresentation")
                     }
-                } else if (toStringMethod != null) {
-                    // Be aware, that this invalidates any frame references for the paused thread
-                    // and that they have to be retrieved again via frame(i)
-                    val stringRepresentation = mapping.invokeMethod(
-                        jvmState.pausedThread,
-                        toStringMethod,
-                        emptyList(),
-                        0
-                    )
-
-                    logger.log("")
-                    logger.log("  toString(): ${stringRepresentation}")
                 }
+                else -> logger.error("Could not retrieve a Java construct for the given variable.")
             }
-            else -> logger.error("Could not retrieve a Java construct for the given variable.")
-        }
 
-        logger.log("")
+            logger.log("")
+        }
     }
 }

@@ -172,6 +172,10 @@ class KnowledgeBase(
         if (name[0] != '?') {
             throw IllegalArgumentException("All variable names must start with a '?'.")
         }
+
+        if (name.contains('*')) {
+            throw IllegalArgumentException("A variable name may not contain an asterisk: \"*\"")
+        }
     }
 
     fun setVariable(name: String, value: RDFNode) {
@@ -211,14 +215,27 @@ class KnowledgeBase(
         } else uri
     }
 
-    fun resolveVariableOrUri(variableOrUri: String): RDFNode? =
+    fun resolveVariableOrUri(variableOrUri: String): List<Pair<String, RDFNode>> =
+        // Its a variable if it starts with a '?'
         if (variableOrUri.startsWith("?")) {
-            // Its a variable if it starts with a '?'
-            variableStore.getOrDefault(variableOrUri, null)
+            // Resolve wildcards, if necessary
+            if (variableOrUri.contains('*')) {
+                val wildcardRegex = Regex("\\" + variableOrUri.replace("*", ".*"))
+                variableStore
+                    .filter { (variable, _) -> wildcardRegex.matches(variable) }
+                    .map { (variable, node) -> Pair(variable, node) }
+            } else {
+                val maybeResource = variableStore.getOrDefault(variableOrUri, null)
+
+                if (maybeResource != null) listOf(Pair(variableOrUri, maybeResource)) else emptyList()
+            }
         } else {
             // We treat it as an IRI otherwise
-            ontology
-                .asGraphModel()
-                ?.getResource(resolvePrefixNameInUri(variableOrUri))
+            val rdfGraph = ontology.asGraphModel()
+            val resource = rdfGraph.getResource(resolvePrefixNameInUri(variableOrUri))
+
+            if (rdfGraph.containsResource(resource))
+                listOf(Pair(variableOrUri, resource))
+            else emptyList()
         }
 }
