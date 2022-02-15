@@ -15,7 +15,7 @@ class Chain : Macro, KoinComponent {
 
     private class ChainCall(
         val chainTarget: Property,
-        val chainTargetType: Resource?,
+        val chainTargetType: Resource?, // FIXME: Can the same IRI refer to a data property and an object property? (Punning?)
         val chain: List<Property>,
         val chainType: Resource
     )
@@ -66,18 +66,14 @@ class Chain : Macro, KoinComponent {
 
                 for ((idx, propertyNode) in rawChainList.iterator().withIndex()) {
                     if (!propertyNode.isURIResource) {
-                        logger.error("The chain macro was invoked for $chainTarget but its $chainsPropertiesProperty property contains a node that is not an OWL property IRI: $propertyNode")
+                        logger.error("The chain macro was invoked for $chainTarget but its $chainsPropertiesProperty property contains a node that is not an IRI resource: $propertyNode")
                         continue@targetLoop
                     }
 
                     val propertyResource = propertyNode.asResource()
                     val propertyType = findPropertyType(propertyResource)
-                    if (propertyType == null) {
-                        logger.error("The chain macro was invoked for $chainTarget, but one of the chained properties is not declared to be an OWL property: $propertyResource.")
-                        continue@targetLoop
-                    }
 
-                    if (propertyType.uri == URIs.owl.DatatypeProperty && idx != rawChainList.size() - 1
+                    if (propertyType != null && propertyType.uri == URIs.owl.DatatypeProperty && idx != rawChainList.size() - 1
                     ) {
                         logger.error("The chain macro was invoked for $chainTarget. Only the last property of a chain can be a OWL DatatypeProperty, but $propertyNode is not listed last.")
                         continue@targetLoop
@@ -94,9 +90,10 @@ class Chain : Macro, KoinComponent {
                     continue
                 }
 
-                val chainType = findPropertyType(last)
-                    ?: throw RuntimeException("Could not determine property type of chain. This should never happen and is a programming error.")
                 val chainTargetType = findPropertyType(chainTarget)
+                val chainType = findPropertyType(last)
+                    ?: chainTargetType // If no type is declared for the last element in the chain, we just assume its the same type as the target
+                    ?: throw RuntimeException("Could not determine property type of chain. Either the chain target or the last link of the chain must be declared as either being an OWL ObjectProperty or DataProperty.")
 
                 if (chainTargetType != null && chainType.uri != chainTargetType.uri) {
                     logger.error("The chain macro was invoked for $chainTarget. However, the property type of the chain ($chainType) and the type of the target property ($chainTargetType) do not match!")
