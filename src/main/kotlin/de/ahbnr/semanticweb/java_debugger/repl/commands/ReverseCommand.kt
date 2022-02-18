@@ -4,12 +4,10 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.sun.jdi.ArrayReference
-import com.sun.jdi.ArrayType
 import com.sun.jdi.ObjectReference
-import com.sun.jdi.ReferenceType
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.backward.BackwardMapper
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.backward.utils.JavaObjectPrinter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -18,7 +16,6 @@ class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
     private val variableOrIRI: String by argument()
 
     override fun run() {
-        val jvm = tryGetJvm()
         val jvmState = tryGetJvmState()
         val knowledgeBase = tryGetKnowledgeBase()
 
@@ -30,69 +27,13 @@ class ReverseCommand : REPLCommand(name = "reverse"), KoinComponent {
 
         val inverseMapping = BackwardMapper(jvmState)
 
-        // Need to obtain the toString method from java.lang.Object
-        // because array reference types do not return any methods
-        val toStringMethod =
-            jvm.vm.allClasses()
-                .find { it.name() == "java.lang.Object" }
-                ?.methodsByName("toString")
-                ?.firstOrNull()
-        if (toStringMethod == null) {
-            logger.error("Can not obtain toString() method reference. This should never happen.")
-        }
+        val printer = JavaObjectPrinter(jvmState)
 
         for ((identifier, node) in nodes) {
             logger.debug("$identifier:")
 
             when (val mapping = inverseMapping.map(node, knowledgeBase, knowledgeBase.buildParameters.limiter)) {
-                is ObjectReference -> {
-                    logger.log("Java Object: $mapping")
-
-                    for ((field, value) in mapping.getValues(mapping.referenceType().allFields())) {
-                        if (!field.isStatic) {
-                            logger.log("  ${field.name()} = $value")
-                        }
-                    }
-
-                    if (mapping is ArrayReference) {
-                        val values = mapping
-                            .values
-                            .joinToString(", ") { it?.toString() ?: "null" }
-
-                        logger.log("")
-                        logger.log("  Array contents: [${values}]")
-
-                        val doesArrayStoreReferences =
-                            (mapping.referenceType() as? ArrayType)?.componentType() is ReferenceType
-                        if (doesArrayStoreReferences) {
-                            val strings = mapping
-                                .values
-                                .joinToString(", ") {
-                                    if (it != null) {
-                                        (it as ObjectReference).invokeMethod(
-                                            jvmState.pausedThread,
-                                            toStringMethod,
-                                            emptyList(),
-                                            0
-                                        ).toString()
-                                    } else "null"
-                                }
-                            logger.log("  As strings: [${strings}]")
-                        }
-                    } else if (toStringMethod != null) {
-                        // Be aware, that this invalidates any frame references for the paused thread
-                        // and that they have to be retrieved again via frame(i)
-                        val stringRepresentation = mapping.invokeMethod(
-                            jvmState.pausedThread,
-                            toStringMethod,
-                            emptyList(),
-                            0
-                        )
-
-                        logger.log("")
-                        logger.log("  toString(): $stringRepresentation")
-                    }
-                }
+                is ObjectReference -> printer.print(mapping)
                 else -> logger.error("Could not retrieve a Java construct for the given variable.")
             }
 
