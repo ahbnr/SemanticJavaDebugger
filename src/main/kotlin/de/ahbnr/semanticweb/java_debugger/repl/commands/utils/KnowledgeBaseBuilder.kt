@@ -60,7 +60,7 @@ class KnowledgeBaseBuilder(
                     "java.util.concurrent",
                 )
             else setOf(),
-            shallowPackages = setOf("java"),
+            shallowPackages = if (limitSdk) setOf("java") else setOf(),
             deepFieldsAndVariables = deepFieldsAndVariables
         )
 
