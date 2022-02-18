@@ -1,0 +1,8 @@
+reasoner HermiT
+classpath 'java/minimal'
+sourcepath 'java/minimal'
+stop at 'HelloWorld:Hello World'
+run HelloWorld
+buildkb --linting=none
+infer isConsistent
+time
