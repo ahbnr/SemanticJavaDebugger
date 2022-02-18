@@ -5,28 +5,17 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
-import openllet.core.OpenlletOptions
+import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.ConsistencyChecker
 import openllet.jena.PelletInfGraph
-import openllet.owlapi.OpenlletReasoner
-import openllet.owlapi.explanation.PelletExplanation
-import openllet.owlapi.explanation.io.manchester.ManchesterSyntaxExplanationRenderer
 import org.koin.core.component.KoinComponent
-import java.io.PrintWriter
 
 
-class CheckKBCommand(
-    private val graphGenerator: GraphGenerator
-) : REPLCommand(name = "checkkb"), KoinComponent {
-    val checkIfConsistent: Boolean by option("--is-consistent").flag(default = false)
-    val checkForUnsatisfiableClasses: Boolean by option("--has-unsatisfiable-classes").flag(default = false)
+class CheckKBCommand : REPLCommand(name = "checkkb"), KoinComponent {
+    private val checkIfConsistent: Boolean by option("--is-consistent").flag(default = false)
+    private val checkForUnsatisfiableClasses: Boolean by option("--has-unsatisfiable-classes").flag(default = false)
 
     override fun run() {
-        val knowledgeBase = state.knowledgeBase
-        if (knowledgeBase == null) {
-            logger.error("No knowledge base is available. Run `buildkb` first.")
-            throw ProgramResult(-1)
-        }
+        val knowledgeBase = tryGetKnowledgeBase()
 
         if (checkForUnsatisfiableClasses && !checkIfConsistent) {
             logger.error("Can only check for unsatisfiable classes if we also check for consistency with --is-consistent.")
@@ -84,56 +73,21 @@ class CheckKBCommand(
         }
 
         if (checkIfConsistent) {
-            // Needed to enable explanations for Openllet, see internals of PelletExplanation.setup() method.
-            // We manipulate it directly so that we can deactivate it later.
-            val originalTracingSetting = OpenlletOptions.USE_TRACING
-            OpenlletOptions.USE_TRACING = true
-            try {
-                knowledgeBase
-                    .getConsistencyReasoner()
-                    .use { reasoner ->
-                        logger.log("Performing consistency check...")
-                        val isConsistent = reasoner.isConsistent
-                        if (isConsistent) {
-                            logger.success("Knowledge base is consistent.")
-                        } else {
+            val checker = ConsistencyChecker(
+                knowledgeBase = knowledgeBase
+            )
+
+            checker
+                .check()
+                .use { result ->
+                    when (result) {
+                        is ConsistencyChecker.Result.Consistent -> logger.success("Knowledge base is consistent.")
+                        is ConsistencyChecker.Result.Inconsistent -> {
                             logger.error("Knowledge base is inconsistent!")
-
-                            if (reasoner is OpenlletReasoner) {
-                                val renderer = ManchesterSyntaxExplanationRenderer()
-                                val out = PrintWriter(logger.logStream())
-                                renderer.startRendering(out)
-
-                                val explainer = PelletExplanation(reasoner)
-                                logger.emphasize("Why is the knowledge base inconsistent?")
-                                logger.emphasize("")
-                                renderer.render(explainer.inconsistencyExplanations)
-
-                                renderer.endRendering()
-                            } else {
-                                logger.debug("(Explanations are available when using Openllet reasoner.)")
-                            }
-                        }
-
-                        if (checkForUnsatisfiableClasses) {
-                            if (!isConsistent) {
-                                logger.error("Can only do a full check if Ontology is consistent.")
-                                throw ProgramResult(-1)
-                            }
-
-                            // FIXME: Am I using Hermit correctly here?
-                            val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom
-                            if (unsat.isEmpty()) {
-                                logger.success("No unsatisfiable concepts except the default bottom concepts.")
-                            } else {
-                                logger.error("There are unsatisfiable concepts in the ontology besides the default bottom concepts:")
-                                logger.error(unsat.toString())
-                            }
+                            result.explain()
                         }
                     }
-            } finally {
-                OpenlletOptions.USE_TRACING = originalTracingSetting
-            }
+                }
         }
     }
 }
