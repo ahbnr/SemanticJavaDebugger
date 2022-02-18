@@ -9,7 +9,7 @@ import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.OwlExpressionEvaluator
 import org.koin.core.component.KoinComponent
 
-class OwlAssertCommand : REPLCommand(name = "owl"), KoinComponent {
+class InferAssertCommand : REPLCommand(name = "infer"), KoinComponent {
     private val isSatisfiableMode = "isSatisfiable"
     private val isUnsatisfiableMode = "isUnsatisfiable"
     private val entailsMode = "entails"
