@@ -3,9 +3,11 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.KnowledgeBaseBuilder
@@ -15,7 +17,12 @@ class BuildKBCommand(
     val graphGenerator: GraphGenerator
 ) : REPLCommand(name = "buildkb"), KoinComponent {
     val limitSdk: Boolean by option().flag(default = false)
-    val fullLintingReport: Boolean by option().flag(default = false)
+    val linting: LinterMode by option().choice(
+        "default" to LinterMode.Normal,
+        "full" to LinterMode.FullReport,
+        "none" to LinterMode.NoLinters
+    ).default(LinterMode.Normal)
+
     val deep: List<String> by option().multiple()
 
     override fun run() {
@@ -28,7 +35,7 @@ class BuildKBCommand(
             jvmState = jvmState,
             limitSdk = limitSdk,
             deepFieldsAndVariables = deep.toSet(),
-            linterMode = if (fullLintingReport) LinterMode.FullReport else LinterMode.Normal,
+            linterMode = linting,
             quiet = false
         )
 
