@@ -47,7 +47,10 @@ class JLineLogger(
     override fun emphasize(line: String, appendNewline: Boolean) {
         printWithStyle(
             line,
-            AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN),
+            AttributedStyle
+                .DEFAULT
+                .foreground(AttributedStyle.CYAN)
+                .italic(),
             appendNewline
         )
     }

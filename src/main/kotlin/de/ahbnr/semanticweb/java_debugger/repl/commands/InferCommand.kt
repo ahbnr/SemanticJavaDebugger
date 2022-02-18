@@ -39,7 +39,7 @@ class OwlCommand : REPLCommand(name = "owl"), KoinComponent {
         isSatisfiableMode,
         isClosedMode,
         signatureMode,
-        classesOfMode
+        classesOfMode,
     )
 
     val rawDlExpression: String by argument()
