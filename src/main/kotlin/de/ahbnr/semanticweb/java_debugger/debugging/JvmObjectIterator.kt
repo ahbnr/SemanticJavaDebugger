@@ -1,9 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.debugging
 
-import com.sun.jdi.ArrayReference
-import com.sun.jdi.ClassType
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ThreadReference
+import com.sun.jdi.*
 import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.IterableMirror
 import de.ahbnr.semanticweb.java_debugger.debugging.mirrors.utils.MirroringError
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
@@ -20,6 +17,8 @@ class JvmObjectIterator(
 
     private val hasBeenDeepInspected = mutableSetOf<Long>()
     private val seen = mutableSetOf<Long>()
+
+    private var encounteredAbsentInformationError = false
 
     /**
      * Utility function to iterate over all objects
@@ -74,6 +73,14 @@ class JvmObjectIterator(
         }
     }
 
+    private fun <T> tryGetInfo(task: () -> T): T? =
+        try {
+            task.invoke()
+        } catch (e: AbsentInformationException) {
+            encounteredAbsentInformationError = true
+            null
+        }
+
     private fun iterateStackReferences(): Sequence<ObjectReference> = sequence {
         for (frameDepth in 0 until thread.frameCount()) {
             // the frame reference must be freshly retrieved every time,
@@ -89,7 +96,12 @@ class JvmObjectIterator(
             }
 
             val stackReferences = frame()
-                .getValues(frame().visibleVariables())
+                .getValues(
+                    tryGetInfo {
+                        frame().visibleVariables()
+                    }
+                        ?: emptyList()
+                )
 
             yieldAll(
                 if (contextRecorder != null)
@@ -191,7 +203,7 @@ class JvmObjectIterator(
         if (limiter.canReferenceTypeBeSkipped(referenceType))
             return@sequence
 
-        for (field in referenceType.fields()) { // FIXME: Also handle inherited fields
+        for (field in referenceType.allFields()) {
             if (field.isStatic)
                 continue
 
@@ -211,5 +223,12 @@ class JvmObjectIterator(
         }
 
         yield(objectReference)
+    }
+
+    fun reportErrors() {
+        if (encounteredAbsentInformationError) {
+            logger.error("Could not extract all necessary information through JDI!")
+            logger.emphasize("Did you forget to compile your program with debug information (-g flag)?")
+        }
     }
 }

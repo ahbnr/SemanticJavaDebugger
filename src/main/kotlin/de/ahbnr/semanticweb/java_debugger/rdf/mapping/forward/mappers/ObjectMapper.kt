@@ -42,6 +42,10 @@ class ObjectMapper : IMapper {
         )
         private val allObjects = iterator.iterateObjects().toList()
 
+        init {
+            iterator.reportErrors()
+        }
+
         // Names of those component types of arrays and iterables for which typed sequence element triples
         // already have been added
         private val mappedSequenceComponentTypes = mutableSetOf<String>()
