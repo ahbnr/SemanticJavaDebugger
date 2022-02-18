@@ -44,7 +44,7 @@ object ObjectMapping : KoinComponent {
             yield(resource)
 
             val individualRdfNode = knowledgeBase.ontology.asGraphModel().getIndividual(resource.uri)
-                ?: throw IllegalArgumentException("${resource.uri} is not an OWL individual, so it can not possible be the mapping of a Java object.")
+                ?: throw IllegalArgumentException("${resource.uri} is not an OWL individual, so it can not possibly be the mapping of a Java object.")
 
             yieldAll(individualRdfNode.sameIndividuals().asSequence())
 
@@ -99,6 +99,6 @@ object ObjectMapping : KoinComponent {
             return null
         }
 
-        return jvmState.getObjectById(context.objectId, limiter)
+        return jvmState.getObjectById(context.objectId)
     }
 }
