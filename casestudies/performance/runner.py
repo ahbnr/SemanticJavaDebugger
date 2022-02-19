@@ -6,7 +6,9 @@ from typing import TypedDict
 import isodate
 
 import config
+import tasks
 from project import Project
+from tasks import Task
 
 time_regex = re.compile("> time\n.*\\((?P<iso8601>PT.+\\.\\d+S)\\)")
 
@@ -15,7 +17,15 @@ class SJDBResult(TypedDict):
     time: datetime.timedelta
 
 
+def runTask(task: Task) -> SJDBResult:
+    compileProject(task.project)
+    tasks.genTaskFile(task)
+    return runSJDB(task.project)
+
+
 def runSJDB(project: Project) -> SJDBResult:
+    compileProject(project)
+
     with subprocess.Popen(
             [config.sjdb, config.taskfile(project)],
             stdout=subprocess.PIPE,

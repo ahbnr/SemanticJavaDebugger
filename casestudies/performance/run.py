@@ -1,6 +1,10 @@
+from typing import Dict
+
 import runner
-import tasks
 from project import Project
+from runner import SJDBResult
+from sjdboptions import MappingOptions
+from tasks import Task
 
 hello_world = Project(
     projectPath="java/minimal",
@@ -8,8 +12,30 @@ hello_world = Project(
     main="HelloWorld"
 )
 
-runner.compileProject(hello_world)
-tasks.genTaskFile(hello_world)
+tasks = [
+    Task(
+        name="HelloWorld-U",
+        description="HelloWorld project with limit-sdk=false",
+        project=hello_world,
+        mappingOptions=MappingOptions(
+            limitSdk=False
+        )
+    ),
+    Task(
+        name="HelloWorld-L",
+        description="HelloWorld project with limit-sdk=true",
+        project=hello_world,
+        mappingOptions=MappingOptions(
+            limitSdk=True
+        )
+    ),
+]
 
-result = runner.runSJDB(hello_world)
-print(result["time"])
+results: Dict[Task, SJDBResult] = {}
+
+for task in tasks:
+    results[task] = runner.runTask(task)
+
+for task in results:
+    result = results[task]
+    print("{}: {}".format(task.name, result["time"]))
