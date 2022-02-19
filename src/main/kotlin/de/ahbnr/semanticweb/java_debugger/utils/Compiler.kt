@@ -1,6 +1,9 @@
 package de.ahbnr.semanticweb.java_debugger.utils
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.filefilter.FileFilterUtils
+import org.apache.commons.io.filefilter.TrueFileFilter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.nio.file.Path
@@ -9,6 +12,7 @@ import javax.tools.DiagnosticCollector
 import javax.tools.JavaFileObject
 import javax.tools.ToolProvider
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.isRegularFile
 
 
 class Compiler(
@@ -24,7 +28,19 @@ class Compiler(
         val fileManager =
             compiler.getStandardFileManager(diagnostics, Locale.getDefault(), null)
 
-        val javaObjects = fileManager.getJavaFileObjects(*sources.map { it.toFile() }.toTypedArray())
+        val javaSourceFiles = sources.flatMap {
+            if (it.isRegularFile()) {
+                listOf(it.toFile())
+            } else {
+                FileUtils.listFiles(
+                    it.toFile(),
+                    FileFilterUtils.suffixFileFilter(".java"),
+                    TrueFileFilter.INSTANCE
+                )
+            }
+        }.toTypedArray()
+
+        val javaObjects = fileManager.getJavaFileObjects(*javaSourceFiles)
         if (javaObjects.none()) {
             throw RuntimeException("There is nothing to compile.")
         }

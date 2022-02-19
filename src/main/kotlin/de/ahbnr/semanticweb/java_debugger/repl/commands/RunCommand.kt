@@ -13,10 +13,8 @@ class RunCommand : REPLCommand(name = "run"), KoinComponent {
     override fun run() {
         val className =
             if (classOrSource.endsWith(".java")) {
-                val sourcePath = Paths.get(classOrSource)
-
                 val compiler = de.ahbnr.semanticweb.java_debugger.utils.Compiler(
-                    listOf(sourcePath),
+                    listOf(Paths.get(classOrSource)),
                     state.compilerTmpDir
                 )
 
@@ -24,11 +22,10 @@ class RunCommand : REPLCommand(name = "run"), KoinComponent {
                 compiler.compile()
                 logger.success("Compiled!")
 
-                state.sourcePath = sourcePath
+                state.sourcePath = Paths.get("") // CWD
                 state.classPath = state.compilerTmpDir
 
-                sourcePath
-                    .toString()
+                classOrSource
                     .take(classOrSource.length - ".java".length)
                     .replace('/', '.')
             } else classOrSource
