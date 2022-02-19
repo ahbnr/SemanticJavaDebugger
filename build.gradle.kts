@@ -28,13 +28,16 @@ dependencies {
     implementation("com.github.galigator.openllet:openllet-owlapi:2.6.5")
     // Jena support
     implementation("com.github.galigator.openllet:openllet-jena:2.6.5")
-    // Explanation support
+    // Openllet Explanation support
     implementation("com.github.galigator.openllet:openllet-explanation:2.6.5")
     // OWL and RDF linter
     implementation("com.github.galigator.openllet:openllet-pellint:2.6.5")
 
     // Extended OWL support
     implementation("com.github.owlcs:ontapi:2.1.0")
+
+    // Generic explanation support
+    implementation("net.sourceforge.owlapi:owlexplanation:5.0.0")
 
     // Logging library used by Apache Jena
     implementation("org.slf4j:slf4j-api:1.7.32")

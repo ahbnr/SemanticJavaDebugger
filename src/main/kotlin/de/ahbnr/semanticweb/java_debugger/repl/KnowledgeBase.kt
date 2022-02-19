@@ -1,5 +1,6 @@
 package de.ahbnr.semanticweb.java_debugger.repl
 
+import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.OntURIs
@@ -12,8 +13,14 @@ import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.reasoner.rulesys.GenericRuleReasoner
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.semanticweb.owlapi.reasoner.ReasonerProgressMonitor
-import org.semanticweb.owlapi.reasoner.SimpleConfiguration
+import org.semanticweb.owl.explanation.api.Explanation
+import org.semanticweb.owl.explanation.impl.blackbox.*
+import org.semanticweb.owl.explanation.impl.blackbox.checker.BlackBoxExplanationGeneratorFactory
+import org.semanticweb.owl.explanation.impl.blackbox.checker.SatisfiabilityEntailmentCheckerFactory
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.reasoner.*
 
 
 class KnowledgeBase(
@@ -129,6 +136,95 @@ class KnowledgeBase(
                 })
             else null
         ).asCloseable()
+
+    // FIXME: This code is a mess. Clean up, as soon as we debugged the reasoner inconsitencies for domain:ConditionThree of the BTree example
+    fun getExplanationGenerator(
+        baseOntology: OWLOntology,
+        reasoner: OWLReasoner? = null
+    ): (OWLAxiom) -> Set<Explanation<OWLAxiom>> {
+        val reasonerFactory = owlClassExpressionReasoner.getOwlApiReasonerFactory()
+        // val generatorFactory = ExplanationManager.createExplanationGeneratorFactory(
+        //     reasonerFactory,
+        //     OntManagers::createManager // for version 5.0.0 of owlexplanation
+        // )
+
+        var origFreshEntityPolicy: FreshEntityPolicy? = null
+        var origIndividualNodeSetPolicy: IndividualNodeSetPolicy? = null
+        var origReasonerProgressMonitor: ReasonerProgressMonitor? = null
+        var origIndividualTaskTimeout: Long? = null
+        val patchedReasonerFactory = if (reasonerFactory is org.semanticweb.HermiT.ReasonerFactory) {
+            object : OWLReasonerFactory by reasonerFactory {
+                override fun createReasoner(ontology: OWLOntology, config: OWLReasonerConfiguration): OWLReasoner {
+                    return if (reasoner == null) {
+                        val hermitConfig = org.semanticweb.HermiT.Configuration()
+
+                        hermitConfig.freshEntityPolicy = config.freshEntityPolicy
+                        hermitConfig.individualNodeSetPolicy = config.individualNodeSetPolicy
+                        hermitConfig.reasonerProgressMonitor = config.progressMonitor
+                        hermitConfig.individualTaskTimeout = config.timeOut
+
+                        // TODO: Necessary due to anySimpleType definition.
+                        //   Fix this.
+                        // Maybe set at least a warning monitor instead
+                        // hermitConfig.warningMonitor = Configuration.WarningMonitor { logger.warning(it) }
+                        hermitConfig.ignoreUnsupportedDatatypes = true
+
+                        reasonerFactory.createReasoner(baseOntology, hermitConfig)
+                    } else {
+                        if (reasoner is org.semanticweb.HermiT.Reasoner) {
+                            origFreshEntityPolicy = reasoner.configuration.freshEntityPolicy
+                            origIndividualNodeSetPolicy = reasoner.configuration.individualNodeSetPolicy
+                            origReasonerProgressMonitor = reasoner.configuration.reasonerProgressMonitor
+                            origIndividualTaskTimeout = reasoner.configuration.individualTaskTimeout
+
+                            reasoner.configuration.freshEntityPolicy = config.freshEntityPolicy
+                            reasoner.configuration.individualNodeSetPolicy = config.individualNodeSetPolicy
+                            reasoner.configuration.reasonerProgressMonitor = config.progressMonitor
+                            reasoner.configuration.individualTaskTimeout = config.timeOut
+                        }
+                        reasoner
+                    }
+                }
+            }
+        } else reasonerFactory
+
+        // We need to construct the explanation generator factory manually since there is a NullPointerException bug
+        // in version 5.0.0
+        val m = if (baseOntology is Ontology)
+            OntManagers::createManager
+        else OWLManager::createOWLOntologyManager
+
+        val checkerFactory: EntailmentCheckerFactory<OWLAxiom> =
+            SatisfiabilityEntailmentCheckerFactory(
+                patchedReasonerFactory,
+                m
+            )
+        val config = Configuration(
+            checkerFactory,
+            StructuralTypePriorityExpansionStrategy(
+                InitialEntailmentCheckStrategy.PERFORM,
+                m
+            ),
+            DivideAndConquerContractionStrategy(),
+            m
+        )
+        val generatorFactory = BlackBoxExplanationGeneratorFactory(config)
+
+        return { axiom ->
+            val explanationGenerator = generatorFactory.createExplanationGenerator(baseOntology)
+            val result = explanationGenerator.getExplanations(axiom, 1)
+
+            if (reasoner is org.semanticweb.HermiT.Reasoner) {
+                reasoner.configuration.freshEntityPolicy = origFreshEntityPolicy
+                reasoner.configuration.individualNodeSetPolicy = origIndividualNodeSetPolicy
+                reasoner.configuration.reasonerProgressMonitor = origReasonerProgressMonitor
+                reasoner.configuration.individualTaskTimeout = origIndividualTaskTimeout!!
+            }
+
+            result
+        }
+    }
+
 
     fun getConsistencyReasoner(): CloseableOWLReasoner = getOwlApiReasoner(consistencyReasoner, ontology)
     fun getOwlClassExpressionReasoner(baseOntology: Ontology): CloseableOWLReasoner =

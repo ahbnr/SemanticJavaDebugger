@@ -23,6 +23,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.parameters.OntologyCopy
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.reasoner.OWLReasonerConfiguration
+import org.semanticweb.owlapi.reasoner.OWLReasonerFactory
 import org.semanticweb.owlapi.util.InferredOntologyGenerator
 import uk.ac.manchester.cs.jfact.JFactFactory
 
@@ -37,6 +38,7 @@ interface JenaReasonerProvider : JenaModelInferrer {
 
 interface OwlApiReasonerProvider : JenaModelInferrer {
     fun getOwlApiReasoner(baseOntology: OWLOntology, reasonerConfiguration: OWLReasonerConfiguration?): OWLReasoner
+    fun getOwlApiReasonerFactory(): OWLReasonerFactory
 }
 
 sealed class ReasonerId(val name: String) : JenaModelInferrer {
@@ -66,9 +68,11 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             override fun getOwlApiReasoner(
                 baseOntology: OWLOntology,
                 reasonerConfiguration: OWLReasonerConfiguration?
-            ): OWLReasoner =
-                if (reasonerConfiguration == null)
-                    ReasonerFactory().createReasoner(baseOntology)
+            ): OWLReasoner {
+                val factory = getOwlApiReasonerFactory()
+
+                return if (reasonerConfiguration == null)
+                    factory.createReasoner(baseOntology)
                 else {
                     val hermitConfig = Configuration()
                     hermitConfig.freshEntityPolicy = reasonerConfiguration.freshEntityPolicy
@@ -82,19 +86,27 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
                     // hermitConfig.warningMonitor = Configuration.WarningMonitor { logger.warning(it) }
                     hermitConfig.ignoreUnsupportedDatatypes = true
 
-                    ReasonerFactory().createReasoner(baseOntology, hermitConfig)
+                    factory.createReasoner(baseOntology, hermitConfig)
                 }
+            }
+
+            override fun getOwlApiReasonerFactory(): OWLReasonerFactory = ReasonerFactory()
         }
 
         object JFact : PureOwlApiReasoner("JFact") {
             override fun getOwlApiReasoner(
                 baseOntology: OWLOntology,
                 reasonerConfiguration: OWLReasonerConfiguration?
-            ): OWLReasoner =
-                if (reasonerConfiguration == null)
-                    JFactFactory().createReasoner(baseOntology)
+            ): OWLReasoner {
+                val factory = getOwlApiReasonerFactory()
+
+                return if (reasonerConfiguration == null)
+                    factory.createReasoner(baseOntology)
                 else
-                    JFactFactory().createReasoner(baseOntology, reasonerConfiguration)
+                    factory.createReasoner(baseOntology, reasonerConfiguration)
+            }
+
+            override fun getOwlApiReasonerFactory(): OWLReasonerFactory = JFactFactory()
         }
 
         override fun inferJenaModel(baseOntology: Ontology): Model {
@@ -133,7 +145,7 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
             baseOntology: OWLOntology,
             reasonerConfiguration: OWLReasonerConfiguration?
         ): OpenlletReasoner {
-            val factory = OpenlletReasonerFactory.getInstance()
+            val factory = getOwlApiReasonerFactory()
             val reasoner =
                 if (reasonerConfiguration == null)
                     factory.createReasoner(baseOntology)
@@ -144,6 +156,8 @@ sealed class ReasonerId(val name: String) : JenaModelInferrer {
 
             return reasoner
         }
+
+        override fun getOwlApiReasonerFactory(): OpenlletReasonerFactory = OpenlletReasonerFactory.getInstance()
 
         override fun getJenaReasoner(): PelletReasoner =
             openllet.jena.PelletReasonerFactory.theInstance().create()

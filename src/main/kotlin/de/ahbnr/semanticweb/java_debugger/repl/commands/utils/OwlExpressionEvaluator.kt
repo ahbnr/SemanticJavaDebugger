@@ -62,7 +62,7 @@ class OwlExpressionEvaluator(
             iri ?: varName
         }
 
-    private fun parseAxiomExpression(manchesterAxiomExpression: String): OWLAxiom? {
+    fun parseAxiomExpression(manchesterAxiomExpression: String): OWLAxiom? {
         val parser = buildParser()
 
         val axiom = try {
@@ -182,18 +182,35 @@ class OwlExpressionEvaluator(
         return getInstances(classExpression)
     }
 
-    fun isEntailed(axiom: OWLAxiom): Boolean? =
+    fun isEntailed(axiom: OWLAxiom, explain: Boolean = false): Boolean? =
         getReasoner(axiom.signature())
             .use { reasoner ->
                 handleReasonerErrors {
-                    reasoner.isEntailed(axiom)
+                    val result = reasoner.isEntailed(axiom)
+
+                    if (explain) {
+                        logger.log(
+                            if (result) "Why is the axiom entailed?"
+                            else "Why is the axiom not entailed?"
+                        )
+                        val explanationGenerator =
+                            knowledgeBase.getExplanationGenerator(reasoner.rootOntology)
+                        // knowledgeBase.getExplanationGenerator(reasoner.rootOntology, reasoner) // Use this to force the same reasoner
+
+                        val explanations = explanationGenerator.invoke(axiom)
+                        for (explanation in explanations) {
+                            logger.log(explanation.toString())
+                        }
+                    }
+
+                    result
                 }
             }
 
-    fun isEntailed(manchesterAxiomExpression: String): Boolean? {
+    fun isEntailed(manchesterAxiomExpression: String, explain: Boolean = false): Boolean? {
         val axiom = parseAxiomExpression(manchesterAxiomExpression) ?: return null
 
-        return isEntailed(axiom)
+        return isEntailed(axiom, explain)
     }
 
     fun getClassesOf(individual: OWLNamedIndividual): Stream<OWLClass>? =
