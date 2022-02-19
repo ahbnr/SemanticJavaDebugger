@@ -120,6 +120,7 @@ class SemanticJavaDebugger : CliktCommand() {
                         RhsChainCommand(),
                         LocalsCommand(),
                         LogCommand(),
+                        MappingCommand(),
                         InferCommand(),
                         readCommand,
                         ReadKBCommand(),

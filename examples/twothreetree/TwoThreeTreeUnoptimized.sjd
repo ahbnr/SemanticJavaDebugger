@@ -5,7 +5,7 @@ run examples/twothreetree/TwoThreeTree.java
 locals
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 time
 stats
 # checkkb --is-consistent

@@ -4,7 +4,7 @@ stop at examples.twothreetree.TwoThreeTree:66
 run examples/twothreetree/TwoThreeTree.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 checkkb --is-consistent
 
 section "Detection by Explicit Model"

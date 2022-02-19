@@ -7,17 +7,15 @@ import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.groups.mutuallyExclusiveOptions
 import com.github.ajalt.clikt.parameters.options.convert
-import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import de.ahbnr.semanticweb.java_debugger.rdf.linting.LinterMode
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.repl.commands.utils.*
-import org.koin.core.component.KoinComponent
 
 class StopCommand(
     val graphGenerator: GraphGenerator,
-) : REPLCommand(name = "stop"), KoinComponent {
+) : REPLCommand(name = "stop") {
     sealed class BreakpointCondition(val expression: String) {
         sealed class OwlDlCondition(expression: String) : BreakpointCondition(expression) {
             sealed class SatisfiabilityCondition(classExpression: String) : OwlDlCondition(classExpression) {
@@ -65,8 +63,6 @@ class StopCommand(
             option("--if-sparql-none").convert { BreakpointCondition.SparqlCondition.IfSparqlNoneCondition(it) }
         )
 
-        val limitSdk: Boolean by option().flag(default = false)
-        val deep: List<String> by option().multiple()
         val close: List<String> by option().multiple()
 
         override fun run() {
@@ -77,8 +73,6 @@ class StopCommand(
                     ?: throw ProgramResult(-1)
 
             val callback = condition?.let { breakpointCondition ->
-                val limitSdkInstance = limitSdk
-                val deepInstance = deep
                 val closeInstance = close
                 fun(): Boolean {
                     val jvm = this@StopCommand.jvmDebugger.jvm
@@ -95,11 +89,8 @@ class StopCommand(
 
                     val builder = KnowledgeBaseBuilder(
                         graphGenerator = this@StopCommand.graphGenerator,
-                        sourcePath = state.sourcePath,
-                        applicationDomainDefFile = state.applicationDomainDefFile,
                         jvmState = jvmState,
-                        limitSdk = limitSdkInstance,
-                        deepFieldsAndVariables = deepInstance.toSet(),
+                        debuggerState = state,
                         linterMode = LinterMode.NoLinters,
                         quiet = true
                     )

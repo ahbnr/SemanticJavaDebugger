@@ -2,7 +2,11 @@ stop at 'casestudies.btrees.structure.StructureTest:Test Point'
 run casestudies.btrees.structure.StructureTest
 
 domain casestudies/btrees/structure/BTreeStructure.ttl
-buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
+mapping set deep <<EOF
+    casestudies.btrees.structure.BTreeNode.children
+    casestudies.btrees.structure.BTreeNode.keys
+EOF
+buildkb
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 
 # We can see that there is a node which is not valid
@@ -43,7 +47,7 @@ stop at 'casestudies.btrees.structure.BTree:BEFORE SPLIT'
 run casestudies.btrees.structure.StructureTest
 
 # No error before splitting
-buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
+buildkb
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
 
@@ -51,7 +55,7 @@ infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:Va
 stop at 'casestudies.btrees.structure.BTree:AFTER SPLIT'
 cont
 
-buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
+buildkb
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
 

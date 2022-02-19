@@ -3,7 +3,7 @@ stop at examples.tests.LVTMyClass:7
 run examples/tests/LocalVariablesTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 checkkb --is-consistent
 
 section "Are local variables correctly declared?"
@@ -27,7 +27,7 @@ assert sparql success '<<EOF
 
 stop at examples.tests.LVTMyClass:17
 cont
-buildkb --limit-sdk
+buildkb
 
 section "Are local variables with same name recognized?"
 
@@ -53,7 +53,7 @@ assert triples '<<EOF
 
 stop at examples.tests.LVTMyClass:30
 cont
-buildkb --limit-sdk
+buildkb
 
 section "Are variables removed by compile-time optimizations ignored?"
 

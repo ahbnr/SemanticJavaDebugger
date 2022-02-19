@@ -3,7 +3,8 @@ stop at examples.tests.IterableTest:13
 run examples/tests/IterableTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk --deep=examples.tests.IterableTest.void_main(java.lang.String[]).list
+mapping set deep examples.tests.IterableTest.void_main(java.lang.String[]).list
+buildkb
 stats
 checkkb --is-consistent
 

@@ -5,28 +5,26 @@ import de.ahbnr.semanticweb.java_debugger.debugging.ReferenceContexts
 import de.ahbnr.semanticweb.java_debugger.debugging.utils.getFullyQualifiedName
 import de.ahbnr.semanticweb.java_debugger.debugging.utils.getFullyQualifiedNamePrefix
 
-data class MappingLimiter(
-    private val excludedPackages: Set<String>,
-    private val shallowPackages: Set<String>,
-    private val deepFieldsAndVariables: Set<String>
+class MappingLimiter(
+    val settings: MappingSettings
 ) {
     fun isLimiting(): Boolean =
-        excludedPackages.isNotEmpty() &&
-                shallowPackages.isNotEmpty()
+        settings.allExcludedPackages.isNotEmpty() &&
+                settings.allShallowPackages.isNotEmpty()
 
     private fun isExcluded(referenceType: ReferenceType) =
-        excludedPackages.any { referenceType.name().startsWith(it) }
+        settings.allExcludedPackages.any { referenceType.name().startsWith(it) }
 
     private fun isShallow(referenceType: ReferenceType) =
-        isExcluded(referenceType) || shallowPackages.any { referenceType.name().startsWith(it) }
+        isExcluded(referenceType) || settings.allShallowPackages.any { referenceType.name().startsWith(it) }
 
     private fun isDeep(fullyQualifiedFieldOrVariableName: String) =
-        deepFieldsAndVariables.any {
+        settings.deepFieldsAndVariables.any {
             fullyQualifiedFieldOrVariableName.startsWith(it)
         }
 
     fun canReferenceTypeBeSkipped(unloadedTypeName: String) =
-        excludedPackages.any { unloadedTypeName.startsWith(it) }
+        settings.allExcludedPackages.any { unloadedTypeName.startsWith(it) }
 
     fun canReferenceTypeBeSkipped(referenceType: ReferenceType): Boolean {
         if (

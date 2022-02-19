@@ -3,7 +3,7 @@ stop at examples.tests.StaticFieldsTest:14
 run examples/tests/StaticFieldsTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 checkkb --is-consistent
 
 section "Are the fields correctly declared?"
@@ -25,7 +25,7 @@ assert sparql success -- '<<EOF
     WHERE {
         prog:examples.tests.SFTMyClass prog:examples.tests.SFTMyClass.staticIntField "42"^^xsd:int ;
                                     prog:examples.tests.SFTMyClass.staticStringField ?string .
-        ?string java:hasStringValue "Lorem Ipsum"^^xsd:string .
+        ?string java:hasPlainValue "Lorem Ipsum"^^xsd:string .
     }
 'EOF
 

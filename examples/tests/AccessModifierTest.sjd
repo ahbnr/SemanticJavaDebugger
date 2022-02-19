@@ -3,7 +3,7 @@ stop at examples.tests.AccessModifierTest:34
 run examples/tests/AccessModifierTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 # checkkb --is-consistent
 
 section "Check access modifiers of classes"

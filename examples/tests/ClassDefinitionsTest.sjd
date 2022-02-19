@@ -3,7 +3,7 @@ stop at examples.tests.ClassDefinitionsTest:19
 run examples/tests/ClassDefinitionsTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 checkkb --is-consistent
 
 section "Check for presence of (inner) classes"

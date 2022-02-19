@@ -6,7 +6,6 @@ section "Program stops if DL condition is satisfiable"
 stop <<EOF
     at "examples.tests.ConditionalBreakpointsTest:Test: OwlDlSatisfiableCondition"
     --if-satisfiable "{local:optional} and domain:Some"
-    --limit-sdk
 EOF
 run examples/tests/ConditionalBreakpointsTest.java
 assert at "examples.tests.ConditionalBreakpointsTest:Test: OwlDlSatisfiableCondition"
@@ -17,7 +16,6 @@ stop <<EOF
     at "examples.tests.ConditionalBreakpointsTest:Test: OwlDlUnsatisfiableCondition"
     --close domain:Some
     --if-unsatisfiable "{local:optional} and domain:Some"
-    --limit-sdk
 EOF
 cont
 assert at "examples.tests.ConditionalBreakpointsTest:Test: OwlDlUnsatisfiableCondition"
@@ -26,7 +24,6 @@ section "Program stops if SPARQL query returns a result"
 stop <<EOF
     at "examples.tests.ConditionalBreakpointsTest:Test: SparqlAnyCondition"
     --if-sparql-any "SELECT ?some WHERE { ?some owl:sameAs local:optional . ?some prog:examples.tests.Optional.value [ a prog:java.lang.Object ] }"
-    --limit-sdk
 EOF
 cont
 assert at "examples.tests.ConditionalBreakpointsTest:Test: SparqlAnyCondition"
@@ -35,7 +32,6 @@ section "Program stops if SPARQL query returns no result"
 stop <<EOF
     at "examples.tests.ConditionalBreakpointsTest:Test: SparqlNoneCondition"
     --if-sparql-none "SELECT ?some WHERE { ?some owl:sameAs local:optional . ?some prog:examples.tests.Optional.value [ a prog:java.lang.Object ] }"
-    --limit-sdk
 EOF
 cont
 assert at "examples.tests.ConditionalBreakpointsTest:Test: SparqlNoneCondition"

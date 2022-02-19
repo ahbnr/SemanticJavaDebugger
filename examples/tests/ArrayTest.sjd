@@ -3,10 +3,8 @@ section "Array Size is encoded correctly"
 stop at "examples.tests.ArrayTest:Test: testArraySize"
 run examples/tests/ArrayTest.java
 
-buildkb <<EOF
-    --limit-sdk
-    --deep=examples.tests.ArrayTest.void_testArraySize().array
-EOF
+mapping set deep examples.tests.ArrayTest.void_testArraySize().array
+buildkb
 assert infer entails "local:array Type: (java:hasElement exactly 3 owl:Thing)"
 
 section "Array Contents are Closed"
@@ -14,10 +12,8 @@ section "Array Contents are Closed"
 stop at "examples.tests.ArrayTest:Test: testArrayContentClosure"
 cont
 
-buildkb <<EOF
-    --limit-sdk
-    --deep=examples.tests.ArrayTest.void_testArrayContentClosure().array
-EOF
+mapping set deep examples.tests.ArrayTest.void_testArrayContentClosure().array
+buildkb
 dumpkb datatest.ttl
 assert infer entails "local:array Type: (java:hasElement only (java:storesReference only {java:null}))"
 

@@ -3,7 +3,7 @@ stop at examples.tests.EnumsTest:13
 run examples/tests/EnumsTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 dumpkb datatest.ttl
 checkkb --is-consistent
 

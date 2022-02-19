@@ -3,7 +3,7 @@ stop at examples.tests.MethodDeclarationTest:14
 run examples/tests/MethodDeclarationTest.java
 
 section "Build Knowledge Base"
-buildkb --limit-sdk
+buildkb
 checkkb --is-consistent
 
 section "Check presence of simple method & attributes"

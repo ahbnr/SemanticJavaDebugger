@@ -1,6 +1,7 @@
 package de.ahbnr.semanticweb.java_debugger.repl
 
 import de.ahbnr.semanticweb.java_debugger.logging.Logger
+import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingSettings
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.semanticweb.owlapi.model.OWLOntologyChangeListener
@@ -13,6 +14,8 @@ class SemanticDebuggerState(
     val compilerTmpDir: Path = Paths.get("") // CWD
 ) : KoinComponent {
     private val logger: Logger by inject()
+
+    val mappingSettings = MappingSettings().apply { limitSdk = true } // limit SDK by default
 
     var applicationDomainDefFile: String? = null
     var sourcePath: Path? = null

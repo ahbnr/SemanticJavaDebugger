@@ -1,33 +1,25 @@
 reasoner HermiT
 
+mapping set deep <<EOF
+    casestudies.btrees.iterator.BTreeNode.children
+    casestudies.btrees.iterator.BTreeNode.keys
+    casestudies.btrees.iterator.BTreeIterator.stack
+EOF
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:first iteration endpoint'
     --if-unsatisfiable domain:PostCondition
     --close domain:NullableChildrenOfCurrentNode
-    --limit-sdk
-    --deep=casestudies.btrees.iterator.BTreeNode.children
-    --deep=casestudies.btrees.iterator.BTreeNode.keys
-    --deep=casestudies.btrees.iterator.BTreeIterator.stack
 EOF
 
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:second iteration endpoint'
     --if-unsatisfiable domain:PostCondition
     --close domain:NullableChildrenOfCurrentNode
-    --limit-sdk
-    --deep=casestudies.btrees.iterator.BTreeNode.children
-    --deep=casestudies.btrees.iterator.BTreeNode.keys
-    --deep=casestudies.btrees.iterator.BTreeIterator.stack
 EOF
 
 domain casestudies/btrees/iterator/BTreeIteration.ttl
 run casestudies.btrees.iterator.IteratorTest
-buildkb <<EOF
-    --limit-sdk
-    --deep=casestudies.btrees.iterator.BTreeNode.children
-    --deep=casestudies.btrees.iterator.BTreeNode.keys
-    --deep=casestudies.btrees.iterator.BTreeIterator.stack
-EOF
+buildkb
 
 # The conditional breakpoints will be hit for this incorrect implementation
 # Now, lets find the cause of the postcondition violation:

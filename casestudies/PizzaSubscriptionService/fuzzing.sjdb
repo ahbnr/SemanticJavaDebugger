@@ -6,21 +6,24 @@ domain glue.ttl
 reasoner HermiT
 
 section 'Set Breakpoint & Run Fuzzer'
-stop at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza <<EOF
-     --if-not-entailed='local:pizza Type: pizza:InterestingPizza'
-     --limit-sdk
-     --deep=de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+mapping set deep <<EOF
+    de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+EOF
+stop <<EOF
+    at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
+    -if-not-entailed='local:pizza Type: pizza:InterestingPizza'
 EOF
 
 run de.ahbnr.pizzasubscriptionservice.Fuzzer
 
 assert at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
 section 'Breakpoint Hit => Error in Pizza Generation'
-buildkb <<EOF
-    --limit-sdk
-    --deep=de.ahbnr.pizzasubscriptionservice.Pizza.toppings
-    --deep=de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main(java.lang.String[]).trace
+mapping set deep <<EOF
+    de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+    de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main(java.lang.String[]).trace
 EOF
+buildkb
+
 # The pizza is missing a non-meat / non-cheese (vegan) topping
 reverse local:pizza
 

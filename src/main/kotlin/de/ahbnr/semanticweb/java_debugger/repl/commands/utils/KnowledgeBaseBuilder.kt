@@ -7,20 +7,17 @@ import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward.MappingLimiter
 import de.ahbnr.semanticweb.java_debugger.repl.KnowledgeBase
+import de.ahbnr.semanticweb.java_debugger.repl.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import spoon.Launcher
 import spoon.reflect.CtModel
-import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
 class KnowledgeBaseBuilder(
     val graphGenerator: GraphGenerator,
-    val sourcePath: Path?,
-    val applicationDomainDefFile: String?,
     val jvmState: JvmState,
-    val limitSdk: Boolean,
-    val deepFieldsAndVariables: Set<String>,
+    val debuggerState: SemanticDebuggerState,
     val linterMode: LinterMode,
     val quiet: Boolean,
 ) : KoinComponent {
@@ -29,43 +26,22 @@ class KnowledgeBaseBuilder(
     private fun buildSourceModel(): CtModel {
         val spoonLauncher = Launcher()
 
-        if (sourcePath != null) {
-            spoonLauncher.addInputResource(sourcePath.absolutePathString())
-        } else if (!quiet) {
-            logger.debug("No path to source. Can not augment knowledge base with source structure.")
+        debuggerState.sourcePath.let { sourcePath ->
+            if (sourcePath != null) {
+                spoonLauncher.addInputResource(sourcePath.absolutePathString())
+            } else if (!quiet) {
+                logger.debug("No path to source. Can not augment knowledge base with source structure.")
+            }
+            spoonLauncher.buildModel()
+            if (!quiet && sourcePath != null)
+                logger.success("Source model created.")
         }
-        spoonLauncher.buildModel()
-        if (!quiet && sourcePath != null)
-            logger.success("Source model created.")
 
         return spoonLauncher.model
     }
 
-    private fun buildLimiter(): MappingLimiter =
-        MappingLimiter(
-            excludedPackages = if (limitSdk)
-                setOf(
-                    "sun",
-                    "jdk",
-                    "java.security",
-                    "java.lang.reflect",
-                    "java.lang.ref",
-                    "java.lang.module",
-                    "java.lang.invoke",
-                    "java.lang.annotation",
-                    "java.lang.module",
-                    "java.lang.reflect",
-                    "java.net",
-                    "java.nio",
-                    "java.util.concurrent",
-                )
-            else setOf(),
-            shallowPackages = if (limitSdk) setOf("java") else setOf(),
-            deepFieldsAndVariables = deepFieldsAndVariables
-        )
-
     fun build(): KnowledgeBase? {
-        val limiter = buildLimiter()
+        val limiter = MappingLimiter(debuggerState.mappingSettings)
         val sourceModel = buildSourceModel()
 
         val buildParameters = BuildParameters(
@@ -75,7 +51,7 @@ class KnowledgeBaseBuilder(
         )
         val ontology = graphGenerator.buildOntology(
             buildParameters,
-            applicationDomainDefFile,
+            debuggerState.applicationDomainDefFile,
             linterMode
         ) ?: return null
 
