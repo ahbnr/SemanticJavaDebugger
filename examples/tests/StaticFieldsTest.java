@@ -1,6 +1,6 @@
 package examples.tests;
 
-class MyClass {
+class SFTMyClass {
     public static int staticIntField = 42;
     public static String staticStringField = "Lorem Ipsum";
 
@@ -9,7 +9,7 @@ class MyClass {
 
 public class StaticFieldsTest {
     public static void main(String[] args) {
-        var myInstance = new MyClass();
+        var myInstance = new SFTMyClass();
 
         System.out.println("Hello Static Fields!");
     }

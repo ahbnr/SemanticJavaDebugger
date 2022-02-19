@@ -6,20 +6,20 @@ buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --dee
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 
 # We can see that there is a node which is not valid
-owl entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
 
 # Ok, then let's ask which nodes are not valid:
-owl instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
+infer instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
 
 # What condition does it violate? Lets check
 
-owl entails '?i0 Type: domain:ConditionOne'
+infer entails '?i0 Type: domain:ConditionOne'
 # Condition One holds
 
-owl entails '?i0 Type: domain:ConditionTwo'
+infer entails '?i0 Type: domain:ConditionTwo'
 # Condition Two holds
 
-owl entails '?i0 Type: domain:ConditionThree'
+infer entails '?i0 Type: domain:ConditionThree'
 # Condition Three does not hold!
 # Hence, ?i0 must be a root node which is neither a leaf nor does it have at least two children
 
@@ -45,7 +45,7 @@ run casestudies.btrees.structure.StructureTest
 # No error before splitting
 buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
-owl entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
 
 # But conditions are violated after splitting:
 stop at 'casestudies.btrees.structure.BTree:AFTER SPLIT'
@@ -53,7 +53,7 @@ cont
 
 buildkb --limit-sdk --deep=casestudies.btrees.structure.BTreeNode.children --deep=casestudies.btrees.structure.BTreeNode.keys
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
-owl entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
 
 cont
 cont

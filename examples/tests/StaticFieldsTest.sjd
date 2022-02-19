@@ -9,13 +9,13 @@ checkkb --is-consistent
 section "Are the fields correctly declared?"
 
 assert triples -- '<<EOF
-    prog:examples.tests.MyClass java:hasField prog:examples.tests.MyClass.staticIntField ;
-                                java:hasField prog:examples.tests.MyClass.staticStringField ;
-                                java:hasField prog:examples.tests.MyClass.nonStaticField .
+    prog:examples.tests.SFTMyClass java:hasField prog:examples.tests.SFTMyClass.staticIntField ;
+                                java:hasField prog:examples.tests.SFTMyClass.staticStringField ;
+                                java:hasField prog:examples.tests.SFTMyClass.nonStaticField .
 
-    prog:examples.tests.MyClass.staticIntField java:isStatic "true"^^xsd:boolean .
-    prog:examples.tests.MyClass.staticStringField java:isStatic "true"^^xsd:boolean .
-    prog:examples.tests.MyClass.nonStaticField java:isStatic "false"^^xsd:boolean .
+    prog:examples.tests.SFTMyClass.staticIntField java:isStatic "true"^^xsd:boolean .
+    prog:examples.tests.SFTMyClass.staticStringField java:isStatic "true"^^xsd:boolean .
+    prog:examples.tests.SFTMyClass.nonStaticField java:isStatic "false"^^xsd:boolean .
 'EOF
 
 section "Are the static values present?"
@@ -23,8 +23,8 @@ section "Are the static values present?"
 assert sparql success -- '<<EOF
     SELECT ?string
     WHERE {
-        prog:examples.tests.MyClass prog:examples.tests.MyClass.staticIntField "42"^^xsd:int ;
-                                    prog:examples.tests.MyClass.staticStringField ?string .
+        prog:examples.tests.SFTMyClass prog:examples.tests.SFTMyClass.staticIntField "42"^^xsd:int ;
+                                    prog:examples.tests.SFTMyClass.staticStringField ?string .
         ?string java:hasStringValue "Lorem Ipsum"^^xsd:string .
     }
 'EOF
@@ -34,8 +34,8 @@ section "Object instances do not implement static fields"
 assert sparql fail -- '<<EOF
     SELECT ?something
     WHERE {
-        [] a prog:examples.tests.MyClass ;
-           prog:examples.tests.MyClass.staticIntField ?something .
+        [] a prog:examples.tests.SFTMyClass ;
+           prog:examples.tests.SFTMyClass.staticIntField ?something .
     }
 'EOF
 

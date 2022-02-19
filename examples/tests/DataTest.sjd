@@ -54,7 +54,7 @@ sparql -- '<<EOF
              java:hasElement [
                  java:hasIndex 0 ;
                  java:storesReference [
-                    java:hasStringValue ?first
+                    java:hasPlainValue ?first
                  ]
              ]
            ] .
@@ -68,7 +68,7 @@ sparql -- '<<EOF
     WHERE {
         [] a prog:examples.tests.DataContainer ;
            prog:examples.tests.DataContainer.stringField [
-             java:hasStringValue ?string
+             java:hasPlainValue ?string
            ] .
     }
 'EOF

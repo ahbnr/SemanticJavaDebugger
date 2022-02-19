@@ -8,16 +8,16 @@ run examples.btrees.tests.StructureTest
 
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close domain:Child
-assert owl entails "local:root Type: domain:Root"
-assert owl entailsNot "local:root Type: domain:Child"
-assert owl entailsNot "local:root Type: domain:Leaf"
+assert infer entails "local:root Type: domain:Root"
+assert infer entailsNot "local:root Type: domain:Child"
+assert infer entailsNot "local:root Type: domain:Leaf"
 
-assert owl entails "local:leaf Type: domain:Leaf"
-assert owl entails "local:leaf Type: domain:Child"
-assert owl entailsNot "local:leaf Type: domain:Root"
+assert infer entails "local:leaf Type: domain:Leaf"
+assert infer entails "local:leaf Type: domain:Child"
+assert infer entailsNot "local:leaf Type: domain:Root"
 
-assert owl entails "local:middle Type: (not domain:Root and not domain:Leaf)"
-assert owl entails "local:middle Type: domain:Child"
+assert infer entails "local:middle Type: (not domain:Root and not domain:Leaf)"
+assert infer entails "local:middle Type: domain:Child"
 
 
 
@@ -28,14 +28,14 @@ cont
 
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
-assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
+assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
 
 stop at 'examples.btrees.tests.StructureTest:Test point: ConditionOneError'
 cont
 
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
-assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
+assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
 
 
 
@@ -47,7 +47,7 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
-assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
+assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
 
 stop at 'examples.btrees.tests.StructureTest:Test point: ConditionTwoError'
 cont
@@ -55,10 +55,10 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
-assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
+assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
 
-assert owl entails 'local:root Type: domain:ConditionTwo'
-assert owl entails 'local:leftMiddle Type: (prog:examples.btrees.BTreeNode and not domain:ConditionTwo)'
+assert infer entails 'local:root Type: domain:ConditionTwo'
+assert infer entails 'local:leftMiddle Type: (prog:examples.btrees.BTreeNode and not domain:ConditionTwo)'
 
 
 
@@ -70,7 +70,7 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
-assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
 
 stop at 'examples.btrees.tests.StructureTest:Test point: ConditionThreeError'
 cont
@@ -78,10 +78,10 @@ cont
 buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.btrees.BTreeNode.keys
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
-assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
 
-assert owl entails 'local:root Type: (prog:examples.btrees.BTreeNode and not domain:ConditionThree)'
-assert owl entails 'local:leaf Type: domain:ConditionThree'
+assert infer entails 'local:root Type: (prog:examples.btrees.BTreeNode and not domain:ConditionThree)'
+assert infer entails 'local:leaf Type: domain:ConditionThree'
 
 
 
@@ -94,7 +94,7 @@ buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.bt
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
 close domain:FragmentedNode
-assert owl isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
 stop at 'examples.btrees.tests.StructureTest:Test point: ValidNodeConditionError'
 cont
@@ -103,7 +103,7 @@ buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.bt
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
 close domain:FragmentedNode
-assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
 section "Split Error"
 
@@ -114,6 +114,8 @@ buildkb --limit-sdk --deep=examples.btrees.BTreeNode.children --deep=examples.bt
 close prog:examples.btrees.BTreeNode --no-reasoner
 close domain:Child
 close domain:FragmentedNode
-assert owl isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+infer instancesOf domain:ValidNode
+infer instancesOf prog:examples.btrees.BTreeNode
+assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
 
 cont

@@ -33,7 +33,7 @@ EOF
 # Now, lets find the cause of the postcondition violation:
 
 # Lets see which nodes are the children of the current node
-owl instancesOf domain:ChildrenOfCurrentNode
+infer instancesOf domain:ChildrenOfCurrentNode
 
 # TODO: For some reason Openllet SPARQL-DL fails here
 reasoner JenaOwlMicro

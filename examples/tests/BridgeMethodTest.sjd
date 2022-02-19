@@ -9,7 +9,7 @@ checkkb --is-consistent
 section "Check presence of original next() method"
 
 assert triples '<<EOF
-    prog:examples.tests.BridgeMethodTest java:hasMethod prog:examples.tests.BridgeMethodTest.examples.tests.MyClass_next%28%29
+    prog:examples.tests.BridgeMethodTest java:hasMethod prog:examples.tests.BridgeMethodTest.examples.tests.BMTMyClass_next%28%29
 'EOF
 
 section "Check presence of generated next() bridge method"

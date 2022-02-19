@@ -1,6 +1,6 @@
 package examples.tests;
 
-class MyClass {
+class LVTMyClass {
     public void basic() {
         int localVariable = 42;
 
@@ -36,7 +36,7 @@ class MyClass {
 
 public class LocalVariablesTest {
     public static void main(String[] args) {
-        var myInstance = new MyClass();
+        var myInstance = new LVTMyClass();
 
         myInstance.basic();
         myInstance.scopes();

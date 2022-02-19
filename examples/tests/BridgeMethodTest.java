@@ -3,11 +3,11 @@ package examples.tests;
 import java.util.Iterator;
 import java.lang.Override;
 
-class MyClass {
+class BMTMyClass {
 
 }
 
-public class BridgeMethodTest implements Iterator<MyClass> {
+public class BridgeMethodTest implements Iterator<BMTMyClass> {
     @Override
     public boolean hasNext() {
         return true;
@@ -16,8 +16,8 @@ public class BridgeMethodTest implements Iterator<MyClass> {
     // At runtime, a bridge method `Object next()` will be generated.
     // See also http://www.angelikalanger.com/GenericsFAQ/FAQSections/TechnicalDetails.html#FAQ102
     @Override
-    public MyClass next() {
-        return new MyClass();
+    public BMTMyClass next() {
+        return new BMTMyClass();
     }
 
     public static void main(String[] args) {

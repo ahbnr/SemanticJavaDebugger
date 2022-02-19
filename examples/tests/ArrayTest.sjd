@@ -7,7 +7,7 @@ buildkb <<EOF
     --limit-sdk
     --deep=examples.tests.ArrayTest.void_testArraySize().array
 EOF
-assert owl entails "local:array Type: (java:hasElement exactly 3 owl:Thing)"
+assert infer entails "local:array Type: (java:hasElement exactly 3 owl:Thing)"
 
 section "Array Contents are Closed"
 
@@ -19,6 +19,6 @@ buildkb <<EOF
     --deep=examples.tests.ArrayTest.void_testArrayContentClosure().array
 EOF
 dumpkb datatest.ttl
-assert owl entails "local:array Type: (java:hasElement only (java:storesReference only {java:null}))"
+assert infer entails "local:array Type: (java:hasElement only (java:storesReference only {java:null}))"
 
 cont
