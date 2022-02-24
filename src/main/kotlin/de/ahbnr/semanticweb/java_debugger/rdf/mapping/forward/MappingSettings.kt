@@ -1,6 +1,8 @@
 package de.ahbnr.semanticweb.java_debugger.rdf.mapping.forward
 
 class MappingSettings {
+    var closeReferenceTypes: Boolean = true
+
     val additionalExcludedPackages: MutableSet<String> = mutableSetOf()
     val additionalShallowPackages: MutableSet<String> = mutableSetOf()
     val deepFieldsAndVariables: MutableSet<String> = mutableSetOf()

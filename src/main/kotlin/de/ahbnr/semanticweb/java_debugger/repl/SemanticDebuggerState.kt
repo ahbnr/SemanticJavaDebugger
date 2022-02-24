@@ -15,7 +15,11 @@ class SemanticDebuggerState(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    val mappingSettings = MappingSettings().apply { limitSdk = true } // limit SDK by default
+    val mappingSettings = MappingSettings().apply {
+        // use high performance settings as default
+        limitSdk = true
+        closeReferenceTypes = false
+    }
 
     var applicationDomainDefFile: String? = null
     var sourcePath: Path? = null

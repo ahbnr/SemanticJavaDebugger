@@ -662,6 +662,26 @@ class ObjectMapper : IMapper {
                 for (obj in allObjects) {
                     addObject(obj)
                 }
+
+                // Should we close all Java reference type?
+                if (buildParameters.limiter.settings.closeReferenceTypes) {
+                    for (referenceType in buildParameters.jvmState.pausedThread.virtualMachine().allClasses()) {
+                        val typeIri = URIs.prog.genReferenceTypeURI(referenceType)
+                        // val instances = referenceType.instances(Long.MAX_VALUE)
+                        val instanceIris = allObjects
+                            .filter { it.referenceType() == referenceType }
+                            .map { URIs.run.genObjectURI(it) }
+
+                        // If so, declare each type equivalent to a nominal containing all its instances
+                        tripleCollector.addStatement(
+                            typeIri,
+                            URIs.owl.equivalentClass,
+                            tripleCollector.addConstruct(
+                                TripleCollector.BlankNodeConstruct.OWLOneOf.fromURIs(instanceIris)
+                            )
+                        )
+                    }
+                }
             }
 
             addObjects()
