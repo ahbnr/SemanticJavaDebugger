@@ -1,41 +1,57 @@
-from typing import Dict
+import numpy as np
+import pandas as pd
+import pandera as pa
+import pandera.dtypes
+from pandera.typing import Series
 
 import runner
 from project import Project
 from runner import SJDBResult
 from sjdboptions import MappingOptions
-from tasks import Task
+from tasks import TaskGenerator, TaskType
 
 hello_world = Project(
+    name="HelloWorld",
     projectPath="java/minimal",
     breakpoint="HelloWorld:Hello World",
     main="HelloWorld"
 )
 
-tasks = [
-    Task(
-        name="HelloWorld-U",
-        description="HelloWorld project with limit-sdk=false",
-        project=hello_world,
-        mappingOptions=MappingOptions(
-            limitSdk=False
+taskGen = TaskGenerator(
+    projectSelection={hello_world},
+    mappingOptionsSelection={
+        MappingOptions(limitSdk=True, closeReferenceTypes=False),
+        MappingOptions(limitSdk=True, closeReferenceTypes=True),
+        MappingOptions(limitSdk=False, closeReferenceTypes=True),
+    },
+    taskTypeSelection={
+        TaskType.KBBuilding,
+        TaskType.Consistency,
+        # TaskType.Classification
+    }
+)
+
+
+class ResultSchema(pa.SchemaModel):
+    taskId: Series[str] = pa.Field()
+    time: Series[pandera.dtypes.Timedelta] = pa.Field()
+
+
+results: pd.DataFrame = pd.DataFrame(np.empty((0, 2)), columns=["taskId", "time"])
+
+for task in taskGen.generate():
+    runResult: SJDBResult = runner.runTask(task)
+    results = pd.concat([
+        results,
+        pd.DataFrame(
+            np.array([[task.name, pd.Timedelta(runResult.time)]]),
+            index=[task.name],
+            columns=["taskId", "time"]
         )
-    ),
-    Task(
-        name="HelloWorld-L",
-        description="HelloWorld project with limit-sdk=true",
-        project=hello_world,
-        mappingOptions=MappingOptions(
-            limitSdk=True
-        )
-    ),
-]
+    ])
 
-results: Dict[Task, SJDBResult] = {}
+# ResultSchema.validate(results)
+store = pd.HDFStore('store.h5')
+store['results'] = results
 
-for task in tasks:
-    results[task] = runner.runTask(task)
-
-for task in results:
-    result = results[task]
-    print("{}: {}".format(task.name, result["time"]))
+print(results.to_string())

@@ -1,9 +1,0 @@
-reasoner HermiT
-classpath 'java/minimal'
-sourcepath 'java/minimal'
-mapping set limit-sdk True
-stop at 'HelloWorld:Hello World'
-run HelloWorld
-buildkb --linting=none
-infer isConsistent
-time

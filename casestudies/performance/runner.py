@@ -1,7 +1,7 @@
 import datetime
 import re
 import subprocess
-from typing import TypedDict
+from typing import NamedTuple
 
 import isodate
 
@@ -13,13 +13,14 @@ from tasks import Task
 time_regex = re.compile("> time\n.*\\((?P<iso8601>PT.+\\.\\d+S)\\)")
 
 
-class SJDBResult(TypedDict):
+class SJDBResult(NamedTuple):
     time: datetime.timedelta
 
 
 def runTask(task: Task) -> SJDBResult:
     compileProject(task.project)
     tasks.genTaskFile(task)
+    print("\n\n=== Running task {} ===\n\n".format(task.name))
     return runSJDB(task.project)
 
 
@@ -39,9 +40,9 @@ def runSJDB(project: Project) -> SJDBResult:
         stdout = ''.join(linegen())
         time_result = time_regex.search(stdout).group('iso8601')
 
-        return {
-            "time": isodate.parse_duration(time_result),
-        }
+        return SJDBResult(
+            time=isodate.parse_duration(time_result),
+        )
 
 
 def compileProject(project: Project):

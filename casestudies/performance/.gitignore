@@ -1,5 +1,6 @@
 store.h5
 results.pickle
+tasks.sjdb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
