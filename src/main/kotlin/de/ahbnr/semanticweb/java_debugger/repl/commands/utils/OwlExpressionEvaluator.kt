@@ -217,10 +217,12 @@ class OwlExpressionEvaluator(
         getReasoner(individual.signature())
             .use { reasoner ->
                 handleReasonerErrors {
-                    // FIXME: Is there a quicker way than searching the superclasses of a nominal?
-                    reasoner.superClasses(
-                        OWLFunctionalSyntaxFactory.ObjectOneOf(individual)
-                    )
+                    reasoner
+                        .getTypes(
+                            individual,
+                            false
+                        )
+                        .entities()
                 }
             }
 
