@@ -11,11 +11,13 @@ class InferCommand : REPLCommand(name = "infer"), KoinComponent {
     init {
         subcommands(
             ClassesOfCommand(),
+            ClassificationCommand(),
             EntailsCommand(),
             InstancesOfCommand(),
             IsClosedCommand(),
             IsConsistentCommand(),
             IsSatisfiableCommand(),
+            RealisationCommand(),
             SignatureCommand(),
             UnsatisfiableClassesCommand()
         )

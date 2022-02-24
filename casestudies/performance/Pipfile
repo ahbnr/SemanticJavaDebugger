@@ -6,6 +6,10 @@ name = "pypi"
 [packages]
 pandas = "*"
 isodate = "*"
+pandera = "*"
+matplotlib = "*"
+numpy = "*"
+tables = "*"
 
 [dev-packages]
 

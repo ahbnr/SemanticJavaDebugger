@@ -102,6 +102,12 @@ hs_err_pid*
 build
 graph.rdf
 datatest.ttl
+success-fail.ttl
+success-success.ttl
+success.ttl
+steps.sjdb
+fail.ttl
+dtfix.owl
 
 .gradle
 **/build/
