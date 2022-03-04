@@ -1,5 +1,6 @@
+import datetime
 from enum import Enum
-from typing import NamedTuple, Set, Iterator, List
+from typing import NamedTuple, Set, Iterator, List, Optional
 
 import config
 from project import Project
@@ -8,12 +9,14 @@ from sjdboptions import MappingOptions
 
 class TaskTypeProperties(NamedTuple):
     id: str
+    name: str
 
 
 class TaskType(Enum):
-    KBBuilding = TaskTypeProperties(id="K")
-    Consistency = TaskTypeProperties(id="C")
-    Classification = TaskTypeProperties(id="S")
+    KBBuilding = TaskTypeProperties(id="K", name="Knowledge Base Building")
+    Consistency = TaskTypeProperties(id="C", name="Consistency")
+    Classification = TaskTypeProperties(id="S", name="Classification")
+    Realisation = TaskTypeProperties(id="R", name="Realisation")
 
 
 class Task(NamedTuple):
@@ -21,12 +24,14 @@ class Task(NamedTuple):
     project: Project
     mappingOptions: MappingOptions
     taskType: TaskType
+    timeout: Optional[datetime.timedelta]
 
 
 class TaskGenerator(NamedTuple):
-    projectSelection: Set[Project]
+    projectSelection: List[Project]
     mappingOptionsSelection: Set[MappingOptions]
     taskTypeSelection: Set[TaskType]
+    timeout: Optional[datetime.timedelta]
 
     def generate(self) -> Iterator[Task]:
         for project in self.projectSelection:
@@ -40,7 +45,8 @@ class TaskGenerator(NamedTuple):
                         ),
                         project=project,
                         mappingOptions=mappingOptions,
-                        taskType=taskType
+                        taskType=taskType,
+                        timeout=self.timeout
                     )
 
 
@@ -48,18 +54,26 @@ def genTaskFile(task: Task):
     with open(config.taskfile(task.project), "w") as f:
         f.writelines('\n'.join([
             "reasoner HermiT",
-            "classpath '{}'".format(task.project.projectPath),
-            "sourcepath '{}'".format(task.project.projectPath),
+            "classpaths '{}'".format(' '.join(task.project.classpaths)),
+        ]) + "\n")
+
+        if task.project.sourcePath:
+            f.writelines('\n'.join([
+                "sourcepath '{}'".format(task.project.projectPath),
+            ]) + "\n")
+
+        f.writelines('\n'.join([
             "mapping set limit-sdk {}".format(task.mappingOptions.limitSdk),
             "stop at '{}'".format(task.project.breakpoint),
-            "run {}".format(task.project.main),
+            "run -- {}".format(task.project.main),
             "buildkb --linting=none",
         ]) + "\n")
 
         task_lines: List[str] = {
             TaskType.KBBuilding: [],
             TaskType.Consistency: ["infer isConsistent"],
-            TaskType.Classification: ["infer classification"]
+            TaskType.Classification: ["infer classification"],
+            TaskType.Realisation: ["infer realisation"]
         }[task.taskType]
         f.writelines('\n'.join(task_lines) + "\n")
 

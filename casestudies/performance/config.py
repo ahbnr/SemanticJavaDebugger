@@ -1,6 +1,8 @@
+import os
+
 from project import Project
 
-sjdb = "../../sjdb"
+sjdb = os.path.abspath("../../sjdb")
 
 
 def taskfile(project: Project) -> str:
