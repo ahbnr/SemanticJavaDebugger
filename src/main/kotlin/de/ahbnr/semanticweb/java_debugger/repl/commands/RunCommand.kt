@@ -3,12 +3,14 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
 import org.koin.core.component.KoinComponent
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 class RunCommand : REPLCommand(name = "run"), KoinComponent {
     private val classOrSource: String by argument()
+    private val args: List<String> by argument().multiple()
 
     override fun run() {
         val className =
@@ -23,19 +25,21 @@ class RunCommand : REPLCommand(name = "run"), KoinComponent {
                 logger.success("Compiled!")
 
                 state.sourcePath = Paths.get("") // CWD
-                state.classPath = state.compilerTmpDir
+                state.classPaths = listOf(state.compilerTmpDir)
 
                 classOrSource
                     .take(classOrSource.length - ".java".length)
                     .replace('/', '.')
             } else classOrSource
 
-        if (state.classPath == null) {
-            state.classPath = Paths.get("") // CWD
-        }
+        val classPaths = state.classPaths.ifEmpty {
+            listOf(Paths.get("")) // CWD
+        }.map { it.absolutePathString() }
+
+        val argsString = args.joinToString(" ")
 
         logger.log("Launching Java program.")
-        jvmDebugger.launchVM(className, state.classPath!!.absolutePathString())
+        jvmDebugger.launchVM("$className $argsString", classPaths)
         jvmDebugger.jvm?.resume()
     }
 }

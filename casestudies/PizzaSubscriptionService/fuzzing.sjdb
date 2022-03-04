@@ -1,7 +1,7 @@
 section 'Set Paths & Reasoner'
 
 sourcepath src/main/java
-classpath build/classes/java/main
+classpaths build/classes/java/main
 domain glue.ttl
 reasoner HermiT
 

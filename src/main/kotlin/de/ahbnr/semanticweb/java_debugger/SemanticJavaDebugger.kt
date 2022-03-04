@@ -108,7 +108,7 @@ class SemanticJavaDebugger : CliktCommand() {
                         AssertCommand(),
                         BuildKBCommand(graphGen),
                         CheckKBCommand(),
-                        ClassPathCommand(),
+                        ClassPathsCommand(),
                         CloseClass(),
                         ContCommand(),
                         DomainCommand(),

@@ -120,7 +120,7 @@ class JvmDebugger : Closeable, KoinComponent {
             }
     }
 
-    fun launchVM(mainClass: String, classpath: String? = null) {
+    fun launchVM(mainClassAndArgs: String, classpaths: List<String>) {
         if (jvm != null) {
             logger.debug("There is a JVM already running.")
             logger.emphasize("Closing existing JVM and creating new one...")
@@ -135,10 +135,9 @@ class JvmDebugger : Closeable, KoinComponent {
             .defaultConnector()
 
         val arguments = launchingConnector.defaultArguments()
-        arguments["main"]!!.setValue(mainClass)
-        if (classpath != null) {
-            arguments["options"]!!.setValue("-cp $classpath")
-        }
+        arguments["main"]!!.setValue(mainClassAndArgs)
+
+        arguments["options"]!!.setValue(classpaths.joinToString(" ") { "-cp $it" })
 
         val rawVM = launchingConnector.launch(arguments)
 

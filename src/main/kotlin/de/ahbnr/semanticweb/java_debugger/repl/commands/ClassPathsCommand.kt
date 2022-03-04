@@ -3,15 +3,16 @@
 package de.ahbnr.semanticweb.java_debugger.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.types.path
 import org.koin.core.component.KoinComponent
 import java.nio.file.Path
 
-class ClassPathCommand : REPLCommand(name = "classpath"), KoinComponent {
-    val path: Path by argument().path(mustExist = true, mustBeReadable = true)
+class ClassPathsCommand : REPLCommand(name = "classpaths"), KoinComponent {
+    private val paths: List<Path> by argument().path(mustExist = true, mustBeReadable = true).multiple()
 
     override fun run() {
-        state.classPath = path
+        state.classPaths = paths
 
         logger.success("Classpath set.")
     }

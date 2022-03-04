@@ -3,7 +3,7 @@ package de.ahbnr.semanticweb.java_debugger.repl.commands.infercommands
 import de.ahbnr.semanticweb.java_debugger.repl.commands.REPLCommand
 import org.semanticweb.owlapi.model.parameters.Imports
 
-class RealisationCommand : REPLCommand(name = "classification") {
+class RealisationCommand : REPLCommand(name = "realisation") {
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
 
