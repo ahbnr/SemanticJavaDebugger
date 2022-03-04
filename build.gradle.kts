@@ -17,6 +17,11 @@ dependencies {
     // Apache Jena
     implementation("org.apache.jena:apache-jena-libs:4.2.0")
 
+    // OWL-API 5
+    implementation("net.sourceforge.owlapi:owlapi-api:5.1.19")
+    implementation("net.sourceforge.owlapi:owlapi-parsers:5.1.19")
+    implementation("net.sourceforge.owlapi:owlapi-distribution:5.1.19")
+
     // HermiT reasoner (OWLAPI 5 compatibility version)
     implementation("net.sourceforge.owlapi:org.semanticweb.hermit:1.4.5.519")
 
@@ -34,7 +39,7 @@ dependencies {
     implementation("com.github.galigator.openllet:openllet-pellint:2.6.5")
 
     // Extended OWL support
-    implementation("com.github.owlcs:ontapi:2.1.0")
+    implementation("com.github.owlcs:ontapi:3.0.0")
 
     // Generic explanation support
     implementation("net.sourceforge.owlapi:owlexplanation:5.0.0")
