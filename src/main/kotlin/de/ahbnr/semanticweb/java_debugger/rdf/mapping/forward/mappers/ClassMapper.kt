@@ -206,7 +206,7 @@ class ClassMapper : IMapper {
                 tripleCollector.addStatement(
                     fieldURI,
                     URIs.java.isStatic,
-                    NodeFactory.createLiteral(field.isStatic.toString(), XSDDatatype.XSDboolean)
+                    NodeFactory.createLiteralByValue(field.isStatic, XSDDatatype.XSDboolean)
                 )
 
                 if (field.isStatic) {
@@ -277,7 +277,7 @@ class ClassMapper : IMapper {
                     tripleCollector.addStatement(
                         variableDeclarationURI,
                         URIs.java.isAtLine,
-                        NodeFactory.createLiteral(line.toString(), XSDDatatype.XSDint)
+                        NodeFactory.createLiteralByValue(line, XSDDatatype.XSDint)
                     )
                 }
 
@@ -395,14 +395,20 @@ class ClassMapper : IMapper {
                     tripleCollector.addStatement(
                         locationURI,
                         URIs.java.isAtSourcePath,
-                        NodeFactory.createLiteral(declarationLocation.sourcePath, XSDDatatype.XSDstring)
+                        NodeFactory.createLiteralByValue(
+                            declarationLocation.sourcePath,
+                            XSDDatatype.XSDstring
+                        )
                     )
 
                     // set line
                     tripleCollector.addStatement(
                         locationURI,
                         URIs.java.isAtLine,
-                        NodeFactory.createLiteral(declarationLocation.line.toString(), XSDDatatype.XSDint)
+                        NodeFactory.createLiteralByValue(
+                            declarationLocation.line,
+                            XSDDatatype.XSDint
+                        )
                     )
                 }
 
@@ -428,14 +434,14 @@ class ClassMapper : IMapper {
                     tripleCollector.addStatement(
                         locationURI,
                         URIs.java.isAtSourcePath,
-                        NodeFactory.createLiteral(definitionLocation.sourcePath, XSDDatatype.XSDstring)
+                        NodeFactory.createLiteralByValue(definitionLocation.sourcePath, XSDDatatype.XSDstring)
                     )
 
                     // set line
                     tripleCollector.addStatement(
                         locationURI,
                         URIs.java.isAtLine,
-                        NodeFactory.createLiteral(definitionLocation.line.toString(), XSDDatatype.XSDint)
+                        NodeFactory.createLiteralByValue(definitionLocation.line, XSDDatatype.XSDint)
                     )
                 }
             }

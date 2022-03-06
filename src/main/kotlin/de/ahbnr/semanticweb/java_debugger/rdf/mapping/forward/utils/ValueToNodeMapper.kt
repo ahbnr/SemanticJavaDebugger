@@ -28,39 +28,51 @@ class ValueToNodeMapper : KoinComponent {
 
     private fun mapPrimitiveValue(value: PrimitiveValue): Node? =
         when (value) {
-            is BooleanValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDboolean)
-            is ByteValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDbyte)
-            is CharValue -> NodeFactory.createLiteral(
-                value.value().code.toString(),
+            is BooleanValue -> NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDboolean)
+            is ByteValue -> NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDbyte)
+            is CharValue -> NodeFactory.createLiteralByValue(
+                value.value().code,
                 XSDDatatype.XSDunsignedShort
             )
             is DoubleValue -> {
-                val plainValue = value.value()
+                // val plainValue = value.value()
 
-                val stringRepresentation = when {
-                    plainValue.isInfinite() -> "${
-                        if (plainValue < 0) "-" else ""
-                    }INF"
-                    else -> plainValue.toString()
-                }
+                // val stringRepresentation = when {
+                //     plainValue.isInfinite() -> "${
+                //         if (plainValue < 0) "-" else ""
+                //     }INF"
+                //     else -> plainValue.toString()
+                // }
 
-                NodeFactory.createLiteral(stringRepresentation, XSDDatatype.XSDdouble)
+                // NodeFactory.createLiteral(stringRepresentation, XSDDatatype.XSDdouble)
+
+                // FIXME: Previously I have been creating the appropriate string representation manually, see above,
+                //   and called the createLiteral() method.
+                //   Now I am using the "createLiteralByValue" method and am hoping that it is doing the right thing.
+                //   I should test this.
+                NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDdouble)
             }
             is FloatValue -> {
-                val plainValue = value.value()
+                // val plainValue = value.value()
 
-                val stringRepresentation = when {
-                    plainValue.isInfinite() -> "${
-                        if (plainValue < 0) "-" else ""
-                    }INF"
-                    else -> plainValue.toString()
-                }
+                // val stringRepresentation = when {
+                //     plainValue.isInfinite() -> "${
+                //         if (plainValue < 0) "-" else ""
+                //     }INF"
+                //     else -> plainValue.toString()
+                // }
 
-                NodeFactory.createLiteral(stringRepresentation, XSDDatatype.XSDfloat)
+                // NodeFactory.createLiteral(stringRepresentation, XSDDatatype.XSDfloat)
+
+                // FIXME: Previously I have been creating the appropriate string representation manually, see above,
+                //   and called the createLiteral() method.
+                //   Now I am using the "createLiteralByValue" method and am hoping that it is doing the right thing.
+                //   I should test this.
+                NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDfloat)
             }
-            is IntegerValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDint)
-            is LongValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDlong)
-            is ShortValue -> NodeFactory.createLiteral(value.value().toString(), XSDDatatype.XSDshort)
+            is IntegerValue -> NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDint)
+            is LongValue -> NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDlong)
+            is ShortValue -> NodeFactory.createLiteralByValue(value.value(), XSDDatatype.XSDshort)
             else -> {
                 logger.error("Encountered unknown kind of primitive value: $value.")
                 null

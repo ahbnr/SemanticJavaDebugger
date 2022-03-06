@@ -5,7 +5,7 @@ run examples/tests/ArrayTest.java
 
 mapping set deep examples.tests.ArrayTest.void_testArraySize().array
 buildkb
-assert infer entails "local:array Type: (java:hasElement exactly 3 owl:Thing)"
+assert infer entails "ClassAssertion( ObjectExactCardinality( 3 java:hasElement owl:Thing ) local:array)"
 
 section "Array Contents are Closed"
 
@@ -15,6 +15,16 @@ cont
 mapping set deep examples.tests.ArrayTest.void_testArrayContentClosure().array
 buildkb
 dumpkb datatest.ttl
-assert infer entails "local:array Type: (java:hasElement only (java:storesReference only {java:null}))"
+assert infer entails "<<EOF
+    ClassAssertion(
+        ObjectAllValuesFrom(
+            java:hasElement
+            ObjectAllValuesFrom(
+                java:storesReference ObjectOneOf( java:null)
+            )
+        )
+        local:array
+    )
+"EOF
 
 cont

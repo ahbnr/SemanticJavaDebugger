@@ -10,20 +10,20 @@ buildkb
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
 
 # We can see that there is a node which is not valid
-infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+infer entails 'SubClassOf( prog:casestudies.btrees.structure.BTreeNode domain:ValidNode )'
 
 # Ok, then let's ask which nodes are not valid:
 infer instancesOf 'prog:casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
 
 # What condition does it violate? Lets check
 
-infer entails '?i0 Type: domain:ConditionOne'
+infer entails 'ClassAssertion( domain:ConditionOne ?i0 )'
 # Condition One holds
 
-infer entails '?i0 Type: domain:ConditionTwo'
+infer entails 'ClassAssertion( domain:ConditionTwo ?i0 )'
 # Condition Two holds
 
-infer entails '?i0 Type: domain:ConditionThree'
+infer entails 'ClassAssertion( domain:ConditionThree ?i0 )'
 # Condition Three does not hold!
 # Hence, ?i0 must be a root node which is neither a leaf nor does it have at least two children
 
@@ -49,7 +49,7 @@ run casestudies.btrees.structure.StructureTest
 # No error before splitting
 buildkb
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
-infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+infer entails 'SubClassOf( prog:casestudies.btrees.structure.BTreeNode domain:ValidNode )'
 
 # But conditions are violated after splitting:
 stop at 'casestudies.btrees.structure.BTree:AFTER SPLIT'
@@ -57,7 +57,7 @@ cont
 
 buildkb
 close prog:casestudies.btrees.structure.BTreeNode --no-reasoner
-infer entails 'prog:casestudies.btrees.structure.BTreeNode SubClassOf: domain:ValidNode'
+infer entails 'SubClassOf( prog:casestudies.btrees.structure.BTreeNode domain:ValidNode )'
 
 cont
 cont

@@ -493,7 +493,7 @@ prog:java.lang.String rdf:type owl:Class ;
                       rdfs:subClassOf [ owl:intersectionOf ( prog:java.lang.Object
                                                              [ rdf:type owl:Restriction ;
                                                                owl:onProperty java:hasPlainValue ;
-                                                               owl:someValuesFrom xsd:string
+                                                               owl:allValuesFrom xsd:string
                                                              ]
                                                            ) ;
                                         rdf:type owl:Class
@@ -505,12 +505,12 @@ prog:java.lang.String rdf:type owl:Class ;
    owl:annotatedTarget [ owl:intersectionOf ( prog:java.lang.Object
                                               [ rdf:type owl:Restriction ;
                                                 owl:onProperty java:hasPlainValue ;
-                                                owl:someValuesFrom xsd:string
+                                                owl:allValuesFrom xsd:string
                                               ]
                                             ) ;
                          rdf:type owl:Class
                        ] ;
-   rdfs:comment "Any string object should always be associated with a xsd:string value to make the string easily accessible in queries."^^rdfs:Literal
+   rdfs:comment "Any string object can be associated with a xsd:string value to make the string easily accessible in queries. However, xsd:string can not store arbitrary bytes, like java.lang.String can, but only those characters that match the XML Char production (https://www.w3.org/TR/xmlschema11-2/#string). If the string in question does not match this production, no java:hasPlainValue property will be generated for it."^^rdfs:Literal
  ] .
 
 

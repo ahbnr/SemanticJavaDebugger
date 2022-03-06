@@ -55,9 +55,14 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             data class Exactly(val value: Int) : CardinalityType()
         }
 
-        data class OWLCardinalityRestriction(
+        data class OWLObjectCardinalityRestriction(
             val onPropertyUri: String,
             val onClassUri: String,
+            val cardinality: CardinalityType
+        ) : BlankNodeConstruct()
+
+        data class OWLDataCardinalityRestriction(
+            val onPropertyUri: String,
             val cardinality: CardinalityType
         ) : BlankNodeConstruct()
 
@@ -118,11 +123,12 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
                 blankNodeConstruct.objects
             )
             is BlankNodeConstruct.OWLSome -> addSomeRestriction(blankNodeConstruct)
-            is BlankNodeConstruct.OWLCardinalityRestriction -> addCardinalityRestriction(blankNodeConstruct)
+            is BlankNodeConstruct.OWLObjectCardinalityRestriction -> addObjectCardinalityRestriction(blankNodeConstruct)
+            is BlankNodeConstruct.OWLDataCardinalityRestriction -> addDataCardinalityRestriction(blankNodeConstruct)
             is BlankNodeConstruct.OWLInverseProperty -> addInverseProperty(blankNodeConstruct)
         }
 
-    private fun addCardinalityRestriction(cardinalityRestriction: BlankNodeConstruct.OWLCardinalityRestriction): Node {
+    private fun addObjectCardinalityRestriction(cardinalityRestriction: BlankNodeConstruct.OWLObjectCardinalityRestriction): Node {
         val restrictionNode = NodeFactory.createBlankNode()
 
         addStatement(
@@ -147,9 +153,39 @@ class TripleCollector(private val triplePattern: Triple) : KoinComponent {
             is BlankNodeConstruct.CardinalityType.Exactly ->
                 addStatement(
                     restrictionNode,
-                    URIs.owl.cardinality,
-                    NodeFactory.createLiteral(
-                        cardinalityRestriction.cardinality.value.toString(),
+                    URIs.owl.cardinality, // FIXME: This should be owl:qualifiedCardinality shouldnt it?
+                    NodeFactory.createLiteralByValue(
+                        cardinalityRestriction.cardinality.value,
+                        XSDDatatype.XSDnonNegativeInteger
+                    )
+                )
+        }
+
+        return restrictionNode
+    }
+
+    private fun addDataCardinalityRestriction(cardinalityRestriction: BlankNodeConstruct.OWLDataCardinalityRestriction): Node {
+        val restrictionNode = NodeFactory.createBlankNode()
+
+        addStatement(
+            restrictionNode,
+            URIs.rdf.type,
+            URIs.owl.Restriction
+        )
+
+        addStatement(
+            restrictionNode,
+            URIs.owl.onProperty,
+            cardinalityRestriction.onPropertyUri
+        )
+
+        when (cardinalityRestriction.cardinality) {
+            is BlankNodeConstruct.CardinalityType.Exactly ->
+                addStatement(
+                    restrictionNode,
+                    URIs.owl.cardinality, // FIXME: This should be owl:qualifiedCardinality shouldnt it?
+                    NodeFactory.createLiteralByValue(
+                        cardinalityRestriction.cardinality.value,
                         XSDDatatype.XSDnonNegativeInteger
                     )
                 )

@@ -61,6 +61,9 @@ class StackMapper : IMapper {
                             URIs.owl.NamedIndividual
                         )
 
+                        // FIXME: This declares even data values as the same as a local variable.
+                        //   Is this valid OWL 2?
+                        //   Probably not, 'SameIndividual( local:x "1"^^xsd:int )' fails with a parsing error
                         tripleCollector.addStatement(
                             localVarURI,
                             URIs.owl.sameAs,
@@ -134,7 +137,7 @@ class StackMapper : IMapper {
                 tripleCollector.addStatement(
                     frameSubject,
                     URIs.java.isAtStackDepth,
-                    NodeFactory.createLiteral(frameDepth.toString(), XSDDatatype.XSDint)
+                    NodeFactory.createLiteralByValue(frameDepth, XSDDatatype.XSDint)
                 )
 
                 // ...and it oftentimes has a `this` reference:
