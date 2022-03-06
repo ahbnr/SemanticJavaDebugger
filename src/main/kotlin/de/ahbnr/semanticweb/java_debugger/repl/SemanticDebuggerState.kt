@@ -54,7 +54,9 @@ class SemanticDebuggerState(
         if (ontology != null) {
             val newChangeListener = OWLOntologyChangeListener { changes ->
                 for (change in changes) {
-                    logger.debug("Change: $change")
+                    if (change.ontology.ontologyID == ontology.ontologyID) {
+                        logger.debug("Change: $change")
+                    }
                 }
             }
 
