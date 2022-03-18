@@ -39,6 +39,7 @@ def runSJDB(project: Project, timeout: Optional[datetime.timedelta]) -> SJDBResu
             timeoutAsSeconds = timeout.seconds if timeout else None
             output, _ = process.communicate(None, timeout=timeoutAsSeconds)
 
+            print(output)
             time_result = isodate.parse_duration(time_regex.search(output.decode('utf-8')).group('iso8601'))
         except subprocess.TimeoutExpired as e:
             print("Timeout hit! ({}s)".format(e.timeout))

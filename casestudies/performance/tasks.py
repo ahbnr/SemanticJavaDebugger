@@ -59,7 +59,7 @@ def genTaskFile(task: Task):
 
         if task.project.sourcePath:
             f.writelines('\n'.join([
-                "sourcepath '{}'".format(task.project.projectPath),
+                "sourcepath '{}'".format(task.project.sourcePath),
             ]) + "\n")
 
         f.writelines('\n'.join([

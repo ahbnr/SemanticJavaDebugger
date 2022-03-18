@@ -15,8 +15,8 @@ from tasks import TaskGenerator, TaskType
 hello_world = Project(
     name="HelloWorld",
     projectPath="java/minimal",
-    sourcePath="java/minimal",
-    classpaths=["java/minimal"],
+    sourcePath="./",
+    classpaths=["./"],
     breakpoint="HelloWorld:Hello World",
     main="HelloWorld"
 )
@@ -32,7 +32,7 @@ dacapo_lusearch = Project(
 
 taskGen = TaskGenerator(
     projectSelection=[
-        # hello_world,
+        hello_world,
         dacapo_lusearch
     ],
     mappingOptionsSelection={
@@ -46,7 +46,7 @@ taskGen = TaskGenerator(
         TaskType.Classification,
         TaskType.Realisation
     },
-    timeout=datetime.timedelta(seconds=15)
+    timeout=datetime.timedelta(seconds=60)
 )
 
 

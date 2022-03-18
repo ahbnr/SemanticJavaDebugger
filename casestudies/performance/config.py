@@ -6,4 +6,4 @@ sjdb = os.path.abspath("../../sjdb")
 
 
 def taskfile(project: Project) -> str:
-    return "{}/tasks.sjdb".format(project.projectPath)
+    return os.path.abspath("{}/tasks.sjdb".format(project.projectPath))
