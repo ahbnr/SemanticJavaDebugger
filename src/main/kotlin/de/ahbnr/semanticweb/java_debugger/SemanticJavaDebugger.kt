@@ -32,17 +32,30 @@ import kotlin.io.path.createDirectories
 import kotlin.system.exitProcess
 
 
+/**
+ * Entrypoint of sjdb
+ *
+ * <ul>
+ * <li> Clikt-based CLI parameters
+ * <li> Prepares JLine based interactive commandline
+ * <li> Sets up koin dependency injection
+ * <li> Starts REPL / runs sjdb-script automatically through REPL, line-by-line
+ * </ul>
+ */
 class SemanticJavaDebugger : CliktCommand() {
+    // Clikt CLI parameters
     private val commandFile: String? by argument().optional()
     private val forceColor by option().switch(
         "--color" to "color",
         "--no-color" to "no-color"
     ).default("unknown")
 
-    var returnCode: Int = 0
+    // Will store exit code for whole program
+    var exitCode: Int = 0
         private set
 
     override fun run() {
+        // Initialize JLine
         val terminalBuilder = TerminalBuilder.builder()
         if (forceColor != "unknown") {
             terminalBuilder.color(forceColor == "color")
@@ -50,8 +63,7 @@ class SemanticJavaDebugger : CliktCommand() {
 
         val terminal = terminalBuilder.build()
 
-        val ns = genDefaultNs()
-
+        // Setup temporary directories for storing compilation results etc.
         val systemTmpDir = System.getProperty("java.io.tmpdir")
         val applicationTmpDir = Path.of(systemTmpDir, "SemanticJavaDebugger")
 
@@ -70,7 +82,11 @@ class SemanticJavaDebugger : CliktCommand() {
             )
         compilerTmpDir.createDirectories()
 
+        // Setup commonly used objects and make them available through dependency injection
+        val ns = genDefaultNs()
+
         JvmDebugger().use { jvmDebugger ->
+            // Setup dependency injection
             @Suppress("USELESS_CAST")
             startKoin {
                 modules(
@@ -87,20 +103,22 @@ class SemanticJavaDebugger : CliktCommand() {
                 )
             }
 
-            try {
-                JavaAccessModifierDatatype.register()
+            // Register custom datatypes with Jena
+            JavaAccessModifierDatatype.register()
 
-                val graphGen = GraphGenerator(
-                    ns,
-                    listOf(
-                        ClassMapper(),
-                        ObjectMapper(),
-                        StackMapper()
-                    )
+            val graphGen = GraphGenerator(
+                ns,
+                listOf(
+                    ClassMapper(),
+                    ObjectMapper(),
+                    StackMapper()
                 )
+            )
 
+            try {
                 val readCommand = ReadCommand()
 
+                // Initialize REPL and enable commands
                 val repl = REPL(
                     terminal = terminal,
                     commands = listOf(
@@ -137,17 +155,21 @@ class SemanticJavaDebugger : CliktCommand() {
                 )
                 readCommand.repl = repl
 
+                // If a sjdb script file was supplied, run it line-by-line through the REPL
                 val wasSuccessful = if (commandFile != null) {
                     val fileInputStream = FileInputStream(commandFile!!)
 
                     repl.interpretStream(fileInputStream)
                 } else {
+                    // Otherwise, run the REPL interactively
                     repl.main()
                     true
                 }
 
-                returnCode = if (wasSuccessful) 0 else -1
+                // Supply exit code to caller, base on result of REPL execution
+                exitCode = if (wasSuccessful) 0 else -1
             } finally {
+                // Shut down dependency injection system
                 stopKoin()
             }
         }
@@ -159,5 +181,5 @@ fun main(args: Array<String>) {
 
     debugger.main(args)
 
-    exitProcess(debugger.returnCode)
+    exitProcess(debugger.exitCode)
 }

@@ -54,6 +54,7 @@ class REPL(
     private val historyPath: Path
 
     init {
+        // Get the system cache directory, so that we can store the REPL command history in there
         val cacheDir = Path.of(AppDirsFactory.getInstance().getUserCacheDir("SemanticJavaDebugger", null, null) ?: ".")
         cacheDir.createDirectories()
 
@@ -81,18 +82,29 @@ class REPL(
 
     @OptIn(ExperimentalTime::class)
     private fun interpretLine(line: String): Boolean {
-        if (line.isBlank()) {
+        // Dont do anything if the line is empty / whitespace
+        if (line.isBlank())
             return true
-        }
 
+        /**
+         * The REPL works in two modes:
+         *
+         * Normal Mode: We interpret one command per line
+         * HereDoc Mode: Sometimes input may span over multiple lines. This mode consumes them all and then passes the
+         *   result to the last entered command.
+         */
         val lastMode = mode
         return when (lastMode) {
             is Mode.Normal -> {
+                // Remove initial whitespace
                 val trimmedLine = line.trimStart()
-                if (trimmedLine.startsWith("#")) {
-                    return true // its a comment line
-                }
 
+                // Ignore comment lines starting with #
+                if (trimmedLine.startsWith("#"))
+                    return true
+
+                // If we find a HereDoc (e.g. <<EOF) then there will be input that spans multiple lines.
+                // Then we switch to HereDoc mode and consume these lines
                 val hereDocMatch = hereDocRegex.find(line)
                 if (hereDocMatch != null) {
                     mode = Mode.HereDoc(
@@ -153,6 +165,9 @@ class REPL(
         }
     }
 
+    /**
+     * Non-interactively interprets all lines in input stream
+     */
     fun interpretStream(input: InputStream): Boolean {
         for (line in input.bufferedReader().lineSequence()) {
             if (mode is Mode.Normal) {
@@ -168,6 +183,9 @@ class REPL(
         return true
     }
 
+    /**
+     * Interactively interprets user input
+     */
     fun main() {
         logger.debug("Storing command history in ${historyPath}.")
 
@@ -176,6 +194,12 @@ class REPL(
             try {
                 val line = reader.readLine(prompt)
 
+                // We run all commands in a separate thread and wait for it on the main thread.
+                //
+                // Why? Because some commands, in particular those involving reasoners can take a long time and we want
+                // the REPL to respond to Ctrl-C so that such commands can be interrupted.
+                // Therefore, we register a listener for this interrupt signal and kill the command thread if the signal
+                // is ever received.
                 class Handler(private val commandThread: Thread) : SignalHandler {
                     override fun handle(p0: Signal?) {
                         @Suppress("DEPRECATION")
@@ -184,13 +208,19 @@ class REPL(
                 }
 
                 val commandThread = thread(false) {
+                    // Interpret an input line
+                    // (this might actually consume multiple input lines, if the line contains a HereDoc, e.g. <<EOF)
                     interpretLine(line)
                 }
 
+                // Store the original signal handler and set our custom one
                 val oldSignalHandler = Signal.handle(Signal("INT"), Handler(commandThread))
+
+                // Run the command and wait for it on the main thread
                 commandThread.start()
                 commandThread.join()
 
+                // Restore original signal handler
                 Signal.handle(Signal("INT"), oldSignalHandler)
 
             } catch (e: UserInterruptException) {
