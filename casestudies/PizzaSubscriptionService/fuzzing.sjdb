@@ -11,7 +11,7 @@ mapping set deep <<EOF
 EOF
 stop <<EOF
     at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
-    -if-not-entailed='ClassAssertion( pizza:InterestingPizza local:pizza )'
+    --if-not-entailed='ClassAssertion( pizza:InterestingPizza local:pizza )'
 EOF
 
 run de.ahbnr.pizzasubscriptionservice.Fuzzer
