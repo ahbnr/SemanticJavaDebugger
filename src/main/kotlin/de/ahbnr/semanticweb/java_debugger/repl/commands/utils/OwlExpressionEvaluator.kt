@@ -108,7 +108,6 @@ class OwlExpressionEvaluator(
     // }
 
     fun parseAxiomExpression(functionalAxiomExpression: String): OWLAxiom? {
-        println("PARSING $functionalAxiomExpression")
         val parser = buildFunctionalParser()
 
         // Based on https://stackoverflow.com/a/62684809
