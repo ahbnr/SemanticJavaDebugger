@@ -1,0 +1,130 @@
+# Inspecting reasons for inconsistent reasoner behaviour...
+
+reasoner HermiT
+domain examples/btrees/BTreeStructure.ttl
+
+# section "Node Types"
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: NodeTypeTests'
+# run examples.btrees.tests.StructureTest
+#
+# mapping set deep <<EOF
+#     examples.btrees.BTreeNode.children
+#     examples.btrees.BTreeNode.keys
+# EOF
+# buildkb
+# close domain:Child
+# assert infer entails "ClassAssertion( domain:Root local:root )"
+# assert infer entailsNot "ClassAssertion( domain:Child local:root )"
+# assert infer entailsNot "ClassAssertion( domain:Leaf local:root )"
+#
+# assert infer entails "ClassAssertion( domain:Leaf local:leaf )"
+# assert infer entails "ClassAssertion( domain:Child local:leaf )"
+# assert infer entailsNot "ClassAssertion( local:leaf domain:Root )"
+#
+# assert infer entails "local:middle Type: (not domain:Root and not domain:Leaf)"
+# assert infer entails "local:middle Type: domain:Child"
+#
+#
+#
+# section "Condition One"
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: ConditionOneSuccess'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: ConditionOneError'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionOne'
+#
+#
+#
+# section "Condition Two"
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: ConditionTwoSuccess'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# close domain:Child
+# assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: ConditionTwoError'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# close domain:Child
+# assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionTwo'
+#
+# assert infer entails 'local:root Type: domain:ConditionTwo'
+# assert infer entails 'local:leftMiddle Type: (prog:examples.btrees.BTreeNode and not domain:ConditionTwo)'
+
+mapping set deep <<EOF
+    examples.btrees.BTreeNode.children
+    examples.btrees.BTreeNode.keys
+EOF
+
+section "Condition Three"
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionThreeSuccess'
+run examples.btrees.tests.StructureTest
+#cont
+
+buildkb
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+
+stop at 'examples.btrees.tests.StructureTest:Test point: ConditionThreeError'
+cont
+
+buildkb
+close prog:examples.btrees.BTreeNode --no-reasoner
+close domain:Child
+assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ConditionThree'
+
+assert infer entails 'local:root Type: (prog:examples.btrees.BTreeNode and not domain:ConditionThree)'
+dumpkb fail.ttl
+assert infer entails 'local:leaf Type: domain:ConditionThree'
+
+
+
+# section "Valid Node Condition"
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: ValidNodeConditionSuccess'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# close domain:Child
+# close domain:FragmentedNode
+# assert infer isUnsatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: ValidNodeConditionError'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# close domain:Child
+# close domain:FragmentedNode
+# assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+#
+# section "Split Error"
+#
+# stop at 'examples.btrees.tests.StructureTest:Test point: brokenSplitTest'
+# cont
+#
+# buildkb
+# close prog:examples.btrees.BTreeNode --no-reasoner
+# close domain:Child
+# close domain:FragmentedNode
+# assert infer isSatisfiable 'prog:examples.btrees.BTreeNode and not domain:ValidNode'
+#
+# cont
