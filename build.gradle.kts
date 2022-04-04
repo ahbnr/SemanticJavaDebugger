@@ -98,7 +98,7 @@ tasks {
         mergeServiceFiles()
 
         manifest {
-            attributes["Main-Class"] = "de.ahbnr.semanticweb.java_debugger.SemanticJavaDebuggerKt"
+            attributes["Main-Class"] = "de.ahbnr.semanticweb.sjdb.SemanticJavaDebuggerKt"
         }
     }
 }
@@ -141,7 +141,7 @@ application {
         "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
     )
 
-    mainClass.set("de.ahbnr.semanticweb.java_debugger.SemanticJavaDebuggerKt")
+    mainClass.set("de.ahbnr.semanticweb.sjdb.SemanticJavaDebuggerKt")
 }
 
 
