@@ -6,7 +6,7 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.owlcs.ontapi.OntManagers
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.UniversalKnowledgeBaseParser
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.UniversalKnowledgeBaseParser
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 

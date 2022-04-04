@@ -1,6 +1,6 @@
 package de.ahbnr.semanticweb.sjdb.utils
 
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.Namespaces
+import de.ahbnr.semanticweb.jdi2owl.mapping.Namespaces
 import org.apache.jena.rdf.model.*
 
 fun expandResourceToModel(baseResource: Resource, ns: Namespaces, noBlankDefaults: Boolean = true): Model {

@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.repl.commands.utils
 
 import de.ahbnr.semanticweb.logging.Logger
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.repl.CloseableOWLReasoner
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent

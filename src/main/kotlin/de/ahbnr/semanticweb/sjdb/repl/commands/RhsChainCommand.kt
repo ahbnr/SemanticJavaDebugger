@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

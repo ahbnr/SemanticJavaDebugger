@@ -1,11 +1,11 @@
 package de.ahbnr.semanticweb.sjdb.repl.commands.utils
 
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
-import de.ahbnr.semanticweb.logging.Logger
-import de.ahbnr.semanticweb.sjdb.rdf.linting.LinterMode
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.BuildParameters
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
 import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
+import de.ahbnr.semanticweb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.BuildParameters
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
 import org.koin.core.component.KoinComponent

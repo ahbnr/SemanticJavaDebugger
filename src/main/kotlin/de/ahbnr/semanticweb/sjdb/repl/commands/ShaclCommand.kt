@@ -4,7 +4,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.file
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import org.apache.jena.rdf.model.RDFNode
 import org.apache.jena.riot.Lang
 import org.apache.jena.riot.RDFDataMgr

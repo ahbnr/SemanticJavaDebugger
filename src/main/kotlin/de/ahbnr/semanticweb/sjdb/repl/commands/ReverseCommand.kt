@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.sun.jdi.ObjectReference
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.backward.BackwardMapper
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.backward.utils.JavaObjectPrinter
 import org.koin.core.component.KoinComponent

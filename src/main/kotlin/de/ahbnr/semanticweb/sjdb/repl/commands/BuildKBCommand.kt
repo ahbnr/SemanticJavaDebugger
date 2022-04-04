@@ -6,8 +6,8 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
-import de.ahbnr.semanticweb.sjdb.rdf.linting.LinterMode
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.KnowledgeBaseBuilder
 import org.koin.core.component.KoinComponent
 

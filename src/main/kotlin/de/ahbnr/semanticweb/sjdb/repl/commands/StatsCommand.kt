@@ -2,7 +2,7 @@
 
 package de.ahbnr.semanticweb.sjdb.repl.commands
 
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.streams.asSequence

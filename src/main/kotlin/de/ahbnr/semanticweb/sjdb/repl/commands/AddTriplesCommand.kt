@@ -4,9 +4,9 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import de.ahbnr.semanticweb.sjdb.rdf.linting.LinterMode
-import de.ahbnr.semanticweb.sjdb.rdf.linting.ModelSanityChecker
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.UniversalKnowledgeBaseParser
+import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
+import de.ahbnr.semanticweb.jdi2owl.linting.ModelSanityChecker
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.UniversalKnowledgeBaseParser
 import org.koin.core.component.KoinComponent
 
 class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {

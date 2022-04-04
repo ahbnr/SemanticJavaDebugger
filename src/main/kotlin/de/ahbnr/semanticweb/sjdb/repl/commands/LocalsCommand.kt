@@ -5,9 +5,9 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.ObjectReference
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.LocalVariableInfo
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.MethodInfo
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.LocalVariableInfo
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.MethodInfo
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.rdf.model.ResourceFactory
 import org.koin.core.component.KoinComponent

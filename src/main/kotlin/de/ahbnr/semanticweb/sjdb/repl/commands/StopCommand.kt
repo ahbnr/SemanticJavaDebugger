@@ -9,8 +9,8 @@ import com.github.ajalt.clikt.parameters.groups.mutuallyExclusiveOptions
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import de.ahbnr.semanticweb.sjdb.rdf.linting.LinterMode
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.*
 
 class StopCommand(
