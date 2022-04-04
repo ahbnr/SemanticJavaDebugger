@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.mappers
 import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.StackFrame
 import com.sun.jdi.Value
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.IMapper

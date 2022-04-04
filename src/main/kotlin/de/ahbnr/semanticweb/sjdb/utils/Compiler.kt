@@ -1,6 +1,6 @@
 package de.ahbnr.semanticweb.sjdb.utils
 
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.FileFilterUtils
 import org.apache.commons.io.filefilter.TrueFileFilter

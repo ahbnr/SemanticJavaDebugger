@@ -8,8 +8,8 @@ import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.switch
-import de.ahbnr.semanticweb.sjdb.debugging.JvmDebugger
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmDebugger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.datatypes.JavaAccessModifierDatatype
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.GraphGenerator

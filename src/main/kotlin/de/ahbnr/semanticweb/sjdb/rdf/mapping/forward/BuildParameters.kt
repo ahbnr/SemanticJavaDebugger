@@ -1,6 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward
 
-import de.ahbnr.semanticweb.sjdb.debugging.JvmState
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
+import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
 import spoon.reflect.CtModel
 
 data class BuildParameters(

@@ -2,10 +2,10 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.ProgramResult
-import de.ahbnr.semanticweb.sjdb.debugging.JvmDebugger
-import de.ahbnr.semanticweb.sjdb.debugging.JvmInstance
-import de.ahbnr.semanticweb.sjdb.debugging.JvmState
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmDebugger
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmInstance
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
 import org.koin.core.component.KoinComponent

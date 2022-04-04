@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.debugging
+package de.ahbnr.semanticweb.jdi2owl.debugging
 
 import com.sun.jdi.Field
 import com.sun.jdi.LocalVariable

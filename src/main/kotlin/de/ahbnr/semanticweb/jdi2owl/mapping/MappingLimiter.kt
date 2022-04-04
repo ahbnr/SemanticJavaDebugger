@@ -1,9 +1,9 @@
-package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward
+package de.ahbnr.semanticweb.jdi2owl.mapping
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.sjdb.debugging.ReferenceContexts
-import de.ahbnr.semanticweb.sjdb.debugging.utils.getFullyQualifiedName
-import de.ahbnr.semanticweb.sjdb.debugging.utils.getFullyQualifiedNamePrefix
+import de.ahbnr.semanticweb.jdi2owl.debugging.ReferenceContexts
+import de.ahbnr.semanticweb.jdi2owl.debugging.utils.getFullyQualifiedName
+import de.ahbnr.semanticweb.jdi2owl.debugging.utils.getFullyQualifiedNamePrefix
 
 class MappingLimiter(
     val settings: MappingSettings

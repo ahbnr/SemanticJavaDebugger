@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.sjdb.debugging.utils.getFullyQualifiedName
+import de.ahbnr.semanticweb.jdi2owl.debugging.utils.getFullyQualifiedName
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.LocalVariableInfo
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.LocationInfo
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils.MethodInfo

@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward
+package de.ahbnr.semanticweb.jdi2owl.mapping
 
 class MappingSettings {
     var closeReferenceTypes: Boolean = true

@@ -3,9 +3,9 @@ package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils
 import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.Method
-import de.ahbnr.semanticweb.sjdb.debugging.utils.InternalJDIUtils
-import de.ahbnr.semanticweb.sjdb.debugging.utils.getLocalMethodId
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.debugging.utils.InternalJDIUtils
+import de.ahbnr.semanticweb.jdi2owl.debugging.utils.getLocalMethodId
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.BuildParameters
 import org.apache.commons.collections4.MultiValuedMap
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap

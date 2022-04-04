@@ -3,11 +3,11 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.mappers
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.sjdb.debugging.JvmObjectIterator
-import de.ahbnr.semanticweb.sjdb.debugging.ReferenceContexts
-import de.ahbnr.semanticweb.sjdb.debugging.mirrors.*
-import de.ahbnr.semanticweb.sjdb.debugging.mirrors.utils.MirroringError
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmObjectIterator
+import de.ahbnr.semanticweb.jdi2owl.debugging.ReferenceContexts
+import de.ahbnr.semanticweb.jdi2owl.debugging.mirrors.*
+import de.ahbnr.semanticweb.jdi2owl.debugging.mirrors.utils.MirroringError
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.IMapper

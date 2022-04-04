@@ -1,6 +1,6 @@
 package de.ahbnr.semanticweb.sjdb.repl
 
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import org.jline.terminal.Terminal
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle

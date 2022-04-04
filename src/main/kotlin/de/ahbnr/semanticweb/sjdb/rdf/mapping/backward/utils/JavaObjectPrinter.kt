@@ -1,8 +1,8 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping.backward.utils
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.sjdb.debugging.JvmState
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
+import de.ahbnr.semanticweb.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

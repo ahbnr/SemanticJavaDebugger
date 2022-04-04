@@ -1,9 +1,9 @@
 package de.ahbnr.semanticweb.sjdb.rdf.linting
 
 import com.github.owlcs.ontapi.Ontology
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.MappingLimiter
+import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
 import openllet.core.vocabulary.BuiltinNamespace
 import openllet.jena.BuiltinTerm
 import openllet.pellint.lintpattern.LintPattern

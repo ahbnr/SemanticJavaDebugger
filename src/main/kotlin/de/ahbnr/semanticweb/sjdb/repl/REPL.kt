@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.UsageError
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 import net.harawata.appdirs.AppDirsFactory
 import org.jline.reader.EndOfFileException

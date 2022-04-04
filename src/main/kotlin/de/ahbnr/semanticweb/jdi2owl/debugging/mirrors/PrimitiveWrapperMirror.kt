@@ -1,8 +1,8 @@
-package de.ahbnr.semanticweb.sjdb.debugging.mirrors
+package de.ahbnr.semanticweb.jdi2owl.debugging.mirrors
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.sjdb.debugging.mirrors.utils.MirroringError
-import de.ahbnr.semanticweb.sjdb.debugging.mirrors.utils.retrieveMethod
+import de.ahbnr.semanticweb.jdi2owl.debugging.mirrors.utils.MirroringError
+import de.ahbnr.semanticweb.jdi2owl.debugging.mirrors.utils.retrieveMethod
 
 // Be aware, that invoking any method of this mirror invalidates any frame references for the thread
 // and that they have to be retrieved again via frame(i)

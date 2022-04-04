@@ -1,6 +1,6 @@
 @file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
 
-package de.ahbnr.semanticweb.sjdb.debugging.utils
+package de.ahbnr.semanticweb.jdi2owl.debugging.utils
 
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.Location

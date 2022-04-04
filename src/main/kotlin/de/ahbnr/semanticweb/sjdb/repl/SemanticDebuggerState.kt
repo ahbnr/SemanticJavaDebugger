@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.repl
 
-import de.ahbnr.semanticweb.sjdb.logging.Logger
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.MappingSettings
+import de.ahbnr.semanticweb.logging.Logger
+import de.ahbnr.semanticweb.jdi2owl.mapping.MappingSettings
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.semanticweb.owlapi.model.OWLOntologyChangeListener

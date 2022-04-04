@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils
 
 import com.sun.jdi.LocalVariable
-import de.ahbnr.semanticweb.sjdb.debugging.utils.InternalJDIUtils
+import de.ahbnr.semanticweb.jdi2owl.debugging.utils.InternalJDIUtils
 import spoon.reflect.code.CtLocalVariable
 
 data class LocalVariableInfo(

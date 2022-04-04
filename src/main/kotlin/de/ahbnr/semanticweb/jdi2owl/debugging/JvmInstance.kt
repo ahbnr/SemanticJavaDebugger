@@ -1,6 +1,6 @@
 @file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE", "JAVA_MODULE_DOES_NOT_DEPEND_ON_MODULE")
 
-package de.ahbnr.semanticweb.sjdb.debugging
+package de.ahbnr.semanticweb.jdi2owl.debugging
 
 import com.sun.jdi.ClassType
 import com.sun.jdi.ReferenceType
@@ -9,7 +9,7 @@ import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.EventSet
 import com.sun.jdi.event.VMDisconnectEvent
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.Closeable

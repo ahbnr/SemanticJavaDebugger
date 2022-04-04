@@ -1,6 +1,6 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.macros
 
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.Property

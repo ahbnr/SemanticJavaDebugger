@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.debugging
+package de.ahbnr.semanticweb.jdi2owl.debugging
 
 import com.sun.jdi.Location
 import com.sun.jdi.ObjectReference

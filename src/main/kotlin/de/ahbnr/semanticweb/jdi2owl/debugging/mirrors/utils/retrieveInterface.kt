@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.debugging.mirrors.utils
+package de.ahbnr.semanticweb.jdi2owl.debugging.mirrors.utils
 
 import com.sun.jdi.ClassType
 import com.sun.jdi.InterfaceType

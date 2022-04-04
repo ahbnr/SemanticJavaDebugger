@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.rdf.linting
 
 import com.github.owlcs.ontapi.jena.model.OntObject
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
 import openllet.pellint.rdfxml.OWLEntityDatabase
 import openllet.pellint.rdfxml.OWLSyntaxChecker

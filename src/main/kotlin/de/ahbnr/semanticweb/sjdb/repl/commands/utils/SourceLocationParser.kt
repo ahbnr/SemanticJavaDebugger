@@ -1,6 +1,6 @@
 package de.ahbnr.semanticweb.sjdb.repl.commands.utils
 
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

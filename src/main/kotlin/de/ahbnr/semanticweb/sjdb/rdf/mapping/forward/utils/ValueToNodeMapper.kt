@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.rdf.mapping.forward.utils
 
 import com.sun.jdi.*
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.sjdb.rdf.mapping.OntURIs
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.graph.Node

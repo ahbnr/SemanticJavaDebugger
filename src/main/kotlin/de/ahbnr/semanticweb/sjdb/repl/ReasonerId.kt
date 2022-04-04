@@ -2,7 +2,7 @@ package de.ahbnr.semanticweb.sjdb.repl
 
 import com.github.owlcs.ontapi.OntManagers
 import com.github.owlcs.ontapi.Ontology
-import de.ahbnr.semanticweb.sjdb.logging.Logger
+import de.ahbnr.semanticweb.logging.Logger
 import openllet.jena.PelletReasoner
 import openllet.owlapi.OpenlletReasoner
 import openllet.owlapi.OpenlletReasonerFactory

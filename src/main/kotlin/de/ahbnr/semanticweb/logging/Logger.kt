@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.logging
+package de.ahbnr.semanticweb.logging
 
 import java.io.OutputStream
 
