@@ -1,8 +1,8 @@
-package de.ahbnr.semanticweb.sjdb.rdf.mapping.backward
+package de.ahbnr.semanticweb.sjdb.backwardmapping
 
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
-import de.ahbnr.semanticweb.sjdb.rdf.mapping.backward.mappers.ObjectMapping
 import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
+import de.ahbnr.semanticweb.sjdb.backwardmapping.mappers.ObjectMapping
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.apache.jena.rdf.model.RDFNode
 

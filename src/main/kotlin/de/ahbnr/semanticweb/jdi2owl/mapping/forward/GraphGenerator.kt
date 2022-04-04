@@ -7,9 +7,9 @@ import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
 import de.ahbnr.semanticweb.jdi2owl.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.jdi2owl.mapping.Namespaces
-import de.ahbnr.semanticweb.logging.Logger
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.macros.Chain
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.UniversalKnowledgeBaseParser
+import de.ahbnr.semanticweb.logging.Logger
 import org.apache.jena.rdf.model.Model
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -36,14 +36,14 @@ class GraphGenerator(
     }
 
     private fun loadJavaOntology(model: Model) {
-        val resourcePath = "/ontologies/java.ttl"
+        val resourcePath = "/de/ahbnr/semanticweb/jdi2owl/ontologies/java.ttl"
         val inputStream = javaClass.getResourceAsStream(resourcePath)
 
         readIntoModel(resourcePath, model, inputStream!!)
     }
 
     private fun loadMacrosOntology(model: Model) {
-        val resourcePath = "/ontologies/macros.ttl"
+        val resourcePath = "/de/ahbnr/semanticweb/jdi2owl/ontologies/macros.ttl"
         val inputStream = javaClass.getResourceAsStream(resourcePath)
 
         readIntoModel(resourcePath, model, inputStream!!)
