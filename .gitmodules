@@ -1,0 +1,3 @@
+[submodule "libs/jdi2owl"]
+	path = libs/jdi2owl
+	url = git@github.com:ahbnr/jdi2owl.git
