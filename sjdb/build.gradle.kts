@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm")
     application
 }
 
@@ -156,3 +156,8 @@ task("runInfo") {
         println("MAINCLASS=${application.mainClass.get()}")
     }
 }
+
+// Workaround needed for multi-project build for some reason.
+// Probably a really bad idea but seems to work for now: https://stackoverflow.com/a/64418715
+task("prepareKotlinBuildScriptModel") { }
+
