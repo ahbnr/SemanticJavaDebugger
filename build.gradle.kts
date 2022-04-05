@@ -11,9 +11,19 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+
+    flatDir {
+        dirs("../logging/build/libs", "../jdi2owl/build/libs")
+    }
 }
 
 dependencies {
+    // local copy of custom logging interface
+    implementation("de.ahbnr.semanticweb.logging:logging-1.0-SNAPSHOT")
+
+    // local copy of jdi2owl mapper
+    implementation("de.ahbnr.semanticweb.jdi2owl:jdi2owl-1.0-SNAPSHOT")
+
     // Apache Jena
     implementation("org.apache.jena:apache-jena-libs:4.2.0")
 
@@ -48,7 +58,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:1.7.32")
     implementation("org.slf4j:slf4j-simple:1.7.32")
 
-    // For Java source code analysis
+    // Spoon for Java source code analysis
     implementation("fr.inria.gforge.spoon:spoon-core:10.0.1-beta-1")
 
     // For handling CLI parameters
