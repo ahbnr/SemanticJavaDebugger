@@ -1,3 +1,5 @@
-plugins {
-    kotlin("jvm") version "1.5.31" apply false
+tasks.register("build") {
+    dependsOn(
+        gradle.includedBuild("sjdb").task(":build")
+    )
 }

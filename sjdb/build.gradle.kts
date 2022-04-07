@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.0"
-    kotlin("jvm")
+    kotlin("jvm") version "1.5.31"
     application
 }
 
@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     // local copy of jdi2owl mapper
-    implementation(project(":jdi2owl"))
+    implementation("de.ahbnr.semanticweb:jdi2owl")
 
     // Apache Jena
     implementation("org.apache.jena:apache-jena-libs:4.2.0")
@@ -156,8 +156,4 @@ task("runInfo") {
         println("MAINCLASS=${application.mainClass.get()}")
     }
 }
-
-// Workaround needed for multi-project build for some reason.
-// Probably a really bad idea but seems to work for now: https://stackoverflow.com/a/64418715
-task("prepareKotlinBuildScriptModel") { }
 
