@@ -4,6 +4,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
+import de.ahbnr.semanticweb.jdi2owl.utils.Compiler
 import org.koin.core.component.KoinComponent
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
@@ -15,7 +16,7 @@ class RunCommand : REPLCommand(name = "run"), KoinComponent {
     override fun run() {
         val className =
             if (classOrSource.endsWith(".java")) {
-                val compiler = de.ahbnr.semanticweb.sjdb.utils.Compiler(
+                val compiler = Compiler(
                     listOf(Paths.get(classOrSource)),
                     state.compilerTmpDir
                 )

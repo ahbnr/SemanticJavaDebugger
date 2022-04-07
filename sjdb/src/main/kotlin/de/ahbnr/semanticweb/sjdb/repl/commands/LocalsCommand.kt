@@ -90,7 +90,7 @@ class LocalsCommand : REPLCommand(name = "locals"), KoinComponent {
 
             val variableInfo = variableInfos.getOrDefault(variable, null)
             if (knowledgeBase != null && variableInfo != null) {
-                val variableUri = knowledgeBase.asPrefixNameUri(URIs.prog.genVariableDeclarationURI(variableInfo))
+                val variableUri = knowledgeBase.asPrefixNameUri(URIs.prog.genVariableDeclarationIRI(variableInfo))
 
                 logger.log("  Variable URI: $variableUri")
             }
