@@ -49,7 +49,7 @@ class KnowledgeBaseBuilder(
             jvmState = jvmState,
             sourceModel = sourceModel,
             limiter = limiter,
-            typeInfoProvider = TypeInfoProvider(jvmState.pausedThread.virtualMachine())
+            typeInfoProvider = TypeInfoProvider(jvmState.pausedThread)
         )
         val ontology = graphGenerator.buildOntology(
             buildParameters,

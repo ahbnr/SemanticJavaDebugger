@@ -79,9 +79,10 @@ class LocalsCommand : REPLCommand(name = "locals"), KoinComponent {
             if (knowledgeBase == null) emptyMap()
             else {
                 val method = frame.location().method()
-                val methodInfo = MethodInfo(method, knowledgeBase.buildParameters)
+                val declaringTypeInfo = knowledgeBase.buildParameters.typeInfoProvider.getTypeInfo(method.declaringType())
+                val methodInfo = declaringTypeInfo.getMethodInfo(method)
 
-                methodInfo.variables.associateBy { it.jdiLocalVariable }
+                method.variables().associateWith { methodInfo.getVariableInfo(it) }
             }
 
         val visibleVariables = frame.getValues(frame.visibleVariables())
