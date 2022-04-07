@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import de.ahbnr.semanticweb.jdi2owl.utils.Compiler
 import org.koin.core.component.KoinComponent
+import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
@@ -25,7 +26,7 @@ class RunCommand : REPLCommand(name = "run"), KoinComponent {
                 compiler.compile()
                 logger.success("Compiled!")
 
-                state.sourcePath = Paths.get("") // CWD
+                state.sourcePath = Path.of(classOrSource)
                 state.classPaths = listOf(state.compilerTmpDir)
 
                 classOrSource

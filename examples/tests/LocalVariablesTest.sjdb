@@ -1,0 +1,74 @@
+section "Prepare Program & Domain"
+stop at examples.tests.LVTMyClass:7
+run examples/tests/LocalVariablesTest.java
+
+section "Build Knowledge Base"
+buildkb
+checkkb --is-consistent
+
+section "Are local variables correctly declared?"
+
+assert triples '<<EOF
+    prog:`SysLoader-examples.tests.LVTMyClass.-void-basic()` java:declaresVariable prog:`SysLoader-examples.tests.LVTMyClass.-void-basic().localVariable` .
+
+    prog:`SysLoader-examples.tests.LVTMyClass.-void-basic()`.localVariable rdfs:range xsd:int ;
+                                                                           rdfs:domain java:StackFrame .
+'EOF
+
+section "Are values present?"
+
+assert sparql success '<<EOF
+    SELECT ?frame
+    WHERE {
+        ?frame a java:StackFrame ;
+               prog:`SysLoader-examples.tests.LVTMyClass.-void-basic().localVariable` "42"^^xsd:int .
+    }
+'EOF
+
+stop at examples.tests.LVTMyClass:17
+cont
+buildkb
+
+section "Are local variables with same name recognized?"
+
+# TODO: Test disabled for now, since variable names now use the implementation-dependent code index as tie-breaker for names
+#       Test can be reintroduced when we introduce a property that gives the code index.
+# assert triples '<<EOF
+#     prog:`SysLoader-examples.tests.LVTMyClass.-void-scopes()` java:declaresVariable prog:`SysLoader-examples.tests.LVTMyClass.-void-scopes().localVariable_0` ;
+#                                                               java:declaresVariable prog:`SysLoader-examples.tests.LVTMyClass.-void-scopes().localVariable_1` .
+# 'EOF
+#
+# assert sparql success '<<EOF
+#     SELECT ?frame
+#     WHERE {
+#         ?frame a java:StackFrame ;
+#                prog:`SysLoader-examples.tests.LVTMyClass.-void-scopes().localVariable_1` "1337"^^xsd:int .
+#     }
+# 'EOF
+#
+# section "Are variable source code locations available?"
+#
+# assert triples '<<EOF
+#     prog:`SysLoader-examples.tests.LVTMyClass.-void-scopes().localVariable_0` java:isAtLine "12"^^xsd:int .
+#     prog:`SysLoader-examples.tests.LVTMyClass.-void-scopes().localVariable_1` java:isAtLine "16"^^xsd:int .
+# 'EOF
+
+stop at examples.tests.LVTMyClass:30
+cont
+buildkb
+
+section "Are variables removed by compile-time optimizations ignored?"
+
+assert triples '<<EOF
+    prog:`SysLoader-examples.tests.LVTMyClass.-void-removedVar()` java:declaresVariable prog:`SysLoader-examples.tests.LVTMyClass.-void-removedVar().localVariable` .
+'EOF
+
+assert sparql success '<<EOF
+    SELECT ?frame
+    WHERE {
+        ?frame a java:StackFrame ;
+               prog:`SysLoader-examples.tests.LVTMyClass.-void-removedVar().localVariable` "12"^^xsd:int .
+    }
+'EOF
+
+cont

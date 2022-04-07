@@ -12,10 +12,10 @@ domain:Some
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.tests.Optional
+            prog:SysLoader-examples.tests.Optional
             [
                 a owl:Restriction ;
-                owl:onProperty prog:examples.tests.Optional.value ;
+                owl:onProperty prog:SysLoader-examples.tests.Optional.value ;
                 owl:someValuesFrom prog:java.lang.Object
             ]
         )

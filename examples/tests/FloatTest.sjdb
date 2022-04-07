@@ -1,0 +1,15 @@
+section "Prepare Program & Domain"
+stop at 'examples.tests.FloatTest:FloatTest: Test Point'
+run examples/tests/FloatTest.java
+
+section "Build Knowledge Base"
+buildkb
+dumpkb datatest.ttl
+checkkb --is-consistent
+
+assert infer entails 'DataPropertyAssertion( prog:`SysLoader-examples.tests.FloatTest.-void-main(java.lang.String[]).pi` run:frame0 "3.1415"^^xsd:double )'
+assert infer entails 'DataPropertyAssertion( prog:`SysLoader-examples.tests.FloatTest.-void-main(java.lang.String[]).NaN` run:frame0 "NaN"^^xsd:double )'
+assert infer entails 'DataPropertyAssertion( prog:`SysLoader-examples.tests.FloatTest.-void-main(java.lang.String[]).Infinity` run:frame0 "INF"^^xsd:double )'
+assert infer entails 'DataPropertyAssertion( prog:`SysLoader-examples.tests.FloatTest.-void-main(java.lang.String[]).NegativeInfinity` run:frame0 "-INF"^^xsd:double )'
+
+cont

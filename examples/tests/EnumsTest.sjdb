@@ -1,0 +1,28 @@
+section "Prepare Program & Domain"
+stop at examples.tests.EnumsTest:13
+run examples/tests/EnumsTest.java
+
+section "Build Knowledge Base"
+buildkb
+dumpkb datatest.ttl
+checkkb --is-consistent
+
+section "Check for presence of enum class"
+
+assert triples '<<EOF
+  prog:SysLoader-examples.tests.MyEnum a java:Class ;
+                                       rdfs:subClassOf prog:java.lang.Enum .
+'EOF
+
+section "Check for presence of instances"
+
+assert sparql success '<<EOF
+    SELECT ?enumAInstance
+    WHERE {
+        run:frame0 prog:`SysLoader-examples.tests.EnumsTest.-void-main(java.lang.String[]).a` ?enumAInstance .
+        ?enumAInstance a prog:SysLoader-examples.tests.MyEnum .
+        prog:SysLoader-examples.tests.MyEnum prog:SysLoader-examples.tests.MyEnum.A ?enumAInstance .
+    }
+'EOF
+
+cont

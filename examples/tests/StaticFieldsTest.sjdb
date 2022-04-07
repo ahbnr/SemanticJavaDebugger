@@ -1,0 +1,42 @@
+section "Prepare Program & Domain"
+stop at examples.tests.StaticFieldsTest:14
+run examples/tests/StaticFieldsTest.java
+
+section "Build Knowledge Base"
+buildkb
+checkkb --is-consistent
+
+section "Are the fields correctly declared?"
+
+assert triples -- '<<EOF
+    prog:SysLoader-examples.tests.SFTMyClass java:hasField prog:SysLoader-examples.tests.SFTMyClass.staticIntField ;
+                                             java:hasField prog:SysLoader-examples.tests.SFTMyClass.staticStringField ;
+                                             java:hasField prog:SysLoader-examples.tests.SFTMyClass.nonStaticField .
+
+    prog:SysLoader-examples.tests.SFTMyClass.staticIntField java:isStatic "true"^^xsd:boolean .
+    prog:SysLoader-examples.tests.SFTMyClass.staticStringField java:isStatic "true"^^xsd:boolean .
+    prog:SysLoader-examples.tests.SFTMyClass.nonStaticField java:isStatic "false"^^xsd:boolean .
+'EOF
+
+section "Are the static values present?"
+
+assert sparql success -- '<<EOF
+    SELECT ?string
+    WHERE {
+        prog:SysLoader-examples.tests.SFTMyClass prog:SysLoader-examples.tests.SFTMyClass.staticIntField "42"^^xsd:int ;
+                                                 prog:SysLoader-examples.tests.SFTMyClass.staticStringField ?string .
+        ?string java:hasPlainValue "Lorem Ipsum"^^xsd:string .
+    }
+'EOF
+
+section "Object instances do not implement static fields"
+
+assert sparql fail -- '<<EOF
+    SELECT ?something
+    WHERE {
+        [] a prog:SysLoader-examples.tests.SFTMyClass ;
+             prog:SysLoader-examples.tests.SFTMyClass.staticIntField ?something .
+    }
+'EOF
+
+cont

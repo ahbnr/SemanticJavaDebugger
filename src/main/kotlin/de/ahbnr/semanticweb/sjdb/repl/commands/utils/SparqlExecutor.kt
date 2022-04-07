@@ -2,6 +2,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.utils
 
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
+import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 import org.apache.jena.query.QueryExecution
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
@@ -15,6 +16,8 @@ class SparqlExecutor(
     private val logger: Logger by inject()
 
     fun execute(query: String): QueryExecution? {
+        val preprocessedQuery = UsabilityPreprocessor.preprocess(query)
+
         val prefixes = knowledgeBase
             .prefixNameToUri
             .entries
@@ -22,7 +25,7 @@ class SparqlExecutor(
 
         val prefixedQuery = """
                 $prefixes
-                $query
+                $preprocessedQuery
         """.trimIndent()
 
         return try {

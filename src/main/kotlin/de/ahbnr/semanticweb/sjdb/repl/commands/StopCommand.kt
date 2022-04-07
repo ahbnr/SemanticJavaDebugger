@@ -12,11 +12,14 @@ import com.github.ajalt.clikt.parameters.options.option
 import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.*
+import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 
 class StopCommand(
     val graphGenerator: GraphGenerator,
 ) : REPLCommand(name = "stop") {
-    sealed class BreakpointCondition(val expression: String) {
+    sealed class BreakpointCondition(expression: String) {
+        val expression = UsabilityPreprocessor.preprocess(expression)
+
         sealed class OwlDlCondition(expression: String) : BreakpointCondition(expression) {
             sealed class SatisfiabilityCondition(classExpression: String) : OwlDlCondition(classExpression) {
                 class IfSatisfiableCondition(classExpression: String) : SatisfiabilityCondition(classExpression)

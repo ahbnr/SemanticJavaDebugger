@@ -12,6 +12,7 @@ import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import spoon.Launcher
+import spoon.compiler.ModelBuildingException
 import spoon.reflect.CtModel
 import kotlin.io.path.absolutePathString
 
@@ -33,7 +34,13 @@ class KnowledgeBaseBuilder(
             } else if (!quiet) {
                 logger.debug("No path to source. Can not augment knowledge base with source structure.")
             }
-            spoonLauncher.buildModel()
+            try {
+                spoonLauncher.buildModel()
+            } catch (e: ModelBuildingException) {
+                if (sourcePath != null)
+                    logger.error("Failed to build source model at source path ${sourcePath.absolutePathString()}.")
+                throw e
+            }
             if (!quiet && sourcePath != null)
                 logger.success("Source model created.")
         }

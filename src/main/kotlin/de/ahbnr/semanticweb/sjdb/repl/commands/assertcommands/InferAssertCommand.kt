@@ -4,9 +4,11 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.OwlExpressionEvaluator
+import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 import org.koin.core.component.KoinComponent
 
 class InferAssertCommand : REPLCommand(name = "infer"), KoinComponent {
@@ -15,7 +17,7 @@ class InferAssertCommand : REPLCommand(name = "infer"), KoinComponent {
     private val entailsMode = "entails"
     private val entailsNotMode = "entailsNot"
     private val mode: String by argument().choice(isSatisfiableMode, isUnsatisfiableMode, entailsMode, entailsNotMode)
-    private val manchesterSyntaxExpression: String by argument()
+    private val manchesterSyntaxExpression: String by argument().convert { UsabilityPreprocessor.preprocess(it) }
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()

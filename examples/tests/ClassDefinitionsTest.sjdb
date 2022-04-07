@@ -9,9 +9,9 @@ checkkb --is-consistent
 section "Check for presence of (inner) classes"
 
 assert triples '<<EOF
-  prog:examples.tests.OuterClass a java:Class .
-  prog:examples.tests.OuterClass%24InnerClass a java:Class .
-  prog:examples.tests.OuterClass%24StaticInnerClass a java:Class .
+  prog:`SysLoader-examples.tests.OuterClass` a java:Class .
+  prog:`SysLoader-examples.tests.OuterClass$InnerClass` a java:Class .
+  prog:`SysLoader-examples.tests.OuterClass$StaticInnerClass` a java:Class .
 'EOF
 
 cont

@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
 import de.ahbnr.semanticweb.jdi2owl.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.UniversalKnowledgeBaseParser
+import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 import org.koin.core.component.KoinComponent
 
 class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
@@ -26,7 +27,7 @@ class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
 
         val triplesString = """
                 $prefixes
-                $triplesString
+                ${UsabilityPreprocessor.preprocess(triplesString)}
         """.trimIndent()
 
         val reader = UniversalKnowledgeBaseParser(

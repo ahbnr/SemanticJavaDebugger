@@ -23,7 +23,6 @@ class OwlExpressionEvaluator(
     val quiet: Boolean
 ) : KoinComponent {
     private val logger: Logger by inject()
-    private val URIs: OntURIs by inject()
 
     var doSyntacticExtraction: Boolean = false
     var classRelationDepth: Int = -1

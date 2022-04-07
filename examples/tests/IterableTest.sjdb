@@ -3,8 +3,9 @@ stop at examples.tests.IterableTest:13
 run examples/tests/IterableTest.java
 
 section "Build Knowledge Base"
-mapping set deep examples.tests.IterableTest.void_main(java.lang.String[]).list
+mapping set deep `SysLoader-examples.tests.IterableTest.-void-main(java.lang.String[]).list`
 buildkb
+dumpkb datatest.ttl
 stats
 checkkb --is-consistent
 
@@ -14,7 +15,7 @@ section "SPARQL Queries"
 assert sparql success -- '<<EOF
     SELECT ?first ?second ?third
     WHERE {
-        run:frame0 prog:examples.tests.IterableTest.void_main%28java.lang.String%5B%5D%29.list [
+        run:frame0 prog:`SysLoader-examples.tests.IterableTest.-void-main(java.lang.String[]).list` [
             a prog:java.util.List ;
             java:hasElement [
                 java:hasIndex 0 ;

@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
+import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 import org.apache.jena.query.ParameterizedSparqlString
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
@@ -23,7 +24,7 @@ class SparqlAssertCommand : REPLCommand(name = "sparql"), KoinComponent {
         val model = knowledgeBase.getSparqlModel()
 
         val queryString = ParameterizedSparqlString(
-            assertionExpression
+            UsabilityPreprocessor.preprocess(assertionExpression)
         )
 
         try {

@@ -5,6 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
+import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.SimpleSelector
 import org.apache.jena.riot.RDFLanguages
@@ -31,7 +32,7 @@ class TriplesAssertCommand : REPLCommand(name = "triples"), KoinComponent {
             .source(
                 """
                     $prefixes
-                    $triples
+                    ${UsabilityPreprocessor.preprocess(triples)}
                 """
                     .trimIndent()
                     .byteInputStream()

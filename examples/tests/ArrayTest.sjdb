@@ -3,7 +3,7 @@ section "Array Size is encoded correctly"
 stop at "examples.tests.ArrayTest:Test: testArraySize"
 run examples/tests/ArrayTest.java
 
-mapping set deep examples.tests.ArrayTest.void_testArraySize().array
+mapping set deep `SysLoader-examples.tests.ArrayTest.-void-testArraySize().array`
 buildkb
 assert infer entails "ClassAssertion( ObjectExactCardinality( 3 java:hasElement owl:Thing ) local:array)"
 
@@ -12,7 +12,7 @@ section "Array Contents are Closed"
 stop at "examples.tests.ArrayTest:Test: testArrayContentClosure"
 cont
 
-mapping set deep examples.tests.ArrayTest.void_testArrayContentClosure().array
+mapping set deep `SysLoader-examples.tests.ArrayTest.-void-testArrayContentClosure().array`
 buildkb
 dumpkb datatest.ttl
 assert infer entails "<<EOF

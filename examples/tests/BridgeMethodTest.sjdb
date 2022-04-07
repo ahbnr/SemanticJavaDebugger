@@ -4,18 +4,23 @@ run examples/tests/BridgeMethodTest.java
 
 section "Build Knowledge Base"
 buildkb
+dumpkb datatest.ttl
 checkkb --is-consistent
 
 section "Check presence of original next() method"
 
 assert triples '<<EOF
-    prog:examples.tests.BridgeMethodTest java:hasMethod prog:examples.tests.BridgeMethodTest.examples.tests.BMTMyClass_next%28%29
+    prog:SysLoader-examples.tests.BridgeMethodTest
+        java:hasMethod
+        prog:`SysLoader-examples.tests.BridgeMethodTest.-SysLoader-examples.tests.BMTMyClass-next()`
 'EOF
 
 section "Check presence of generated next() bridge method"
 
 assert triples '<<EOF
-    prog:examples.tests.BridgeMethodTest java:hasMethod prog:examples.tests.BridgeMethodTest.java.lang.Object_next%28%29 .
+    prog:SysLoader-examples.tests.BridgeMethodTest
+        java:hasMethod
+        prog:`SysLoader-examples.tests.BridgeMethodTest.-java.lang.Object-next()` .
 'EOF
 
 cont

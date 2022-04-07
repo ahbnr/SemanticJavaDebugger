@@ -7,6 +7,7 @@ import org.koin.core.component.inject
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.isReadable
+import kotlin.io.path.isRegularFile
 
 class SourceLocationParser : KoinComponent {
     private val logger: Logger by inject()
@@ -30,7 +31,9 @@ class SourceLocationParser : KoinComponent {
 
         val filePath = when (val sourcePath = state.sourcePath) {
             null -> Path.of(potentialFilePath)
-            else -> sourcePath.resolve(potentialFilePath)
+            else -> if (sourcePath.isRegularFile())
+                    sourcePath
+                else sourcePath.resolve(potentialFilePath)
         }
 
         if (!filePath.isReadable()) {

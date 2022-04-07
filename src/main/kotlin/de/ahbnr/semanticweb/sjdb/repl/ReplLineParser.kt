@@ -1,5 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.repl
 
+import org.apache.jena.atlas.lib.IRILib
+
 class ReplLineParser {
     private sealed class State {
         object Normal : State()
@@ -11,7 +13,7 @@ class ReplLineParser {
         class StringParse(val delimiter: Char, val builder: StringBuilder, val nextState: State) : State()
     }
 
-    private val stringDelimiters = setOf('\'', '"')
+    private val stringDelimiters = setOf('\'', '"', '`')
 
     fun parse(line: String): List<String> {
         val argv = mutableListOf<String>()
@@ -72,7 +74,12 @@ class ReplLineParser {
             }
 
             is State.StringParse -> {
-                argv.add(state.builder.toString())
+                var string = state.builder.toString()
+                if (state.delimiter == '`') {// Backticks strings are IRI encoded
+                    string = IRILib.encodeUriComponent(string)
+                }
+
+                argv.add(string)
             }
 
             else -> Unit

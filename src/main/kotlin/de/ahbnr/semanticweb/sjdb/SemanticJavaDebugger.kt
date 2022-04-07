@@ -107,7 +107,6 @@ class SemanticJavaDebugger : CliktCommand() {
             JavaAccessModifierDatatype.register()
 
             val graphGen = GraphGenerator(
-                ns,
                 listOf(
                     ClassMapper(),
                     ObjectMapper(),

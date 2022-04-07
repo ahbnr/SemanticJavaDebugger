@@ -4,8 +4,8 @@ run examples/tests/DataTest.java
 
 section "Build Knowledge Base"
 mapping set deep <<EOF
-    examples.tests.DataContainer.intArrayField
-    examples.tests.DataContainer.stringArrayField
+    SysLoader-examples.tests.DataContainer.intArrayField
+    SysLoader-examples.tests.DataContainer.stringArrayField
 EOF
 buildkb
 stats
@@ -17,7 +17,7 @@ section "SPARQL Queries"
 sparql -- '<<EOF
     SELECT ?field
     WHERE {
-        prog:examples.tests.DataContainer java:hasField ?field .
+        prog:SysLoader-examples.tests.DataContainer java:hasField ?field .
     }
 'EOF
 
@@ -25,8 +25,8 @@ sparql -- '<<EOF
 sparql -- '<<EOF
     SELECT ?container ?boolVal
     WHERE {
-        ?container a prog:examples.tests.DataContainer ;
-                   prog:examples.tests.DataContainer.booleanField ?boolVal .
+        ?container a prog:SysLoader-examples.tests.DataContainer ;
+                   prog:SysLoader-examples.tests.DataContainer.booleanField ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 'EOF
@@ -36,9 +36,9 @@ inspect ?boolVal
 sparql -- '<<EOF
     SELECT ?second
     WHERE {
-        ?container a prog:examples.tests.DataContainer ;
-                   prog:examples.tests.DataContainer.intArrayField [
-                     a prog:int%5B%5D ;
+        ?container a prog:SysLoader-examples.tests.DataContainer ;
+                   prog:SysLoader-examples.tests.DataContainer.intArrayField [
+                     a prog:`int[]` ;
                      java:hasElement [
                          java:hasIndex 1 ;
                          java:storesPrimitive ?second
@@ -52,9 +52,9 @@ inspect ?second
 sparql -- '<<EOF
     SELECT ?first
     WHERE {
-        [] a prog:examples.tests.DataContainer ;
-           prog:examples.tests.DataContainer.stringArrayField [
-             a prog:java.lang.String%5B%5D ;
+        [] a prog:SysLoader-examples.tests.DataContainer ;
+           prog:SysLoader-examples.tests.DataContainer.stringArrayField [
+             a prog:`java.lang.String[]` ;
              java:hasElement [
                  java:hasIndex 0 ;
                  java:storesReference [
@@ -70,8 +70,8 @@ inspect ?first
 sparql -- '<<EOF
     SELECT ?string
     WHERE {
-        [] a prog:examples.tests.DataContainer ;
-           prog:examples.tests.DataContainer.stringField [
+        [] a prog:SysLoader-examples.tests.DataContainer ;
+           prog:SysLoader-examples.tests.DataContainer.stringField [
              java:hasPlainValue ?string
            ] .
     }
@@ -84,9 +84,9 @@ inspect ?container
 stop at examples.tests.DataTest:44
 cont
 mapping set deep <<EOF
-    examples.tests.DataContainer.intArrayField
-    examples.tests.DataContainer.stringArrayField
-    examples.tests.DataTest.void_varsTest().intArrayVar
+    SysLoader-examples.tests.DataContainer.intArrayField
+    SysLoader-examples.tests.DataContainer.stringArrayField
+    `SysLoader-examples.tests.DataTest.-void-varsTest().intArrayVar`
 EOF
 buildkb
 checkkb --is-consistent
@@ -97,7 +97,7 @@ sparql -- '<<EOF
     SELECT ?boolVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.tests.DataTest.void_varsTest%28%29.booleanVar ?boolVal .
+           prog:`SysLoader-examples.tests.DataTest.-void-varsTest().booleanVar` ?boolVal .
         FILTER (?boolVal = "true"^^xsd:boolean)
     }
 'EOF
@@ -108,7 +108,7 @@ sparql -- '<<EOF
     SELECT ?intArrayVal
     WHERE {
         [] a java:StackFrame ;
-           prog:examples.tests.DataTest.void_varsTest%28%29.intArrayVar [
+           prog:`SysLoader-examples.tests.DataTest.-void-varsTest().intArrayVar` [
              java:hasElement [
                java:hasIndex 2 ;
                java:storesPrimitive ?intArrayVal

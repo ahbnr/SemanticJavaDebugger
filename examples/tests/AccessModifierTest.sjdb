@@ -1,0 +1,27 @@
+section "Prepare Program & Domain"
+stop at examples.tests.AccessModifierTest:34
+run examples/tests/AccessModifierTest.java
+
+section "Build Knowledge Base"
+buildkb
+# checkkb --is-consistent
+
+section "Check access modifiers of classes"
+
+assert triples '<<EOF
+    prog:`SysLoader-examples.tests.AccessModifierTest` java:hasAccessModifier "public" .
+    prog:`SysLoader-examples.tests.PackagePrivateClass$ProtectedClass` java:hasAccessModifier "protected" .
+    prog:`SysLoader-examples.tests.PackagePrivateClass$PrivateClass` java:hasAccessModifier "private" .
+    prog:`SysLoader-examples.tests.PackagePrivateClass` java:hasAccessModifier "package-private" .
+'EOF
+
+section "Check access modifiers of methods"
+
+assert triples '<<EOF
+    prog:`SysLoader-examples.tests.AccessModifierTest.-void-publicMethod()` java:hasAccessModifier "public" .
+    prog:`SysLoader-examples.tests.AccessModifierTest.-void-protectedMethod()` java:hasAccessModifier "protected" .
+    prog:`SysLoader-examples.tests.AccessModifierTest.-void-privateMethod()` java:hasAccessModifier "private" .
+    prog:`SysLoader-examples.tests.AccessModifierTest.-void-packagePrivateMethod()` java:hasAccessModifier "package-private" .
+'EOF
+
+cont

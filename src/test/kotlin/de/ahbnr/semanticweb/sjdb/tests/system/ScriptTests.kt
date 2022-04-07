@@ -29,7 +29,7 @@ class ScriptTests {
             return Path.of("examples", "tests")
                 .toFile()
                 .walkTopDown()
-                .filter { it.isFile && it.path.endsWith(".sjd") }
+                .filter { it.isFile && it.path.endsWith(".sjdb") }
                 .map {
                     Arguments.of(it.toPath())
                 }
