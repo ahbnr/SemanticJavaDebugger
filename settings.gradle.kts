@@ -1,5 +1,3 @@
-rootProject.name = "sjdb-composite"
+rootProject.name = "sjdb"
 
 includeBuild("libs/jdi2owl")
-includeBuild("sjdb")
-
