@@ -8,11 +8,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PizzaGenerator {
+    public boolean useReducedHistoryForVeganUsers = true;
+
     private List<Topping> getNotRecentlyUsedToppings(UserProfile user, List<Topping> allToppings) {
         final var recentlyUsedToppings = user
                 .recentlyDelivered
                 .stream()
-                .limit(user.isVegan ? 1 : 3)
+                .limit(user.isVegan && useReducedHistoryForVeganUsers ? 1 : 3)
                 .flatMap(pizza -> pizza.toppings.stream())
                 .collect(Collectors.toSet());
 

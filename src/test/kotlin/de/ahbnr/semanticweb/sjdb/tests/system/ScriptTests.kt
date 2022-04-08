@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
 import java.nio.file.Path
 import java.util.stream.Stream
+import kotlin.io.path.relativeTo
 import kotlin.streams.asStream
 import kotlin.test.assertEquals
 
@@ -19,7 +20,15 @@ class ScriptTests {
     @ArgumentsSource(ScriptProvider::class)
     @Execution(ExecutionMode.CONCURRENT)
     fun scriptTest(scriptPath: Path) {
-        val exitValue = runScriptTest(scriptPath)
+        val workingDir = Path.of(
+            "src", "test", "resources",
+            "de", "ahbnr", "semanticweb", "sjdb", "tests", "system",
+        )
+
+        val exitValue = runScriptTest(
+            workingDir,
+            scriptPath.relativeTo(workingDir)
+        )
 
         assertEquals(0, exitValue, "Debugger script failed.")
     }

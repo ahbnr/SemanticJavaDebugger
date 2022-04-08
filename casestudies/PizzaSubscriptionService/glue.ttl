@@ -20,24 +20,24 @@ java:SequenceElement a owl:Class .
 
 pizza:Pizza
     a owl:Class ;
-    owl:equivalentClass prog:de.ahbnr.pizzasubscriptionservice.Pizza .
+    owl:equivalentClass prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza .
 
 pizza:hasBase
     a owl:ObjectProperty ;
-    owl:equivalentProperty prog:de.ahbnr.pizzasubscriptionservice.Pizza.base .
+    owl:equivalentProperty prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.base .
 
 # This makes hasTopping non-simple => at-least / at-most restrictions become invalid
 # pizza:hasTopping
 #     a owl:ObjectProperty ;
-#     owl:propertyChainAxiom  ( prog:de.ahbnr.pizzasubscriptionservice.Pizza.toppings java:hasElement java:storesReference ) .
+#     owl:propertyChainAxiom  ( prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.toppings java:hasElement java:storesReference ) .
 
 pizza:hasTopping
     a owl:ObjectProperty ;
     a owl:NamedIndividual ;
     macros:chainsProperties (
-        prog:de.ahbnr.pizzasubscriptionservice.Pizza.toppings
-        prog:hasElement%3Cde.ahbnr.pizzasubscriptionservice.Topping%3E
-        prog:storesReference%3Cde.ahbnr.pizzasubscriptionservice.Topping%3E
+        prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+        prog:hasElement%3CSysLoader-de.ahbnr.pizzasubscriptionservice.Topping%3E
+        prog:storesReference%3CSysLoader-de.ahbnr.pizzasubscriptionservice.Topping%3E
     ) .
 
 # Bases
@@ -47,7 +47,7 @@ pizza:DeepPanBase
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Base.DeepPan
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Base.DeepPan
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -58,7 +58,7 @@ pizza:ThinAndCrispyBase
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Base.ThinAndCrispy
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Base.ThinAndCrispy
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -72,7 +72,7 @@ pizza:ChickenTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Chicken
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Chicken
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -83,7 +83,7 @@ pizza:HamTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Ham
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Ham
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -94,7 +94,7 @@ pizza:HotSpicedBeefTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.HotSpicedBeef
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.HotSpicedBeef
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -105,7 +105,7 @@ pizza:PeperoniSausageTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.PeperoniSausage
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.PeperoniSausage
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -118,7 +118,7 @@ pizza:GorgonzolaTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Gorgonzola
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Gorgonzola
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -129,7 +129,7 @@ pizza:MozzarelleTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Mozzarella
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Mozzarella
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -140,7 +140,7 @@ pizza:GoatsCheeseTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.GoatsCheese
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.GoatsCheese
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -151,7 +151,7 @@ pizza:ParmesanTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Parmesan
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Parmesan
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -162,7 +162,7 @@ pizza:FourCheesesTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.FourCheeses
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.FourCheeses
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -175,7 +175,7 @@ pizza:PrawnsTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Prawns
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Prawns
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -186,7 +186,7 @@ pizza:AnchoviesTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Anchovies
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Anchovies
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -197,7 +197,7 @@ pizza:MixedSeafoodTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.MixedSeafood
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.MixedSeafood
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -210,7 +210,7 @@ pizza:MushroomTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Mushroom
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Mushroom
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -221,7 +221,7 @@ pizza:OnionTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Onion
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Onion
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -232,7 +232,7 @@ pizza:SpinachTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Spinach
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Spinach
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -243,7 +243,7 @@ pizza:GarlicTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Garlic
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Garlic
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -254,7 +254,7 @@ pizza:OliveTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Olive
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Olive
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -265,7 +265,7 @@ pizza:PepperTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Pepper
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Pepper
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -276,7 +276,7 @@ pizza:CaperTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Caper
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Caper
         ] ;
         owl:someValuesFrom owl:Thing
     ] .
@@ -287,7 +287,7 @@ pizza:TomatoTopping
         a owl:Restriction ;
         owl:onProperty [
             a owl:ObjectProperty ;
-            owl:inverseOf prog:de.ahbnr.pizzasubscriptionservice.Topping.Tomato
+            owl:inverseOf prog:SysLoader-de.ahbnr.pizzasubscriptionservice.Topping.Tomato
         ] ;
         owl:someValuesFrom owl:Thing
     ] .

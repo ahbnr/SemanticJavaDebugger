@@ -7,7 +7,7 @@ reasoner HermiT
 
 section 'Set Breakpoint & Run Fuzzer'
 mapping set deep <<EOF
-    de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+    SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.toppings
 EOF
 stop <<EOF
     at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
@@ -19,10 +19,13 @@ run de.ahbnr.pizzasubscriptionservice.Fuzzer
 assert at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
 section 'Breakpoint Hit => Error in Pizza Generation'
 mapping set deep <<EOF
-    de.ahbnr.pizzasubscriptionservice.Pizza.toppings
-    de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main(java.lang.String[]).trace
+    SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+    `SysLoader-de.ahbnr.pizzasubscriptionservice.Fuzzer.-void-main(java.lang.String[]).trace`
 EOF
 buildkb
+
+# local:pizza is indeed a pizza, so the breakpoint must have been triggered because it it not interesting
+assert infer entails 'ClassAssertion( pizza:Pizza local:pizza )'
 
 # The pizza is missing a non-meat / non-cheese (vegan) topping
 reverse local:pizza
@@ -32,7 +35,7 @@ reasoner JenaOwlMicro
 sparql '<<EOF
     SELECT ?i ?o
     WHERE {
-        ?f <https://github.com/ahbnr/SemanticJavaDebugger/Program#de.ahbnr.pizzasubscriptionservice.Fuzzer.void_main%28java.lang.String%5B%5D%29.trace> [
+        ?f <https://github.com/ahbnr/SemanticJavaDebugger/Program#SysLoader-de.ahbnr.pizzasubscriptionservice.Fuzzer.-void-main%28java.lang.String%5B%5D%29.trace> [
             java:hasElement [
                 java:storesReference ?o ;
                 java:hasIndex ?i

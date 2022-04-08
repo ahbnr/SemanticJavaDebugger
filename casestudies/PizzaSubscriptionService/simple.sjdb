@@ -1,0 +1,34 @@
+section 'Set Paths & Reasoner'
+
+sourcepath src/main/java
+classpaths build/classes/java/main
+domain glue.ttl
+reasoner HermiT
+
+section 'Set Breakpoint'
+mapping set deep <<EOF
+    SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+EOF
+stop <<EOF
+    at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
+    --if-not-entailed='ClassAssertion( pizza:InterestingPizza local:pizza )'
+EOF
+
+section 'Run simple version that reliably produces a non-interesting pizza'
+run de.ahbnr.pizzasubscriptionservice.Main
+
+assert at de.ahbnr.pizzasubscriptionservice.PizzaGenerator:deliverPizza
+
+section 'Breakpoint Hit => Error in Pizza Generation'
+
+mapping set deep SysLoader-de.ahbnr.pizzasubscriptionservice.Pizza.toppings
+buildkb
+# local:pizza is indeed a pizza, so the breakpoint must have been triggered because it it not interesting
+assert infer entails 'ClassAssertion( pizza:Pizza local:pizza )'
+
+# The pizza is missing a non-meat / non-cheese (vegan) topping
+reverse local:pizza
+
+section 'Apparently the error occurs when users switch from vegan to non-vegan and too many vegetables are excluded.'
+
+kill

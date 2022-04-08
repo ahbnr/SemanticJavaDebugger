@@ -97,6 +97,15 @@ tasks.test {
     jvmArgs = listOf(
         "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED"
     )
+
+    // Compile the case study for tests
+    dependsOn(gradle.includedBuild("PizzaSubscriptionService").task(":classes"))
+
+    // Parallelize tests
+    maxParallelForks = Runtime.getRuntime().availableProcessors().div(2)
+    if (maxParallelForks < 1) {
+        maxParallelForks = 1
+    }
 }
 
 tasks {

@@ -3,6 +3,7 @@ package de.ahbnr.pizzasubscriptionservice;
 public class Main {
     public static void main(String[] args) {
         final var pizzaGen = new PizzaGenerator();
+        pizzaGen.useReducedHistoryForVeganUsers = false;
 
         final var myUser = new UserProfile();
         myUser.isVegan = true;
