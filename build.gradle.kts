@@ -87,6 +87,10 @@ run.jvmArgs = listOf(
     // See also https://nipafx.dev/five-command-line-options-hack-java-module-system/
 )
 
+if (project.hasProperty("workingDir")) {
+    run.workingDir = File(project.properties["workingDir"] as String)
+}
+
 
 tasks.test {
     useJUnitPlatform()

@@ -62,7 +62,7 @@ class KnowledgeBaseBuilder(
             buildParameters,
             debuggerState.applicationDomainDefFile,
             linterMode
-        ) ?: return null
+        ).ontology ?: return null
 
         return KnowledgeBase(ontology, buildParameters)
     }
