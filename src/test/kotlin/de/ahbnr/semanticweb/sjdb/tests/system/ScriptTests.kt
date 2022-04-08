@@ -26,7 +26,11 @@ class ScriptTests {
 
     class ScriptProvider : ArgumentsProvider {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
-            return Path.of("examples", "tests")
+            return Path.of(
+                "src", "test", "resources",
+                "de", "ahbnr", "semanticweb", "sjdb", "tests", "system",
+                "examples", "tests"
+            )
                 .toFile()
                 .walkTopDown()
                 .filter { it.isFile && it.path.endsWith(".sjdb") }
