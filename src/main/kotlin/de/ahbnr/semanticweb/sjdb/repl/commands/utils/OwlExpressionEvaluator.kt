@@ -1,7 +1,6 @@
 package de.ahbnr.semanticweb.sjdb.repl.commands.utils
 
 import de.ahbnr.semanticweb.jdi2owl.Logger
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
 import de.ahbnr.semanticweb.sjdb.repl.CloseableOWLReasoner
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
@@ -120,7 +119,7 @@ class OwlExpressionEvaluator(
                 .joinToString("\n")
         }
             Ontology(<https://github.com/ahbnr/SemanticJavaDebugger/Parsing/Temp>
-                $functionalAxiomExpression
+                ${replaceVariables(functionalAxiomExpression)}
             )
         """.trimIndent()
 
@@ -298,7 +297,7 @@ class OwlExpressionEvaluator(
     // Hence, we use functional syntax for axiom expressions.
     // This is not supported either, but we can simulate it.
     fun isEntailed(functionalAxiomExpression: String, explain: Boolean = false): Boolean? {
-        val axiom = parseAxiomExpression(functionalAxiomExpression) ?: return null
+        val axiom = parseAxiomExpression( functionalAxiomExpression ) ?: return null
 
         return isEntailed(axiom, explain)
     }
