@@ -18,17 +18,18 @@ class ClassCloser(
 ) : KoinComponent {
     private val logger: Logger by inject()
 
-    fun close(classUri: String) {
-        val classIri = knowledgeBase.resolvePrefixNameInUri(classUri)
+    fun close(classIRI: String) {
+        val resolvedClassIRI = knowledgeBase.resolvePrefixNameInUri(classIRI)
         val `class` = knowledgeBase.ontology
             .classesInSignature()
             .asSequence()
-            .find { it.iri.iriString == classIri }
+            .find { it.iri.iriString == resolvedClassIRI }
 
         if (`class` == null) {
+            val errorMsg = "There is no such class declared: $classIRI (resolved: $resolvedClassIRI)."
             if (!quiet)
-                logger.error("There is no such class declared.")
-            throw IllegalArgumentException("There is no such class declared.")
+                logger.error(errorMsg)
+            throw IllegalArgumentException(errorMsg)
         }
 
         val individuals = if (noReasoner)
@@ -68,9 +69,9 @@ class ClassCloser(
         if (!quiet)
             logger.log(
                 if (individuals.isEmpty()) {
-                    "No individuals found. Hence, $classUri is now closed to contain no individuals."
+                    "No individuals found. Hence, $classIRI is now closed to contain no individuals."
                 } else {
-                    "Closed $classUri to be restricted to the individuals ${
+                    "Closed $classIRI to be restricted to the individuals ${
                         individuals
                             .joinToString(", ") {
                                 val iri = (it as? OWLNamedIndividual)?.iri?.iriString

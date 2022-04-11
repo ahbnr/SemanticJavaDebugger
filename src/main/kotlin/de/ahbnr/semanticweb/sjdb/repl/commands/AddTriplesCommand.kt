@@ -30,10 +30,11 @@ class AddTriplesCommand : REPLCommand(name = "add-triples"), KoinComponent {
                 ${UsabilityPreprocessor.preprocess(triplesString)}
         """.trimIndent()
 
+        @Suppress("MoveLambdaOutsideParentheses")
         val reader = UniversalKnowledgeBaseParser(
             knowledgeBase.ontology.asGraphModel(),
             "triples.ttl",
-            triplesString.byteInputStream()
+            { triplesString.byteInputStream() }
         )
         reader.readIntoModel()
 

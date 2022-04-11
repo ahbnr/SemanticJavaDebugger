@@ -28,7 +28,8 @@ class ReadKBCommand : REPLCommand(name = "readkb"), KoinComponent {
         val ontology = ontManager.createOntology()
         val model = ontology.asGraphModel()
 
-        val reader = UniversalKnowledgeBaseParser(model, kbfile.name, kbfile.inputStream())
+        @Suppress("MoveLambdaOutsideParentheses")
+        val reader = UniversalKnowledgeBaseParser(model, kbfile.name, { kbfile.inputStream() })
         reader.readIntoModel()
 
         val newKnowledgeBase = KnowledgeBase(

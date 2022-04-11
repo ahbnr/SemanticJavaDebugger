@@ -49,6 +49,7 @@ class KnowledgeBaseBuilder(
     }
 
     fun build(): KnowledgeBase? {
+        logger.debug("Building knowledge base...")
         val limiter = MappingLimiter(debuggerState.mappingSettings)
         val sourceModel = buildSourceModel()
 

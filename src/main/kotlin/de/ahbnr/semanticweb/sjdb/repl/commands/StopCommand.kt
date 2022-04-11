@@ -112,7 +112,16 @@ class StopCommand(
                         quiet = true
                     )
                     for (classToClose in closeInstance) {
-                        classCloser.close(classToClose)
+                        try {
+                            classCloser.close(classToClose)
+                        }
+
+                        catch (e: IllegalArgumentException) {
+                            this@StopCommand.logger.error("Could not close class $classToClose.")
+                            if (e.message != null) {
+                                this@StopCommand.logger.debug("Reason: ${e.message}")
+                            }
+                        }
                     }
 
                     return when (breakpointCondition) {
