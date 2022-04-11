@@ -3,10 +3,7 @@
 package de.ahbnr.semanticweb.sjdb.repl.commands
 
 import com.github.ajalt.clikt.core.subcommands
-import de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands.AtLocationAssertCommand
-import de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands.InferAssertCommand
-import de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands.SparqlAssertCommand
-import de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands.TriplesAssertCommand
+import de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands.*
 import org.koin.core.component.KoinComponent
 
 class AssertCommand : REPLCommand(name = "assert"), KoinComponent {
@@ -15,7 +12,8 @@ class AssertCommand : REPLCommand(name = "assert"), KoinComponent {
             SparqlAssertCommand(),
             TriplesAssertCommand(),
             InferAssertCommand(),
-            AtLocationAssertCommand()
+            AtLocationAssertCommand(),
+            VariableAssertCommand()
         )
     }
 
