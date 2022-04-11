@@ -98,7 +98,8 @@ tasks.test {
         "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED"
     )
 
-    // Compile the case study for tests
+    // Compile the case studies for tests
+    dependsOn(gradle.includedBuild("btrees").task(":classes"))
     dependsOn(gradle.includedBuild("PizzaSubscriptionService").task(":classes"))
 
     // Parallelize tests

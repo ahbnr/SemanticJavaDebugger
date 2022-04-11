@@ -13,7 +13,7 @@ java:SequenceElement a owl:Class .
 domain:hasKey
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
-        prog:examples.btrees.BTreeNode.keys
+        prog:SysLoader-examples.btrees.BTreeNode.keys
         java:hasElement
         java:storesReference
     ) .
@@ -21,14 +21,14 @@ domain:hasKey
 domain:hasChild
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
-        prog:examples.btrees.BTreeNode.children
+        prog:SysLoader-examples.btrees.BTreeNode.children
         java:hasElement
         java:storesReference
     ) .
 
 domain:hasParent
     a owl:ObjectProperty ;
-    rdfs:range prog:examples.btrees.BTreeNode ;
+    rdfs:range prog:SysLoader-examples.btrees.BTreeNode ;
     owl:inverseOf domain:hasChild .
 
 domain:Child
@@ -36,11 +36,11 @@ domain:Child
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Restriction ;
                 owl:onProperty domain:hasParent ;
-                owl:someValuesFrom prog:examples.btrees.BTreeNode
+                owl:someValuesFrom prog:SysLoader-examples.btrees.BTreeNode
             ]
         )
     ] .
@@ -51,7 +51,7 @@ domain:Root
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Class ;
                 owl:complementOf domain:Child
@@ -65,10 +65,10 @@ domain:Leaf
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-examples.btrees.BTreeNode.children ;
                 owl:allValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -92,10 +92,10 @@ domain:NodeWithTwoChildren
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-examples.btrees.BTreeNode.children ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -103,7 +103,7 @@ domain:NodeWithTwoChildren
                     owl:onClass [
                         a owl:Restriction ;
                         owl:onProperty java:storesReference ;
-                        owl:someValuesFrom prog:examples.btrees.BTreeNode
+                        owl:someValuesFrom prog:SysLoader-examples.btrees.BTreeNode
                     ]
                 ]
             ]
@@ -116,10 +116,10 @@ domain:HasMChildren
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-examples.btrees.BTreeNode.children ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -127,7 +127,7 @@ domain:HasMChildren
                     owl:onClass [
                         a owl:Restriction ;
                         owl:onProperty java:storesReference ;
-                        owl:someValuesFrom prog:examples.btrees.BTreeNode
+                        owl:someValuesFrom prog:SysLoader-examples.btrees.BTreeNode
                     ]
                 ]
             ]
@@ -141,10 +141,10 @@ domain:ConditionOne
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:examples.btrees.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-examples.btrees.BTreeNode.children ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -152,7 +152,7 @@ domain:ConditionOne
                     owl:onClass [
                         a owl:Restriction ;
                         owl:onProperty java:storesReference ;
-                        owl:someValuesFrom prog:examples.btrees.BTreeNode
+                        owl:someValuesFrom prog:SysLoader-examples.btrees.BTreeNode
                     ]
                 ]
             ]
@@ -178,7 +178,7 @@ domain:ConditionThree
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Class ;
                 owl:unionOf (
@@ -347,7 +347,7 @@ domain:NodeWithFragmentedKeys
     a owl:Class ;
     owl:equivalentClass [
         a owl:Restriction ;
-        owl:onProperty prog:examples.btrees.BTreeNode.keys ;
+        owl:onProperty prog:SysLoader-examples.btrees.BTreeNode.keys ;
         owl:someValuesFrom domain:NonContinuousSequence
     ] .
 
@@ -355,7 +355,7 @@ domain:NodeWithFragmentedChildren
     a owl:Class ;
     owl:equivalentClass [
         a owl:Restriction ;
-        owl:onProperty prog:examples.btrees.BTreeNode.children ;
+        owl:onProperty prog:SysLoader-examples.btrees.BTreeNode.children ;
         owl:someValuesFrom domain:NonContinuousSequence
     ] .
 
@@ -374,7 +374,7 @@ domain:ContinuousArrayCondition
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:examples.btrees.BTreeNode
+            prog:SysLoader-examples.btrees.BTreeNode
             [
                 a owl:Class ;
                 owl:complementOf domain:FragmentedNode

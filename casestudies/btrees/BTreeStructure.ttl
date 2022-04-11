@@ -16,7 +16,7 @@ domain:Root
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
+            prog:SysLoader-casestudies.btrees.structure.BTreeNode
             [
                 a owl:Restriction ;
                 owl:onProperty [
@@ -35,7 +35,7 @@ domain:Root
                         a owl:Restriction ;
                         owl:onProperty [
                             a owl:ObjectProperty ;
-                            owl:inverseOf prog:casestudies.btrees.structure.BTreeNode.children
+                            owl:inverseOf prog:SysLoader-casestudies.btrees.structure.BTreeNode.children
                         ] ;
                         owl:allValuesFrom owl:Nothing
                     ]
@@ -50,10 +50,10 @@ domain:Leaf
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
+            prog:SysLoader-casestudies.btrees.structure.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:casestudies.btrees.structure.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-casestudies.btrees.structure.BTreeNode.children ;
                 owl:allValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -77,10 +77,10 @@ domain:NodeWithTwoChildren
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
+            prog:SysLoader-casestudies.btrees.structure.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:casestudies.btrees.structure.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-casestudies.btrees.structure.BTreeNode.children ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -88,7 +88,7 @@ domain:NodeWithTwoChildren
                     owl:onClass [
                         a owl:Restriction ;
                         owl:onProperty java:storesReference ;
-                        owl:someValuesFrom prog:casestudies.btrees.structure.BTreeNode
+                        owl:someValuesFrom prog:SysLoader-casestudies.btrees.structure.BTreeNode
                     ]
                 ]
             ]
@@ -101,10 +101,10 @@ domain:HasMChildren
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
+            prog:SysLoader-casestudies.btrees.structure.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:casestudies.btrees.structure.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-casestudies.btrees.structure.BTreeNode.children ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -112,7 +112,7 @@ domain:HasMChildren
                     owl:onClass [
                         a owl:Restriction ;
                         owl:onProperty java:storesReference ;
-                        owl:someValuesFrom prog:casestudies.btrees.structure.BTreeNode
+                        owl:someValuesFrom prog:SysLoader-casestudies.btrees.structure.BTreeNode
                     ]
                 ]
             ]
@@ -126,10 +126,10 @@ domain:ConditionOne
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
+            prog:SysLoader-casestudies.btrees.structure.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:casestudies.btrees.structure.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-casestudies.btrees.structure.BTreeNode.children ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -137,7 +137,7 @@ domain:ConditionOne
                     owl:onClass [
                         a owl:Restriction ;
                         owl:onProperty java:storesReference ;
-                        owl:someValuesFrom prog:casestudies.btrees.structure.BTreeNode
+                        owl:someValuesFrom prog:SysLoader-casestudies.btrees.structure.BTreeNode
                     ]
                 ]
             ]
@@ -163,7 +163,7 @@ domain:ConditionThree
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.structure.BTreeNode
+            prog:SysLoader-casestudies.btrees.structure.BTreeNode
             [
                 a owl:Class ;
                 owl:unionOf (

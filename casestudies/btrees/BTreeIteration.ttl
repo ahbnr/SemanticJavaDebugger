@@ -6,6 +6,7 @@
 @prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/BTrees#> .
+@prefix run: <https://github.com/ahbnr/SemanticJavaDebugger/Run#> .
 
 java:hasElement a owl:ObjectProperty .
 java:SequenceElement a owl:Class .
@@ -13,7 +14,7 @@ java:SequenceElement a owl:Class .
 domain:hasNullableChild
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
-        prog:casestudies.btrees.iterator.BTreeNode.children
+        prog:SysLoader-casestudies.btrees.iterator.BTreeNode.children
         java:hasElement
         java:storesReference
     ) .
@@ -25,8 +26,8 @@ domain:hasParent
 domain:hasCurrentNode
     a owl:ObjectProperty ;
     owl:propertyChainAxiom (
-        prog:casestudies.btrees.iterator.BTreeIterator.java.lang.Comparable_next%28%29.currentState
-        prog:casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node
+        prog:SysLoader-casestudies.btrees.iterator.BTreeIterator.-java.lang.Comparable-next%28%29.currentState
+        prog:SysLoader-casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node
     ) .
 
 domain:currentNodeOf
@@ -74,10 +75,10 @@ domain:Leaf
     owl:equivalentClass [
         a owl:Class ;
         owl:intersectionOf (
-            prog:casestudies.btrees.iterator.BTreeNode
+            prog:SysLoader-casestudies.btrees.iterator.BTreeNode
             [
                 a owl:Restriction ;
-                owl:onProperty prog:casestudies.btrees.iterator.BTreeNode.children ;
+                owl:onProperty prog:SysLoader-casestudies.btrees.iterator.BTreeNode.children ;
                 owl:allValuesFrom [
                     a owl:Restriction ;
                     owl:onProperty java:hasElement ;
@@ -103,10 +104,10 @@ domain:VisitingLeaf
               owl:oneOf ( run:frame0 )
             ]
             [ a owl:Restriction ;
-              owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator.java.lang.Comparable_next%28%29.currentState ;
+              owl:onProperty prog:SysLoader-casestudies.btrees.iterator.BTreeIterator.-java.lang.Comparable-next%28%29.currentState ;
               owl:someValuesFrom [
                 a owl:Restriction ;
-                owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ;
+                owl:onProperty prog:SysLoader-casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ;
                 owl:someValuesFrom domain:Leaf
               ]
             ]
@@ -131,7 +132,7 @@ domain:ChildIsLastElement
                     owl:onProperty java:storesReference ;
                     owl:someValuesFrom [
                         a owl:Restriction ;
-                        owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ;
+                        owl:onProperty prog:SysLoader-casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ;
                         owl:someValuesFrom domain:ChildrenOfCurrentNode
                     ]
                 ]
@@ -153,7 +154,7 @@ domain:StackTopIsChild
                 owl:onProperty java:this ;
                 owl:someValuesFrom [
                     a owl:Restriction ;
-                    owl:onProperty prog:casestudies.btrees.iterator.BTreeIterator.stack ;
+                    owl:onProperty prog:SysLoader-casestudies.btrees.iterator.BTreeIterator.stack ;
                     owl:someValuesFrom domain:ChildIsLastElement
                 ]
             ]

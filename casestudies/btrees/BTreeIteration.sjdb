@@ -1,9 +1,13 @@
 reasoner HermiT
 
+sourcepath src/main/java
+classpaths build/classes/java/main
+domain BTreeIteration.ttl
+
 mapping set deep <<EOF
-    casestudies.btrees.iterator.BTreeNode.children
-    casestudies.btrees.iterator.BTreeNode.keys
-    casestudies.btrees.iterator.BTreeIterator.stack
+    SysLoader-casestudies.btrees.iterator.BTreeNode.children
+    SysLoader-casestudies.btrees.iterator.BTreeNode.keys
+    SysLoader-casestudies.btrees.iterator.BTreeIterator.stack
 EOF
 stop <<EOF
     at 'casestudies.btrees.iterator.BTreeIterator:first iteration endpoint'
@@ -17,8 +21,8 @@ stop <<EOF
     --close domain:NullableChildrenOfCurrentNode
 EOF
 
-domain casestudies/btrees/iterator/BTreeIteration.ttl
 run casestudies.btrees.iterator.IteratorTest
+assert at 'casestudies.btrees.iterator.BTreeIterator:first iteration endpoint'
 buildkb
 
 # The conditional breakpoints will be hit for this incorrect implementation
@@ -34,17 +38,20 @@ sparql -- '<<EOF
   SELECT ?n ?idx
   WHERE {
     run:frame0 java:this [
-      prog:casestudies.btrees.iterator.BTreeIterator.stack [
+      prog:SysLoader-casestudies.btrees.iterator.BTreeIterator.stack [
         java:hasElement [
           java:hasIndex ?idx ;
           java:storesReference [
-            prog:casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ?n
+            prog:SysLoader-casestudies.btrees.iterator.BTreeIterator%24NodeTraversalState.node ?n
           ]
         ]
       ]
     ]
   } ORDER BY DESC(?idx)
 'EOF
+
+assert variable ?n
+assert variable ?idx
 
 # We can see, that the top of the stack (highest index) is not one of the children
 
