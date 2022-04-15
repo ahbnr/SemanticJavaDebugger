@@ -26,6 +26,6 @@ class DumpKBCommand : REPLCommand(name = "dumpkb"), KoinComponent {
             .lang(Lang.TURTLE)
             .format(RDFFormat.TURTLE_PRETTY)
             .output(file.outputStream())
-        logger.success("Knowledge base saved to $file.")
+        logger.success("Knowledge base saved to ${file.absolutePath}.")
     }
 }
