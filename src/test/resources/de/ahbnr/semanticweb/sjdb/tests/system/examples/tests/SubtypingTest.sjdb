@@ -4,8 +4,6 @@ run examples/tests/SubtypingTest.java
 
 section "Build Knowledge Base"
 buildkb
-dumpkb datatest.ttl
-stats
 checkkb --is-consistent
 
 section "Checking Basic Type Hierarchy"

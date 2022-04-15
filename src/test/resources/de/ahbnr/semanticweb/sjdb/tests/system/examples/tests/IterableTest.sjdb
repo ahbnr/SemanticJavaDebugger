@@ -5,8 +5,6 @@ run examples/tests/IterableTest.java
 section "Build Knowledge Base"
 mapping set deep `SysLoader-examples.tests.IterableTest.-void-main(java.lang.String[]).list`
 buildkb
-dumpkb datatest.ttl
-stats
 checkkb --is-consistent
 
 section "SPARQL Queries"

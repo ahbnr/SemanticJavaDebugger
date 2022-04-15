@@ -8,7 +8,6 @@ mapping set deep <<EOF
     SysLoader-examples.tests.DataContainer.stringArrayField
 EOF
 buildkb
-stats
 checkkb --is-consistent
 
 section "SPARQL Queries"

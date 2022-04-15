@@ -4,7 +4,6 @@ run examples/tests/EnumsTest.java
 
 section "Build Knowledge Base"
 buildkb
-dumpkb datatest.ttl
 checkkb --is-consistent
 
 section "Check for presence of enum class"

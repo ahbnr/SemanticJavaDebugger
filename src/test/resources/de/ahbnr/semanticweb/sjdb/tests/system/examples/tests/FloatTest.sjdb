@@ -4,7 +4,6 @@ run examples/tests/FloatTest.java
 
 section "Build Knowledge Base"
 buildkb
-dumpkb datatest.ttl
 checkkb --is-consistent
 
 assert infer entails 'DataPropertyAssertion( prog:`SysLoader-examples.tests.FloatTest.-void-main(java.lang.String[]).pi` run:frame0 "3.1415"^^xsd:double )'

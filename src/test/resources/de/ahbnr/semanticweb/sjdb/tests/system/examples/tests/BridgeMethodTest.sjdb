@@ -4,7 +4,6 @@ run examples/tests/BridgeMethodTest.java
 
 section "Build Knowledge Base"
 buildkb
-dumpkb datatest.ttl
 checkkb --is-consistent
 
 section "Check presence of original next() method"

@@ -14,7 +14,6 @@ cont
 
 mapping set deep `SysLoader-examples.tests.ArrayTest.-void-testArrayContentClosure().array`
 buildkb
-dumpkb datatest.ttl
 assert infer entails "<<EOF
     ClassAssertion(
         ObjectAllValuesFrom(
