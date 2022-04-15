@@ -11,7 +11,7 @@ import com.github.ajalt.clikt.parameters.options.switch
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmDebugger
 import de.ahbnr.semanticweb.jdi2owl.mapping.genDefaultNs
 import de.ahbnr.semanticweb.jdi2owl.Logger
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.mapping.datatypes.JavaAccessModifierDatatype
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.mappers.ClassMapper
@@ -92,7 +92,7 @@ class SemanticJavaDebugger : CliktCommand() {
                 modules(
                     module {
                         single { JLineLogger(terminal) as Logger }
-                        single { OntURIs(ns) }
+                        single { OntIRIs(ns) }
                         single {
                             SemanticDebuggerState(
                                 compilerTmpDir = compilerTmpDir

@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -22,7 +22,7 @@ import org.semanticweb.owlapi.model.OWLObjectProperty
  * For now this implementation just exists to test out the construction.
  */
 class RhsChainCommand : REPLCommand(name = "rhschain"), KoinComponent {
-    private val URIs: OntURIs by inject()
+    private val URIs: OntIRIs by inject()
 
     val lhs: String by argument()
     val rhs1: String by argument()

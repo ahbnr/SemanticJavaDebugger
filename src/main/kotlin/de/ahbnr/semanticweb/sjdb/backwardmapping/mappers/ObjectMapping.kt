@@ -3,7 +3,7 @@ package de.ahbnr.semanticweb.sjdb.backwardmapping.mappers
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
 import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.apache.jena.rdf.model.Literal
@@ -17,7 +17,7 @@ import org.semanticweb.owlapi.model.parameters.Imports
 import kotlin.streams.asSequence
 
 object ObjectMapping : KoinComponent {
-    private val URIs: OntURIs by inject()
+    private val URIs: OntIRIs by inject()
     private val logger: Logger by inject()
 
     private class MappingContext(

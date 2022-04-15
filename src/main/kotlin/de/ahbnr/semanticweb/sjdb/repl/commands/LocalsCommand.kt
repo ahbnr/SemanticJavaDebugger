@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.sun.jdi.LocalVariable
 import com.sun.jdi.ObjectReference
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.LocalVariableInfo
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.MethodInfo
 import org.apache.jena.datatypes.xsd.XSDDatatype
@@ -14,7 +14,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class LocalsCommand : REPLCommand(name = "locals"), KoinComponent {
-    private val URIs: OntURIs by inject()
+    private val URIs: OntIRIs by inject()
 
     override fun run() {
         val jvmState = tryGetJvmState()
@@ -30,7 +30,7 @@ class LocalsCommand : REPLCommand(name = "locals"), KoinComponent {
 
         val knowledgeBase = state.knowledgeBase
         if (knowledgeBase != null) {
-            logger.log("Frame URI: ${knowledgeBase.asPrefixNameUri(URIs.run.genFrameURI(0))}\n")
+            logger.log("Frame URI: ${knowledgeBase.asPrefixNameUri(URIs.run.genFrameIRI(0))}\n")
         }
 
         val model = knowledgeBase?.ontology?.asGraphModel()

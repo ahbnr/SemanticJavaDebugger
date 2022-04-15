@@ -6,7 +6,7 @@ import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.TypeInfoProvider
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.TypeInfoProvider
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
 import org.koin.core.component.KoinComponent

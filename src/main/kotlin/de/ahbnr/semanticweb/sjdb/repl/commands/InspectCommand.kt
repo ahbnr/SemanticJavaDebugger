@@ -4,7 +4,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.sjdb.utils.expandResourceToModel
 import de.ahbnr.semanticweb.sjdb.utils.toPrettyString
 import org.apache.jena.rdf.model.*
@@ -15,7 +15,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class InspectCommand : REPLCommand(name = "inspect"), KoinComponent {
-    private val URIs: OntURIs by inject()
+    private val URIs: OntIRIs by inject()
     private val variableOrIRI: String by argument()
 
     override fun run() {

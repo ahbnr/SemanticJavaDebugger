@@ -2,13 +2,13 @@
 
 package de.ahbnr.semanticweb.sjdb.repl.commands
 
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntURIs
+import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.streams.asSequence
 
 class StatsCommand : REPLCommand(name = "stats"), KoinComponent {
-    private val URIs: OntURIs by inject()
+    private val URIs: OntIRIs by inject()
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
