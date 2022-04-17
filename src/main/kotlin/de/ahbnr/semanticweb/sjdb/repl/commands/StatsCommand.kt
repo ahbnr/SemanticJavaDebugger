@@ -2,93 +2,52 @@
 
 package de.ahbnr.semanticweb.sjdb.repl.commands
 
-import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.file
+import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
+import de.ahbnr.semanticweb.jdi2owl.utils.Statistics
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import kotlin.streams.asSequence
 
 class StatsCommand : REPLCommand(name = "stats"), KoinComponent {
-    private val URIs: OntIRIs by inject()
+    private val dumpJson by option().file(canBeFile = true, canBeDir = false)
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
 
-        logger.log("Number of ontology axioms: ${knowledgeBase.ontology.axiomCount}")
+        val statistics = Statistics(knowledgeBase.ontology)
 
-        knowledgeBase.ontology.asGraphModel().let { plainModel ->
-            logger.log("Number of statements in Jena Model (without inference): ${plainModel.graph.size()}.")
-            logger.log("")
-
-            val numGeneratedUris = plainModel
-                .graph
-                .stream()
-                .asSequence()
-                .flatMap {
-                    sequence {
-                        if (it.subject.isURI) yield(it.subject.uri)
-                        yield(it.predicate.uri)
-                        if (it.`object`.isURI) yield(it.`object`.uri)
-                    }
-                }
-                .filter { it.startsWith(URIs.ns.prog) || it.startsWith(URIs.ns.run) || it.startsWith(URIs.ns.local) }
-                .toSet()
-                .size
-            logger.log("Number of prog: and run: URIs generated: $numGeneratedUris")
-            logger.log("")
-
-            data class Countable(val name: String, val uri: String)
-
-            val toCount = listOf(
-                Countable("Classes", URIs.java.Class),
-                Countable("Interfaces", URIs.java.Interface),
-                Countable("Methods", URIs.java.Method),
-                Countable("Fields", URIs.java.Field),
-                Countable("Array Types", URIs.java.Array),
-                Countable("Variable Declarations", URIs.java.VariableDeclaration),
-                Countable("Objects", URIs.java.Object),
-                Countable("Stack Frames", URIs.java.StackFrame),
-            )
-
-            val typeProperty = plainModel.getProperty(URIs.rdf.type)
-            fun countSubjects(countable: Countable): Int {
-                val subjects =
-                    plainModel.listSubjectsWithProperty(typeProperty, plainModel.getResource(countable.uri))
-                var count = 0
-                for (subject in subjects) ++count
-
-                return count
-            }
-
-            toCount.forEach {
-                val count = countSubjects(it)
-
-                logger.log("${it.name}: $count")
-            }
+        for ((_, metric) in statistics.allMetrics) {
+            logger.log("${metric.name}: ${metric.value}")
         }
 
-        // knowledgeBase.getSparqlModel().let { infModel ->
-        //     val prefixes = knowledgeBase
-        //         .prefixNameToUri
-        //         .entries
-        //         .joinToString("\n") { (prefixName, prefixUri) -> "PREFIX $prefixName: <$prefixUri>" }
+        dumpJson?.let { out ->
+            class StatisticsTypeAdapter: TypeAdapter<Statistics>() {
+                override fun write(out: JsonWriter, value: Statistics) {
+                    out.beginObject()
 
-        //     // Arrays are deeply inspected if a cardinality is set for their hasElement relation
-        //     val deepArrayQueryString = """
-        //             $prefixes
-        //             SELECT (count(distinct ?sizedHasElement) as ?count)
-        //             WHERE {
-        //                 ?sizedHasElement rdfs:subPropertyOf java:hasElement ;
-        //                                  owl:cardinality [] .
-        //             }
-        //     """.trimIndent()
+                    for ((fieldName, metric) in value.allMetrics) {
+                        out.name(fieldName)
 
-        //     val deepArrayQuery = QueryFactory.create(deepArrayQueryString)
-        //     knowledgeBase.buildSparqlExecution(deepArrayQuery, infModel).use { execution ->
-        //         val results = execution.execSelect()
+                        when (val metricValue = metric.value) {
+                            is Int -> out.value(metricValue)
+                            is Long -> out.value(metricValue)
+                            else -> TODO("JSON serialization only supports int and long values as of now.")
+                        }
+                    }
 
-        //         logger.log("Deep Arrays: ${results.nextSolution().get("count").asLiteral().int}")
-        //         logger.log("")
-        //     }
-        // }
+                    out.endObject()
+                }
+
+                override fun read(`in`: JsonReader): Statistics = TODO("Not yet implemented")
+            }
+            val gson = GsonBuilder()
+                .registerTypeAdapter(Statistics::class.java, StatisticsTypeAdapter())
+                .create()
+
+            out.writeText(gson.toJson(statistics))
+        }
     }
 }

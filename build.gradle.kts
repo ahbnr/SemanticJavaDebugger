@@ -73,6 +73,9 @@ dependencies {
     // Query platform dependent special directories, e.g. XDG cache directory etc
     implementation("net.harawata:appdirs:1.2.1")
 
+    // serialize Java objects to JSON
+    implementation("com.google.code.gson:gson:2.9.0")
+
     testImplementation(kotlin("test"))
     testImplementation(platform("org.junit:junit-bom:5.8.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")

@@ -22,6 +22,9 @@ import org.koin.core.component.inject
 import sun.misc.Signal
 import sun.misc.SignalHandler
 import java.io.InputStream
+import java.io.OutputStreamWriter
+import java.io.PrintStream
+import java.io.PrintWriter
 import java.nio.file.Path
 import kotlin.concurrent.thread
 import kotlin.io.path.createDirectories
@@ -208,9 +211,17 @@ class REPL(
                 }
 
                 val commandThread = thread(false) {
-                    // Interpret an input line
-                    // (this might actually consume multiple input lines, if the line contains a HereDoc, e.g. <<EOF)
-                    interpretLine(line)
+                    try {
+                        // Interpret an input line
+                        // (this might actually consume multiple input lines, if the line contains a HereDoc, e.g. <<EOF)
+                        interpretLine(line)
+                    }
+
+                    catch (e: Exception) {
+                        e.message?.let(logger::log)
+                        e.printStackTrace(PrintStream(logger.logStream()))
+                        logger.error("A ${e.javaClass.name} exception occurred.")
+                    }
                 }
 
                 // Store the original signal handler and set our custom one
