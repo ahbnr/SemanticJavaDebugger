@@ -7,7 +7,6 @@ import com.sun.jdi.LocalVariable
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.LocalVariableInfo
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.MethodInfo
 import org.apache.jena.datatypes.xsd.XSDDatatype
 import org.apache.jena.rdf.model.ResourceFactory
 import org.koin.core.component.KoinComponent
@@ -34,13 +33,13 @@ class LocalsCommand : REPLCommand(name = "locals"), KoinComponent {
         }
 
         val model = knowledgeBase?.ontology?.asGraphModel()
-        val hasJDWPObjectId = model?.getProperty(URIs.java.hasJDWPObjectId)
+        val hasUniqueId = model?.getProperty(URIs.java.hasUniqueId)
 
         fun getObjectUri(ref: ObjectReference): String? {
             val objectId = ref.uniqueID()
             if (knowledgeBase != null) {
                 val subjects = model!!.listSubjectsWithProperty(
-                    hasJDWPObjectId!!,
+                    hasUniqueId!!,
                     ResourceFactory.createTypedLiteral(objectId.toString(), XSDDatatype.XSDlong)
                 )
 

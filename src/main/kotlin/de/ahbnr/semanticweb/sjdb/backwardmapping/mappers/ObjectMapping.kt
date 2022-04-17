@@ -74,13 +74,13 @@ object ObjectMapping : KoinComponent {
         private fun getObjectId(resource: Resource): Long =
             (
                     resource.getProperty(
-                        rdfGraph.getProperty(URIs.java.hasJDWPObjectId)
+                        rdfGraph.getProperty(URIs.java.hasUniqueId)
                     )
                         ?.`object` as? Literal
                     )
                 ?.lexicalForm
                 ?.toLong()
-                ?: throw IllegalArgumentException("The RDF graph is incomplete. ${resource.uri} does represent a Java object, but no object ID is associated with it: No ${URIs.java.hasJDWPObjectId} property is present.")
+                ?: throw IllegalArgumentException("The RDF graph is incomplete. ${resource.uri} does represent a Java object, but no object ID is associated with it: No ${URIs.java.hasUniqueId} property is present.")
     }
 
 
