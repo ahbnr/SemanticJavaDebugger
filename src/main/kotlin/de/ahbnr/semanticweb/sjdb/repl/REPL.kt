@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.UsageError
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import net.harawata.appdirs.AppDirsFactory
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReader
@@ -22,12 +23,13 @@ import org.koin.core.component.inject
 import sun.misc.Signal
 import sun.misc.SignalHandler
 import java.io.InputStream
-import java.io.OutputStreamWriter
 import java.io.PrintStream
-import java.io.PrintWriter
 import java.nio.file.Path
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 import kotlin.io.path.createDirectories
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTimedValue
 
@@ -144,7 +146,7 @@ class REPL(
                     }
                 }
 
-                state.lastCommandDuration = duration
+                state.timeCommandState.lastCommandDuration = duration
                 terminal.flush()
 
                 returnValue
@@ -168,6 +170,20 @@ class REPL(
         }
     }
 
+    private fun waitForCommandThread(commandThread: Thread) {
+        commandThread.join(state.timeout * 1000)
+
+        if (commandThread.isAlive) {
+            @Suppress("DEPRECATION")
+            commandThread.stop()
+            commandThread.join()
+            logger.error("Command forcefully stopped due to timeout.")
+
+            @OptIn(ExperimentalTime::class)
+            state.timeCommandState.lastCommandDuration = Duration.seconds(state.timeout)
+        }
+    }
+
     /**
      * Non-interactively interprets all lines in input stream
      */
@@ -178,9 +194,25 @@ class REPL(
             }
             terminal.writer().println(line)
             terminal.flush()
-            if (!interpretLine(line)) {
-                return false
+
+            val result = run {
+                if (state.timeout <= 0)
+                    interpretLine(line)
+
+                else {
+                    var result = true
+                    val commandThread = thread {
+                        result = interpretLine(line)
+                    }
+
+                    waitForCommandThread(commandThread)
+
+                    result
+                }
             }
+
+            if (!result)
+                return false
         }
 
         return true
@@ -227,13 +259,16 @@ class REPL(
                 // Store the original signal handler and set our custom one
                 val oldSignalHandler = Signal.handle(Signal("INT"), Handler(commandThread))
 
-                // Run the command and wait for it on the main thread
-                commandThread.start()
-                commandThread.join()
+                try {
+                    // Run the command and wait for it on the main thread
+                    commandThread.start()
+                    waitForCommandThread(commandThread)
+                }
 
-                // Restore original signal handler
-                Signal.handle(Signal("INT"), oldSignalHandler)
-
+                finally {
+                    // Restore original signal handler
+                    Signal.handle(Signal("INT"), oldSignalHandler)
+                }
             } catch (e: UserInterruptException) {
                 logger.debug("Send EOF (Ctrl-D) to exit.")
             } catch (e: EndOfFileException) {

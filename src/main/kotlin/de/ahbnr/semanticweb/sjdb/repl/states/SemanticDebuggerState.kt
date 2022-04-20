@@ -1,7 +1,9 @@
-package de.ahbnr.semanticweb.sjdb.repl
+package de.ahbnr.semanticweb.sjdb.repl.states
 
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.jdi2owl.mapping.MappingSettings
+import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
+import de.ahbnr.semanticweb.sjdb.repl.ReasonerId
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.semanticweb.owlapi.model.OWLOntologyChangeListener
@@ -33,8 +35,10 @@ class SemanticDebuggerState(
 
     var classPaths: List<Path> = emptyList()
 
-    @OptIn(ExperimentalTime::class)
-    var lastCommandDuration: Duration? = null
+    // Timeout after which any REPL command is forcefully stopped.
+    // A timeout of 0 means no timeout will be applied.
+    var timeout: Long = 0
+    val timeCommandState = TimeCommandState()
 
     private var ontologyListener: OWLOntologyChangeListener? = null
     private fun removeOntologyListener() {

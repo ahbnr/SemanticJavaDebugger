@@ -7,7 +7,7 @@ import de.ahbnr.semanticweb.jdi2owl.debugging.JvmInstance
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
-import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
