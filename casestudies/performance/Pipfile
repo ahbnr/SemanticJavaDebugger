@@ -10,6 +10,7 @@ pandera = "*"
 matplotlib = "*"
 numpy = "*"
 tables = "*"
+jinja2 = "*"
 
 [dev-packages]
 ipykernel = "*"

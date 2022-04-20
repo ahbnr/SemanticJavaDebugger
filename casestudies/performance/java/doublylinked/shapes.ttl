@@ -1,0 +1,38 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix shapes: <https://github.com/ahbnr/SemanticJavaDebugger/DoublyLinked/Shapes#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+shapes:TailNode
+    rdf:type sh:NodeShape ;
+    sh:property [
+        sh:path prog:SysLoader-Node.previous ;
+        sh:class prog:SysLoader-Node ;
+    ] .
+
+shapes:LastNode
+    rdf:type sh:NodeShape ;
+    sh:property [
+        sh:path prog:SysLoader-Node.next ;
+        sh:hasValue java:null ;
+    ] .
+
+shapes:InitNode
+    rdf:type sh:NodeShape ;
+    sh:property [
+        sh:path prog:SysLoader-Node.next ;
+        sh:node shapes:TailNode ;
+    ] .
+
+shapes:ValidNode
+    rdf:type sh:NodeShape ;
+    sh:targetClass prog:SysLoader-Node ;
+    sh:or (
+        shapes:InitNode
+        shapes:LastNode
+    ) .

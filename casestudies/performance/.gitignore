@@ -1,4 +1,4 @@
-store.h5
+*.h5
 results.pickle
 tasks.sjdb
 

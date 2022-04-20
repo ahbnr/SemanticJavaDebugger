@@ -2,7 +2,7 @@ import os
 
 from project import Project
 
-sjdb = os.path.abspath("../../sjdb")
+sjdbJar = os.path.abspath("../../build/libs/sjdb-1.0-SNAPSHOT-all.jar")
 
 
 def taskfile(project: Project) -> str:

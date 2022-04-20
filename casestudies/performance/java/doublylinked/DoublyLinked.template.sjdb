@@ -1,0 +1,41 @@
+domain domain.ttl
+classpaths './'
+sourcepath 'DoublyLinked.java'
+mapping set limit-sdk true
+timeout {{timeout}}
+
+stop at 'DoublyLinked:Nodes created'
+run -- DoublyLinked
+buildkb --linting=none
+time --tag=buildkb
+stats --dump-json=stats.json
+
+sparql --no-reasoner '<<EOF
+    SELECT ?x
+    WHERE {
+      ?x a prog:SysLoader-Node .
+      FILTER NOT EXISTS {
+        {
+            ?x prog:SysLoader-Node.next [
+                prog:SysLoader-Node.previous [ a prog:SysLoader-Node ]
+            ]
+        }
+        UNION
+        { ?x prog:SysLoader-Node.next java:null }
+      }
+    }
+'EOF
+time --tag=instancesSparql
+
+shacl --no-reasoner shapes.ttl
+{%- if do_inference_task %}
+time --tag=shacl
+{%- else %}
+time --tag=shacl --dump-tagged-to-json=times.json
+{%- endif %}
+
+{%- if do_inference_task %}
+reasoner HermiT
+infer instancesOf "prog:SysLoader-Node and not domain:ValidNode"
+time --tag=instancesInf --dump-tagged-to-json=times.json
+{%- endif %}

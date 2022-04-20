@@ -1,0 +1,13 @@
+reasoner HermiT
+classpaths './'
+sourcepath 'Instances.java'
+mapping set limit-sdk true
+
+stop at 'Instances:Instances created'
+run -- Instances
+buildkb --linting=none
+stats --dump-json=stats.json
+
+infer instancesOf prog:SysLoader-C0
+
+time

@@ -1,0 +1,34 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix java: <https://github.com/ahbnr/SemanticJavaDebugger/Java#> .
+@prefix prog: <https://github.com/ahbnr/SemanticJavaDebugger/Program#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix domain: <https://github.com/ahbnr/SemanticJavaDebugger/DoublyLinked#> .
+@prefix run: <https://github.com/ahbnr/SemanticJavaDebugger/Run#> .
+
+domain:TailNode
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty prog:SysLoader-Node.previous ;
+        owl:someValuesFrom prog:SysLoader-Node
+    ] .
+
+domain:ValidNode
+    a owl:Class ;
+    owl:equivalentClass [
+        a owl:Restriction ;
+        owl:onProperty prog:SysLoader-Node.next ;
+        owl:someValuesFrom [
+            a owl:Class ;
+            owl:unionOf (
+                [
+                    a owl:Class ;
+                    owl:oneOf ( java:null )
+                ]
+                domain:TailNode
+            )
+        ]
+    ] .
