@@ -11,6 +11,7 @@ import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 class SetCommand : REPLCommand(name = "set") {
     private val limitSdk = "limit-sdk"
     private val deep = "deep"
+    private val noSequenceDescriptions = "no-sequence-descriptions"
 
     private val setting: () -> Unit by argument().choice(
         limitSdk to { state.mappingSettings.limitSdk = tryGetBooleanValue() },
@@ -20,7 +21,8 @@ class SetCommand : REPLCommand(name = "set") {
                 clear()
                 addAll(newDeep)
             }
-        }
+        },
+        noSequenceDescriptions to { state.mappingSettings.noSequenceDescriptions = tryGetBooleanValue() }
     )
     private val values by argument().multiple()
 
