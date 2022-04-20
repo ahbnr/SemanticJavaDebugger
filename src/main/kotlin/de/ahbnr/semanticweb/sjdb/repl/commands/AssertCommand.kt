@@ -13,7 +13,8 @@ class AssertCommand : REPLCommand(name = "assert"), KoinComponent {
             TriplesAssertCommand(),
             InferAssertCommand(),
             AtLocationAssertCommand(),
-            VariableAssertCommand()
+            VariableAssertCommand(),
+            ShaclAssertCommand()
         )
     }
 

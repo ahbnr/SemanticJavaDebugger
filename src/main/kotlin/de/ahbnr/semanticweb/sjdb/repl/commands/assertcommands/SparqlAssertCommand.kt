@@ -4,6 +4,9 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.assertcommands
 
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.help
+import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
@@ -15,13 +18,21 @@ import org.koin.core.component.KoinComponent
 class SparqlAssertCommand : REPLCommand(name = "sparql"), KoinComponent {
     private val successMode = "success"
     private val failMode = "fail"
-    val mode: String by argument().choice(successMode, failMode)
-    val assertionExpression: String by argument()
+
+    private val mode: String by argument().choice(successMode, failMode)
+    private val assertionExpression: String by argument()
+
+    private val noReasoner by option()
+        .flag(default = false)
+        .help("do not use an OWL reasoner to answer the query.")
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
 
-        val model = knowledgeBase.getSparqlModel()
+        val model = knowledgeBase.getSparqlModel(
+            dontUseReasoner = noReasoner,
+            customBaseOntology = null
+        )
 
         val queryString = ParameterizedSparqlString(
             UsabilityPreprocessor.preprocess(assertionExpression)
@@ -37,7 +48,7 @@ class SparqlAssertCommand : REPLCommand(name = "sparql"), KoinComponent {
 
             val query = QueryFactory.create(queryString.toString())
 
-            knowledgeBase.buildSparqlExecution(query, model).use { execution ->
+            knowledgeBase.buildSparqlExecution(query, model, dontUseReasoner = noReasoner).use { execution ->
                 val results = execution.execSelect()
                 // Need to ensure all variables are present in at least one result
                 val result =

@@ -4,6 +4,7 @@ import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 import org.apache.jena.query.QueryExecution
+import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QueryFactory
 import org.apache.jena.query.QueryParseException
 import org.koin.core.component.KoinComponent
@@ -11,7 +12,8 @@ import org.koin.core.component.inject
 
 class SparqlExecutor(
     private val knowledgeBase: KnowledgeBase,
-    private val moduleExtractionOptions: ModuleExtractionOptions
+    private val moduleExtractionOptions: ModuleExtractionOptions,
+    private val dontUseReasoner: Boolean
 ) : KoinComponent {
     private val logger: Logger by inject()
 
@@ -45,9 +47,14 @@ class SparqlExecutor(
                 is ModuleExtractionOptions.NoExtraction -> knowledgeBase.ontology
             }
 
-            val model = knowledgeBase.getSparqlModel(ontology)
-
-            knowledgeBase.buildSparqlExecution(query, model)
+            val model = knowledgeBase.getSparqlModel(
+                dontUseReasoner = dontUseReasoner,
+                customBaseOntology = ontology
+            )
+            knowledgeBase.buildSparqlExecution(
+                query, model,
+                dontUseReasoner = dontUseReasoner
+            )
         } catch (e: QueryParseException) {
             logger.error(e.message ?: "Could not parse query.")
             null

@@ -190,7 +190,8 @@ class StopCommand(
                         is BreakpointCondition.SparqlCondition -> {
                             val executor = SparqlExecutor(
                                 knowledgeBase,
-                                moduleExtractionOptions = ModuleExtractionOptions.NoExtraction
+                                moduleExtractionOptions = ModuleExtractionOptions.NoExtraction,
+                                dontUseReasoner = false
                             )
 
                             val execution = executor.execute(breakpointCondition.expression)

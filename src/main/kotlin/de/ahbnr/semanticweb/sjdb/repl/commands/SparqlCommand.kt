@@ -7,6 +7,8 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.ModuleExtractionOptions
@@ -16,6 +18,10 @@ import org.apache.jena.rdf.model.RDFNode
 import org.koin.core.component.KoinComponent
 
 class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
+    private val noReasoner by option()
+        .flag(default = false)
+        .help("do not use an OWL reasoner to answer the query.")
+
     class SyntacticExtractionOptions : OptionGroup() {
         val classRelationDepth by option().int().default(-1)
     }
@@ -37,7 +43,8 @@ class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
                 )
 
                 else -> ModuleExtractionOptions.NoExtraction
-            }
+            },
+            noReasoner
         )
 
         val execution = executor
@@ -54,7 +61,7 @@ class SparqlCommand : REPLCommand(name = "sparql"), KoinComponent {
                 knowledgeBase.removeVariable("?$variable")
             }
 
-            var idx = 0;
+            var idx = 0
             val nameMap = mutableMapOf<String, RDFNode>()
             rewindableResultSet.forEachRemaining { solution ->
                 solution.varNames().forEachRemaining { variableName ->
