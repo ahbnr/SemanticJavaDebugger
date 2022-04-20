@@ -16,8 +16,18 @@ class InferAssertCommand : REPLCommand(name = "infer"), KoinComponent {
     private val isUnsatisfiableMode = "isUnsatisfiable"
     private val entailsMode = "entails"
     private val entailsNotMode = "entailsNot"
-    private val mode: String by argument().choice(isSatisfiableMode, isUnsatisfiableMode, entailsMode, entailsNotMode)
-    private val manchesterSyntaxExpression: String by argument().convert { UsabilityPreprocessor.preprocess(it) }
+    private val findsInstances = "findsInstances"
+    private val findsNoInstances = "findsNoInstances"
+
+    private val mode: String by argument()
+        .choice(
+            isSatisfiableMode, isUnsatisfiableMode,
+            entailsMode, entailsNotMode,
+            findsInstances, findsNoInstances
+        )
+
+    private val manchesterSyntaxExpression: String by argument()
+        .convert { UsabilityPreprocessor.preprocess(it) }
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
@@ -42,6 +52,19 @@ class InferAssertCommand : REPLCommand(name = "infer"), KoinComponent {
                     isEntailed
                 else
                     !isEntailed
+            }
+
+            findsInstances, findsNoInstances -> {
+                val foundInstances = evaluator
+                    .getInstances(manchesterSyntaxExpression)
+                    ?.findAny()
+                    ?.isPresent
+                    ?: throw ProgramResult(-1)
+
+                if (mode == findsInstances)
+                    foundInstances
+                else
+                    !foundInstances
             }
 
             else -> {
