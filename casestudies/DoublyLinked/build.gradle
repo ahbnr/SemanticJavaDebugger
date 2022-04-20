@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'casestudies'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile) {
+    options.deprecation = true
+    options.debug = true
+}
+
+dependencies { }
+
+test { }
+
+application {
+    mainClass.set("DoublyLinked")
+}

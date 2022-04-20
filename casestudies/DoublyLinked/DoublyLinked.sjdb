@@ -1,0 +1,59 @@
+domain domain.ttl
+sourcepath src/main/java
+classpaths build/classes/java/main
+mapping set limit-sdk true
+
+stop at 'DoublyLinked:Nodes created'
+
+section "Nothing is wrong if we dont break nodes:"
+run DoublyLinked
+buildkb --linting=none
+
+assert sparql fail --no-reasoner '<<EOF
+    SELECT ?x
+    WHERE {
+      ?x a prog:SysLoader-Node .
+      FILTER NOT EXISTS {
+        {
+            ?x prog:SysLoader-Node.next [
+                prog:SysLoader-Node.previous [ a prog:SysLoader-Node ]
+            ]
+        }
+        UNION
+        { ?x prog:SysLoader-Node.next java:null }
+      }
+    }
+'EOF
+
+assert shacl conforms --no-reasoner shapes.ttl
+
+reasoner HermiT
+assert infer findsNoInstances "prog:SysLoader-Node and not domain:ValidNode"
+
+kill
+
+section "If there actually are broken nodes, we can detect them:"
+
+run DoublyLinked break
+buildkb --linting=none
+
+assert sparql success --no-reasoner '<<EOF
+    SELECT ?x
+    WHERE {
+      ?x a prog:SysLoader-Node .
+      FILTER NOT EXISTS {
+        {
+            ?x prog:SysLoader-Node.next [
+                prog:SysLoader-Node.previous [ a prog:SysLoader-Node ]
+            ]
+        }
+        UNION
+        { ?x prog:SysLoader-Node.next java:null }
+      }
+    }
+'EOF
+
+assert shacl violation --no-reasoner shapes.ttl
+
+reasoner HermiT
+assert infer findsInstances "prog:SysLoader-Node and not domain:ValidNode"

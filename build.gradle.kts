@@ -104,6 +104,7 @@ tasks.test {
     // Compile the case studies for tests
     dependsOn(gradle.includedBuild("btrees").task(":classes"))
     dependsOn(gradle.includedBuild("PizzaSubscriptionService").task(":classes"))
+    dependsOn(gradle.includedBuild("DoublyLinked").task(":classes"))
 
     // Parallelize tests
     maxParallelForks = Runtime.getRuntime().availableProcessors().div(2)
@@ -114,11 +115,15 @@ tasks.test {
 
 tasks {
     named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveBaseName.set("SemanticJavaDebugger")
+        archiveBaseName.set("sjdb")
         mergeServiceFiles()
 
         manifest {
             attributes["Main-Class"] = "de.ahbnr.semanticweb.sjdb.SemanticJavaDebuggerKt"
+        }
+
+        doLast {
+            println("Created JAR at ${archiveFile.get().asFile.absolutePath}.")
         }
     }
 }

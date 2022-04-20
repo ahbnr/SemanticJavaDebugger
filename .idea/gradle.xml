@@ -12,6 +12,16 @@
                   <project path="$PROJECT_DIR$/libs/jdi2owl" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/casestudies/PizzaSubscriptionService" name="PizzaSubscriptionService">
+                <projects>
+                  <project path="$PROJECT_DIR$/casestudies/PizzaSubscriptionService" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/casestudies/btrees" name="btrees">
+                <projects>
+                  <project path="$PROJECT_DIR$/casestudies/btrees" />
+                </projects>
+              </build>
             </builds>
           </compositeBuild>
         </compositeConfiguration>
@@ -20,6 +30,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/casestudies/PizzaSubscriptionService" />
+            <option value="$PROJECT_DIR$/casestudies/btrees" />
             <option value="$PROJECT_DIR$/libs/jdi2owl" />
           </set>
         </option>
