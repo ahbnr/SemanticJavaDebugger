@@ -5,8 +5,10 @@ import com.github.owlcs.ontapi.Ontology
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.BuildParameters
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import org.apache.jena.query.Query
 import org.apache.jena.query.QueryExecution
+import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.rdf.model.InfModel
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.RDFNode
@@ -90,13 +92,26 @@ class KnowledgeBase(
     private fun getJenaModel(reasoner: ReasonerId): Model =
         reasoner.inferJenaModel(ontology)
 
-    fun buildSparqlExecution(query: Query, model: Model): QueryExecution =
-        sparqlReasoner.buildSparqlExecution(query, model)
+    fun buildSparqlExecution(query: Query, model: Model, dontUseReasoner: Boolean): QueryExecution =
+        if (dontUseReasoner)
+            QueryExecutionFactory.create(query, model)
+        else
+            sparqlReasoner.buildSparqlExecution(query, model)
 
-    fun getSparqlModel(customBaseOntology: Ontology? = null): Model =
-        sparqlReasoner.inferJenaModel(customBaseOntology ?: ontology)
+    fun getSparqlModel(dontUseReasoner: Boolean, customBaseOntology: Ontology?): Model {
+        val ontology = customBaseOntology ?: ontology
 
-    fun getShaclModel(): Model {
+        return if (dontUseReasoner)
+            ontology.asGraphModel()
+        else
+            sparqlReasoner.inferJenaModel(ontology)
+    }
+
+
+    fun getShaclModel(dontUseReasoner: Boolean): Model {
+        if (dontUseReasoner)
+            return ontology.asGraphModel()
+
         val reasonerId = shaclReasoner
 
         // For SHACL, we have to infer all triples beforehand...

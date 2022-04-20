@@ -1,7 +1,7 @@
 package de.ahbnr.semanticweb.sjdb.repl.commands.utils
 
 import de.ahbnr.semanticweb.jdi2owl.Logger
-import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File

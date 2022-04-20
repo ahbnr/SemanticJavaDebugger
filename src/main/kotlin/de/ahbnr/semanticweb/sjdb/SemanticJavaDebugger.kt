@@ -19,7 +19,7 @@ import de.ahbnr.semanticweb.jdi2owl.mapping.forward.mappers.ObjectMapper
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.mappers.StackMapper
 import de.ahbnr.semanticweb.sjdb.repl.JLineLogger
 import de.ahbnr.semanticweb.sjdb.repl.REPL
-import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import de.ahbnr.semanticweb.sjdb.repl.commands.*
 import org.apache.commons.io.FilenameUtils
 import org.jline.terminal.TerminalBuilder
@@ -144,12 +144,13 @@ class SemanticJavaDebugger : CliktCommand() {
                         ReasonerCommand(),
                         RunCommand(),
                         SectionCommand(),
-                        ShaclCommand(graphGen),
+                        ShaclCommand(),
                         SourcePathCommand(),
                         SparqlCommand(),
                         StatsCommand(),
                         StopCommand(graphGen),
-                        TimeCommand()
+                        TimeCommand(),
+                        TimeoutCommand()
                     )
                 )
                 readCommand.repl = repl

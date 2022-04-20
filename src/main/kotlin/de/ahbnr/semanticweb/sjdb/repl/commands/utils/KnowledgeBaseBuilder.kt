@@ -8,7 +8,7 @@ import de.ahbnr.semanticweb.jdi2owl.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.TypeInfoProvider
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
-import de.ahbnr.semanticweb.sjdb.repl.SemanticDebuggerState
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import spoon.Launcher
