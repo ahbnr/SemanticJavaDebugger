@@ -9,7 +9,7 @@ def render_template(filePath: str, targetPath: str, env: dict):
     filename = os.path.basename(filePath)
 
     templateLoader = jinja2.FileSystemLoader(searchpath=dirpath)
-    templateEnv = jinja2.Environment(loader=templateLoader)
+    templateEnv = jinja2.Environment(loader=templateLoader, extensions=['jinja2.ext.loopcontrols'])
 
     def debug(text):
         print(text)

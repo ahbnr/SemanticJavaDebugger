@@ -1,15 +1,3 @@
-domain domain.ttl
-classpaths './'
-sourcepath 'DoublyLinked.java'
-mapping set limit-sdk true
-timeout 60
-
-stop at 'DoublyLinked:Nodes created'
-run -- DoublyLinked
-buildkb --linting=none
-time --tag=buildkb
-stats --dump-json=stats.json
-
 sparql --no-reasoner '<<EOF
     SELECT ?x
     WHERE {
@@ -25,7 +13,5 @@ sparql --no-reasoner '<<EOF
       }
     }
 'EOF
-time --tag=instancesSparql
-
-shacl --no-reasoner shapes.ttl
-time --tag=shacl --dump-tagged-to-json=times.json
+time --tag=sparql
+memory peak --dump-json=memory.json

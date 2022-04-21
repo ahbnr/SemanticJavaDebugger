@@ -1,23 +1,32 @@
+from typing import Dict, Set
+
 import numpy as np
 import pandas as pd
 
 from render_template import render_template
 from runner import compileProject, runSJDB, SJDBResult
 
-low_range_evaluation = False
-high_range_evaluation = True
+low_range_evaluation = True
+high_range_evaluation = False
 
 resultColumns = [
     "times",
+    "memory",
     "stats"
 ]
 
+warmup = 10
+repeat = 5
+
+tasks = ["buildkb", "sparql", "shacl", "infer"]
+
 
 def run_single_experiment(
-        index,
         java_env: dict[str, any],
         sjdb_script_env: dict[str, any]
-):
+) -> SJDBResult:
+    sjdb_script_env["warmup"] = warmup
+
     print("Rendering Java template...")
     render_template(
         filePath="java/doublylinked/DoublyLinked.template.java",
@@ -36,17 +45,51 @@ def run_single_experiment(
     compileProject("java/doublylinked")
 
     print("Running sjdb...")
-    result: SJDBResult = runSJDB(
+    return runSJDB(
         projectPath="java/doublylinked",
         taskfile="DoublyLinked.sjdb",
-        timeout=None
+        timeout=None,
+        repeat=repeat
     )
+
+
+def experiment_for_each_task(
+        index,
+        java_env: Dict[str, any],
+        sjdb_script_env: Dict[str, any],
+        excluded_tasks: Set[str]
+) -> pd.DataFrame:
+    times = None
+    memory = None
+    stats = None
+    for task in tasks:
+        if task in excluded_tasks:
+            continue
+
+        sjdb_script_env['task'] = task
+
+        result = run_single_experiment(java_env, sjdb_script_env)
+
+        if times is None:
+            times = result.times
+        else:
+            times |= result.times
+
+        new_mem = {task: result.memory['peak']}
+        if memory is None:
+            memory = new_mem
+        else:
+            memory |= new_mem
+
+        if result.stats is not None:
+            stats = result.stats
 
     return pd.DataFrame(
         np.array([
             [
-                result.times,
-                result.stats
+                times,
+                memory,
+                stats
             ]
         ]),
         index=[index],
@@ -71,10 +114,9 @@ if low_range_evaluation:
 
         sjdb_script_env = {
             "timeout": timeout,
-            "do_inference_task": True
         }
 
-        results = pd.concat([results, run_single_experiment(num_nodes, java_env, sjdb_script_env)])
+        results = pd.concat([results, experiment_for_each_task(num_nodes, java_env, sjdb_script_env, set())])
 
     with pd.HDFStore('DoublyLinkedStore.h5') as store:
         store['results'] = results
@@ -83,7 +125,7 @@ if low_range_evaluation:
 
 if high_range_evaluation:
     start = 500
-    step_size = 5000
+    step_size = 1000
     max_steps = 10
     num_nodes_options = [start + step * step_size for step in range(0, max_steps)]
     timeout = 60
@@ -101,10 +143,9 @@ if high_range_evaluation:
 
         sjdb_script_env = {
             "timeout": timeout,
-            "do_inference_task": False
         }
 
-        results = pd.concat([results, run_single_experiment(num_nodes, java_env, sjdb_script_env)])
+        results = pd.concat([results, experiment_for_each_task(num_nodes, java_env, sjdb_script_env, set('infer'))])
 
     with pd.HDFStore('DoublyLinkedHighStore.h5') as store:
         store['results'] = results
