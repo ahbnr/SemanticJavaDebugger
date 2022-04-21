@@ -10,7 +10,7 @@ import de.ahbnr.semanticweb.sjdb.utils.MemoryUsageMonitor
 
 class MemoryCommand: REPLCommand(
     name = "memory",
-    help = "Shows statistics about memory use. Only enabled if sjdb was called with the --monitor-memory flag."
+    help = "Shows statistics about memory use."
 ) {
     init {
         subcommands(
@@ -19,10 +19,6 @@ class MemoryCommand: REPLCommand(
 
                 override fun run() {
                     val peakUseBytes = MemoryUsageMonitor.peakMemoryUse
-                    if (peakUseBytes == null) {
-                        logger.error("Can not retrieve peak memory use. Either it has not yet been measured, or you forgot to call sjdb with the --monitor-memory flag.")
-                        return
-                    }
 
                     logger.log("${peakUseBytes.div(1024 * 1024)} MiB (${peakUseBytes} bytes)")
 
@@ -35,11 +31,6 @@ class MemoryCommand: REPLCommand(
                             )
                         )
                     }
-                }
-            },
-            object: REPLCommand(name = "clear", help = "Delete all memory statistics collected so far.") {
-                override fun run() {
-                    MemoryUsageMonitor.clear()
                 }
             }
         )
