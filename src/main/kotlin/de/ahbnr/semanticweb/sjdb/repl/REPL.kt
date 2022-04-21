@@ -3,6 +3,7 @@
 package de.ahbnr.semanticweb.sjdb.repl
 
 import com.github.ajalt.clikt.core.CliktError
+import com.github.ajalt.clikt.core.PrintHelpMessage
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.core.UsageError
 import de.ahbnr.semanticweb.jdi2owl.Logger
@@ -134,6 +135,14 @@ class REPL(
                     try {
                         command.parse(argv.drop(1))
                         true
+                    }  catch (e: PrintHelpMessage) {
+                        val printer =
+                            if (e.error) logger::error
+                            else logger::log
+
+                        printer(e.command.getFormattedHelp(), true)
+
+                        false
                     } catch (e: ProgramResult) {
                         e.statusCode == 0
                     } catch (e: UsageError) {
