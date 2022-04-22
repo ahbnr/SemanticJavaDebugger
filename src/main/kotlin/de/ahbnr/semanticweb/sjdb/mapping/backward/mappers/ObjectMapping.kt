@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.backwardmapping.mappers
+package de.ahbnr.semanticweb.sjdb.mapping.backward.mappers
 
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState

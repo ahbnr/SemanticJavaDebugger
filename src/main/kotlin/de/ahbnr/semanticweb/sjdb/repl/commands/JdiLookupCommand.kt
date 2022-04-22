@@ -5,7 +5,7 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.types.long
-import de.ahbnr.semanticweb.sjdb.backwardmapping.utils.JavaObjectPrinter
+import de.ahbnr.semanticweb.sjdb.mapping.backward.utils.JavaObjectPrinter
 import org.koin.core.component.KoinComponent
 
 class JdiLookupCommand : REPLCommand(name = "jdilookup"), KoinComponent {

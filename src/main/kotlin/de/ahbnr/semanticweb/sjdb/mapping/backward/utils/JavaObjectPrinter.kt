@@ -1,4 +1,4 @@
-package de.ahbnr.semanticweb.sjdb.backwardmapping.utils
+package de.ahbnr.semanticweb.sjdb.mapping.backward.utils
 
 import com.sun.jdi.*
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState

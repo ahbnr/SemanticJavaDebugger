@@ -6,7 +6,9 @@ import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.BuildParameters
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
+import de.ahbnr.semanticweb.jdi2owl.mapping.forward.MappingWithPlugins
 import de.ahbnr.semanticweb.jdi2owl.mapping.forward.utils.TypeInfoProvider
+import de.ahbnr.semanticweb.sjdb.mapping.forward.extensions.sourceinfo.SourceInfoPlugin
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import org.koin.core.component.KoinComponent
@@ -17,7 +19,6 @@ import spoon.reflect.CtModel
 import kotlin.io.path.absolutePathString
 
 class KnowledgeBaseBuilder(
-    val graphGenerator: GraphGenerator,
     val jvmState: JvmState,
     val debuggerState: SemanticDebuggerState,
     val linterMode: LinterMode,
@@ -48,18 +49,24 @@ class KnowledgeBaseBuilder(
         return spoonLauncher.model
     }
 
+    fun buildGraphGenerator(): GraphGenerator =
+        GraphGenerator(
+            MappingWithPlugins(
+                listOf(SourceInfoPlugin(buildSourceModel()))
+            )
+        )
+
     fun build(): KnowledgeBase? {
         logger.debug("Building knowledge base...")
         val limiter = MappingLimiter(debuggerState.mappingSettings)
-        val sourceModel = buildSourceModel()
+        val graphGen = buildGraphGenerator()
 
         val buildParameters = BuildParameters(
             jvmState = jvmState,
-            sourceModel = sourceModel,
             limiter = limiter,
             typeInfoProvider = TypeInfoProvider(jvmState.pausedThread)
         )
-        val ontology = graphGenerator.buildOntology(
+        val ontology = graphGen.buildOntology(
             buildParameters,
             debuggerState.applicationDomainDefFile,
             linterMode

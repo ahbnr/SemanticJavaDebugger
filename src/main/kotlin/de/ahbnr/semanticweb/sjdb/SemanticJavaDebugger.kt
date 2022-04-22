@@ -3,26 +3,18 @@
 package de.ahbnr.semanticweb.sjdb;
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.CliktError
-import com.github.ajalt.clikt.core.MissingArgument
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmDebugger
 import de.ahbnr.semanticweb.jdi2owl.mapping.genDefaultNs
 import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.mapping.datatypes.JavaAccessModifierDatatype
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.mappers.ClassMapper
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.mappers.ObjectMapper
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.mappers.StackMapper
 import de.ahbnr.semanticweb.sjdb.repl.JLineLogger
 import de.ahbnr.semanticweb.sjdb.repl.REPL
 import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import de.ahbnr.semanticweb.sjdb.repl.commands.*
-import de.ahbnr.semanticweb.sjdb.utils.MemoryUsageMonitor
 import org.apache.commons.io.FilenameUtils
 import org.jline.terminal.TerminalBuilder
 import org.koin.core.context.startKoin
@@ -108,14 +100,6 @@ class SemanticJavaDebugger : CliktCommand() {
             // Register custom datatypes with Jena
             JavaAccessModifierDatatype.register()
 
-            val graphGen = GraphGenerator(
-                listOf(
-                    ClassMapper(),
-                    ObjectMapper(),
-                    StackMapper()
-                )
-            )
-
             try {
                 val readCommand = ReadCommand()
 
@@ -125,7 +109,7 @@ class SemanticJavaDebugger : CliktCommand() {
                     commands = listOf(
                         AddTriplesCommand(),
                         AssertCommand(),
-                        BuildKBCommand(graphGen),
+                        BuildKBCommand(),
                         CheckKBCommand(),
                         ClassPathsCommand(),
                         CloseClass(),
@@ -151,7 +135,7 @@ class SemanticJavaDebugger : CliktCommand() {
                         SourcePathCommand(),
                         SparqlCommand(),
                         StatsCommand(),
-                        StopCommand(graphGen),
+                        StopCommand(),
                         TimeCommand(),
                         TimeoutCommand()
                     )

@@ -10,13 +10,10 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
-import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.*
 import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 
-class StopCommand(
-    val graphGenerator: GraphGenerator,
-) : REPLCommand(name = "stop") {
+class StopCommand: REPLCommand(name = "stop") {
     sealed class BreakpointCondition(expression: String) {
         val expression = UsabilityPreprocessor.preprocess(expression)
 
@@ -91,7 +88,6 @@ class StopCommand(
                     }
 
                     val builder = KnowledgeBaseBuilder(
-                        graphGenerator = this@StopCommand.graphGenerator,
                         jvmState = jvmState,
                         debuggerState = state,
                         linterMode = LinterMode.NoLinters,

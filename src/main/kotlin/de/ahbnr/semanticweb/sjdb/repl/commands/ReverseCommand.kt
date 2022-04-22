@@ -6,8 +6,8 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.sun.jdi.ObjectReference
 import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
-import de.ahbnr.semanticweb.sjdb.backwardmapping.BackwardMapper
-import de.ahbnr.semanticweb.sjdb.backwardmapping.utils.JavaObjectPrinter
+import de.ahbnr.semanticweb.sjdb.mapping.backward.BackwardMapper
+import de.ahbnr.semanticweb.sjdb.mapping.backward.utils.JavaObjectPrinter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

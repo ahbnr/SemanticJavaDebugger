@@ -11,9 +11,7 @@ import de.ahbnr.semanticweb.jdi2owl.mapping.forward.GraphGenerator
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.KnowledgeBaseBuilder
 import org.koin.core.component.KoinComponent
 
-class BuildKBCommand(
-    val graphGenerator: GraphGenerator
-) : REPLCommand(name = "buildkb"), KoinComponent {
+class BuildKBCommand: REPLCommand(name = "buildkb"), KoinComponent {
     val linting: LinterMode by option().choice(
         "default" to LinterMode.Normal,
         "full" to LinterMode.FullReport,
@@ -25,7 +23,6 @@ class BuildKBCommand(
 
 
         val builder = KnowledgeBaseBuilder(
-            graphGenerator = graphGenerator,
             jvmState = jvmState,
             debuggerState = state,
             linterMode = linting,
