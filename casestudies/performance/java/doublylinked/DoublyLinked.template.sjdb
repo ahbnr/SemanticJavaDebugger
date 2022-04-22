@@ -7,9 +7,6 @@ timeout {{timeout}}
 stop at 'DoublyLinked:Nodes created'
 
 {% for warmupIdx in range(0, warmup+1) %}
-    {%- if warmupIdx == warmup %}
-        memory clear
-    {%- endif %}
     run -- DoublyLinked
     buildkb --linting=none
 

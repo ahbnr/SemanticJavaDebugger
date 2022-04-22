@@ -6,14 +6,13 @@ mapping set deep SysLoader-Instances.-void-main(java.lang.String[]).objects
 timeout {{timeout}}
 
 stop at 'Instances:Instances created'
-run -- Instances
-buildkb --linting=none
-time --tag=buildkb
-stats --dump-json=stats.json
 
-reasoner HermiT
-infer instancesOf prog:SysLoader-C0
-time --tag=instancesInf
+{% for warmupIdx in range(0, warmup+1) %}
+    run -- Instances
+    buildkb --linting=none
 
-sparql --no-reasoner 'SELECT ?x WHERE { ?x a prog:SysLoader-C0 }'
-time --tag=instancesSparql --dump-tagged-to-json=times.json
+    {% include task + ".template.sjdb" %}
+    kill
+{% endfor %}
+
+time --dump-tagged-to-json=times.json

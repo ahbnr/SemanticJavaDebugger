@@ -57,7 +57,6 @@ def runSJDB(
         "java",
         "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
         "-jar", config.sjdbJar,
-        "--monitor-memory",
         taskfile
     ]
 

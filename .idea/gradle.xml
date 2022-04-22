@@ -22,6 +22,16 @@
                   <project path="$PROJECT_DIR$/casestudies/btrees" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/casestudies/DoublyLinked" name="DoublyLinked">
+                <projects>
+                  <project path="$PROJECT_DIR$/casestudies/DoublyLinked" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/libs/jdi2owl/plugins/DummyPlugin" name="DummyPlugin">
+                <projects>
+                  <project path="$PROJECT_DIR$/libs/jdi2owl/plugins/DummyPlugin" />
+                </projects>
+              </build>
             </builds>
           </compositeBuild>
         </compositeConfiguration>
@@ -30,9 +40,11 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/casestudies/DoublyLinked" />
             <option value="$PROJECT_DIR$/casestudies/PizzaSubscriptionService" />
             <option value="$PROJECT_DIR$/casestudies/btrees" />
             <option value="$PROJECT_DIR$/libs/jdi2owl" />
+            <option value="$PROJECT_DIR$/libs/jdi2owl/plugins/DummyPlugin" />
           </set>
         </option>
       </GradleProjectSettings>

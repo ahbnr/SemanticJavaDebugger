@@ -6,8 +6,8 @@ import pandas as pd
 from render_template import render_template
 from runner import compileProject, runSJDB, SJDBResult
 
-low_range_evaluation = True
-high_range_evaluation = False
+low_range_evaluation = False
+high_range_evaluation = True
 
 resultColumns = [
     "times",
@@ -15,8 +15,9 @@ resultColumns = [
     "stats"
 ]
 
-warmup = 10
-repeat = 5
+warmup = 0
+repeat = 1
+timeout = 60
 
 tasks = ["buildkb", "sparql", "shacl", "infer"]
 
@@ -99,7 +100,6 @@ def experiment_for_each_task(
 
 if low_range_evaluation:
     num_nodes_options = [30, 40, 50, 100, 200, 500]
-    timeout = 60
     print("We will be evaluating for the following node counts:")
     print(num_nodes_options)
 
@@ -128,7 +128,6 @@ if high_range_evaluation:
     step_size = 1000
     max_steps = 10
     num_nodes_options = [start + step * step_size for step in range(0, max_steps)]
-    timeout = 60
     print("We will be evaluating for the following node counts:")
     print(num_nodes_options)
 

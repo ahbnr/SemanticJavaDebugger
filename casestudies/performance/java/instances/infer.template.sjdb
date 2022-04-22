@@ -1,0 +1,4 @@
+reasoner HermiT
+infer instancesOf prog:SysLoader-C0
+time --tag=infer
+memory peak --dump-json=memory.json
