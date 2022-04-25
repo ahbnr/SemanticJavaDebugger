@@ -18,55 +18,39 @@ class C{{i}} extends Super{{i}} {
 public class Instances {
     public static void main(String[] args) {
         {%- set instance_counter = namespace(value=0)  %}
-
         {%- set expected_num_instances = namespace(value=0) %}
 
-        {%- if gen_mode == "A" or gen_mode == "C" %}
+        {%- if gen_mode == "A" %}
             {%- set expected_num_instances.value = num_instances %}
 
             var objects = new Object[{{num_instances}}];
-            {%- for i in range(0, num_instances) %}
-                objects[{{i}}] = new C0();
+            for (int i = 0; i < {{num_instances}}; ++i) {
+                objects[i] = new C0();
+            }
+            {%- set instance_counter.value = num_instances  %}
+        {%- endif %}
+
+        {%- if gen_mode == "B" %}
+            {%- set expected_num_instances.value=num_classes %}
+
+            var objects = new Object[{{num_classes}}];
+            {%- for classIdx in range(0, num_classes) %}
+                objects[{{classIdx}}] = new C{{classIdx}}();
                 {%- set instance_counter.value = instance_counter.value + 1  %}
             {%- endfor %}
         {%- endif %}
 
-        {%- if gen_mode == "B" %}
-            {%- set expected_num_instances.value=1 %}
-
-            var objects = new Object[1];
-            objects[0] = new C0();
-            {%- set instance_counter.value = instance_counter.value + 1  %}
-        {%- endif %}
-
-        {%- if gen_mode == "D" %}
+        {%- if gen_mode == "C" %}
             {%- set expected_num_instances.value = num_instances %}
 
             var objects = new Object[{{num_instances}}];
 
+            int instances = 0;
             {%- for classIdx in range(0, num_classes) %}
-                {%- for i in range(0, instances_per_class) %}
-                    {%- if instance_counter.value < num_instances %}
-                        objects[{{instance_counter.value}}] = new C{{classIdx}}();
-                        {%- set instance_counter.value = instance_counter.value + 1  %}
-                    {%- endif %}
-                {%- endfor %}
-            {%- endfor %}
-        {%- endif %}
-
-        {%- if gen_mode == "E" %}
-            {%- set expected_num_instances.value = num_instances %}
-
-            var objects = new Object[{{num_instances}}];
-
-            {% set instances_per_class = int(ceil(num_instances / num_classes)) %}
-            {%- for classIdx in range(0, num_classes) %}
-                {%- for i in range(0, instances_per_class) %}
-                    {%- if instance_counter.value < num_instances %}
-                        objects[{{instance_counter.value}}] = new C{{classIdx}}();
-                        {%- set instance_counter.value = instance_counter.value + 1  %}
-                    {%- endif %}
-                {%- endfor %}
+                for (int i = 0; i < {{instance_counts[classIdx]}}; ++i) {
+                    objects[instances++] = new C{{classIdx}}();
+                }
+                {%- set instance_counter.value = instance_counter.value + instance_counts[classIdx] %}
             {%- endfor %}
         {%- endif %}
 

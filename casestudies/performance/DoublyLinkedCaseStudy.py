@@ -1,3 +1,4 @@
+import datetime
 from typing import Dict, Set
 
 import numpy as np
@@ -6,8 +7,12 @@ import pandas as pd
 from render_template import render_template
 from runner import compileProject, runSJDB, SJDBResult
 
-low_range_evaluation = False
+starttime = datetime.datetime.now()
+
+low_range_evaluation = True
 high_range_evaluation = True
+
+write_results = True
 
 resultColumns = [
     "times",
@@ -15,8 +20,8 @@ resultColumns = [
     "stats"
 ]
 
-warmup = 0
-repeat = 1
+warmup = 5
+repeat = 5
 timeout = 60
 
 tasks = ["buildkb", "sparql", "shacl", "infer"]
@@ -105,7 +110,7 @@ if low_range_evaluation:
 
     results: pd.DataFrame = pd.DataFrame(np.empty((0, len(resultColumns))), columns=resultColumns)
 
-    for num_nodes in num_nodes_options:
+    for i, num_nodes in enumerate(num_nodes_options):
         print("Evaluating for {} nodes...".format(num_nodes))
 
         java_env = {
@@ -116,10 +121,13 @@ if low_range_evaluation:
             "timeout": timeout,
         }
 
+        print(f"LOW RANGE: {i + 1}/{len(num_nodes_options)}")
+
         results = pd.concat([results, experiment_for_each_task(num_nodes, java_env, sjdb_script_env, set())])
 
-    with pd.HDFStore('DoublyLinkedStore.h5') as store:
-        store['results'] = results
+    if write_results:
+        with pd.HDFStore('DoublyLinkedStore.h5') as store:
+            store['results'] = results
 
     print(results.to_string())
 
@@ -133,7 +141,7 @@ if high_range_evaluation:
 
     results: pd.DataFrame = pd.DataFrame(np.empty((0, len(resultColumns))), columns=resultColumns)
 
-    for num_nodes in num_nodes_options:
+    for i, num_nodes in enumerate(num_nodes_options):
         print("Evaluating for {} nodes...".format(num_nodes))
 
         java_env = {
@@ -144,9 +152,19 @@ if high_range_evaluation:
             "timeout": timeout,
         }
 
-        results = pd.concat([results, experiment_for_each_task(num_nodes, java_env, sjdb_script_env, set('infer'))])
+        print(f"HIGH RANGE: {i + 1}/{len(num_nodes_options)}")
 
-    with pd.HDFStore('DoublyLinkedHighStore.h5') as store:
-        store['results'] = results
+        results = pd.concat([results, experiment_for_each_task(num_nodes, java_env, sjdb_script_env, {'infer'})])
+
+    if write_results:
+        with pd.HDFStore('DoublyLinkedHighStore.h5') as store:
+            store['results'] = results
 
     print(results.to_string())
+
+endtime = datetime.datetime.now()
+duration = endtime - starttime
+
+print(f"Started experiments at {starttime}.")
+print(f"Completed experiments at {endtime}.")
+print(f"Total duration: {duration}")
