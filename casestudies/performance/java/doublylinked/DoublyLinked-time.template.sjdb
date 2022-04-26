@@ -6,21 +6,20 @@ timeout {{timeout}}
 
 stop at 'DoublyLinked:Nodes created'
 
-{%- if task != "buildkb" %]
+{%- if task != "buildkb" %}
     {% include "buildkb.template.sjdb" %}
 {%- endif %}
 
 {%- for warmupIdx in range(0, warmup) %}
-    {%- if task == "buildkb" and warmupIdx > 0 %]
+    {%- if task == "buildkb" and warmupIdx > 0 %}
         kill
     {%- endif %}
 
     {% include task + ".template.sjdb" %}
 {%- endfor %}
 
-{%- for repeatIdx in range(0, repeat) %
+{%- for repeatIdx in range(0, repeat) %}
     {% include task + ".template.sjdb" %}
-    time --tag={{task}}
-    memory peak --dump-json={{"memory" + repeatIdx}}.json
-    time --dump-tagged-to-json={{"times" + repeatIdx}}.json
+    time --tag={{repeatIdx}}
+    time --dump-tagged-to-json=times.json
 {%- endfor %}

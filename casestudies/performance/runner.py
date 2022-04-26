@@ -3,145 +3,109 @@ import json
 import os
 import signal
 import subprocess
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import NamedTuple
 from typing import Optional
 
 import isodate
 
 import config
-import tasks
-from tasks import Task
 
 
-class SJDBResult(NamedTuple):
-    times: Optional[Dict[str, datetime.timedelta]]
-    memory: Optional[Dict[str, int]]
-    stats: Optional[Dict[str, int]]
+def timesPath(projectPath: str) -> str:
+    return os.path.join(projectPath, "times.json")
 
 
-def runTask(task: Task) -> SJDBResult:
-    compileProject(task.project.projectPath)
-    tasks.genTaskFile(task)
-    print("\n\n=== Running task {} ===\n\n".format(task.name))
-    return runSJDB(task.project.projectPath, config.taskfile(project), task.timeout)
+def memoryPath(projectPath: str) -> str:
+    return os.path.join(projectPath, "memory.json")
 
 
-def averageDicts(
-        dicts: List[Optional[Dict[Any, Any]]],
-        defaultVal: Any
-) -> Optional[Dict[Any, Any]]:
-    if any(d is None for d in dicts):
-        return None
+def retrieveAverageTime(projectPath: str) -> datetime.timedelta:
+    times_file = timesPath(projectPath)
 
-    averaged_d: Optional[Dict[Any, Any]] = None
-    for d in dicts:
-        if averaged_d is None:
-            averaged_d = {k: defaultVal for k in d}
+    results = None
+    if os.path.exists(times_file):
+        with open(times_file) as f:
+            times_result = json.load(f)
+            results = [
+                isodate.parse_duration(times_result[repeatIdx]) for repeatIdx in times_result
+            ]
 
-        intersected_keys = set(averaged_d.keys()) & set(d.keys())
-        averaged_d = {k: averaged_d[k] + d[k] for k in intersected_keys}
+    if results is None:
+        return datetime.timedelta()
 
-    return {k: averaged_d[k] / len(dicts) for k in averaged_d}
+    return sum(results, datetime.timedelta()) / len(results)
+
+
+def retrieveMemory(projectPath: str) -> int:
+    memory_file = memoryPath(projectPath)
+
+    result = None
+    if os.path.exists(memory_file):
+        with open(memory_file) as f:
+            content = json.load(f)
+            result = content['peak'] if 'peak' in content else None
+
+    return result if result is not None else 0
 
 
 def runSJDB(
         projectPath: str,
         taskfile: str,
         timeout: Optional[datetime.timedelta],
-        repeat: int  # run it this many times and average the results
-) -> SJDBResult:
+        monitorMemory: bool,
+        printer
+):
     cmdline = [
         "java",
         "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
         "-jar", config.sjdbJar,
+    ]
+
+    if monitorMemory:
+        cmdline += [
+            "--monitor-memory",
+        ]
+
+    cmdline += [
         taskfile
     ]
 
-    if repeat <= 0:
-        raise "Must execute at least once."
+    time_file = timesPath(projectPath)
+    if os.path.exists(time_file):
+        os.remove(time_file)
 
-    repeatResults: list[SJDBResult] = []
-    for repeatIdx in range(0, repeat):
-        stats_file = os.path.join(projectPath, "stats.json")
-        if os.path.exists(stats_file):
-            os.remove(stats_file)
+    memory_file = memoryPath(projectPath)
+    if os.path.exists(memory_file):
+        os.remove(memory_file)
 
-        times_file = os.path.join(projectPath, "times.json")
-        if os.path.exists(times_file):
-            os.remove(times_file)
-
-        memory_file = os.path.join(projectPath, "memory.json")
-        if os.path.exists(memory_file):
-            os.remove(memory_file)
-
-        print("Executing commandline {} in {}...".format(" ".join(cmdline), projectPath))
-        with subprocess.Popen(cmdline, cwd=projectPath, stdout=subprocess.PIPE, shell=False,
-                              preexec_fn=os.setsid) as process:
+    printer("Executing commandline {} in {}...".format(" ".join(cmdline), projectPath))
+    with subprocess.Popen(cmdline, cwd=projectPath, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False,
+                          preexec_fn=os.setsid) as process:
+        try:
+            timeoutAsSeconds = timeout.seconds if timeout else None
             try:
-                timeoutAsSeconds = timeout.seconds if timeout else None
-                try:
-                    output, _ = process.communicate(None, timeout=timeoutAsSeconds)
-                except Exception:
-                    process.kill()
-                    raise
+                output, err = process.communicate(None, timeout=timeoutAsSeconds)
+            except Exception:
+                process.kill()
+                raise
 
-                output = output.decode('utf-8')
+            output = output.decode('utf-8')
+            err = err.decode('utf-8')
 
-            except subprocess.TimeoutExpired as e:
-                output = e.output.decode('utf-8')
-                print("Timeout hit! ({}s)".format(e.timeout))
-                try:
-                    os.killpg(os.getpgid(process.pid), signal.SIGKILL)
-                    process.kill()
-                except ProcessLookupError as lookupError:
-                    print("Could not terminate {}!".format(process.pid))
-                    print("Error: {}".format(lookupError))
-                    pass
-                process.wait()
+        except subprocess.TimeoutExpired as e:
+            output = e.output.decode('utf-8')
+            err = e.stderr.decode('utf-8')
+            printer("Timeout hit! ({}s)".format(e.timeout))
+            try:
+                os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+                process.kill()
+            except ProcessLookupError as lookupError:
+                printer("Could not terminate {}!".format(process.pid))
+                printer("Error: {}".format(lookupError))
+                pass
+            process.wait()
 
-            print(output)
-
-            stats_result = None
-            if os.path.exists(stats_file):
-                with open(stats_file) as f:
-                    stats_result = json.load(f)
-
-            times_result = None
-            if os.path.exists(times_file):
-                with open(times_file) as f:
-                    times_result = json.load(f)
-                    times_result = {
-                        tag: isodate.parse_duration(times_result[tag]) for tag in times_result
-                    }
-
-            memory_result = None
-            if os.path.exists(memory_file):
-                with open(memory_file) as f:
-                    memory_result = json.load(f)
-
-        repeatResults.append(
-            SJDBResult(
-                times=times_result,
-                memory=memory_result,
-                stats=stats_result
-            )
-        )
-
-    averaged_times: Optional[dict[str, datetime.timedelta]] = averageDicts([result.times for result in repeatResults],
-                                                                           datetime.timedelta())
-
-    averaged_memory: Optional[dict[str, int]] = averageDicts([result.memory for result in repeatResults], 0)
-
-    averaged_stats: Optional[dict[str, int]] = averageDicts([result.stats for result in repeatResults], 0)
-
-    return SJDBResult(
-        times=averaged_times,
-        memory=averaged_memory,
-        stats=averaged_stats
-    )
+        printer(output)
+        printer(err)
 
 
 def compileProject(projectPath: str):

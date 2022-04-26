@@ -1,3 +1,2 @@
-time --tag=buildkb
-memory peak --dump-json=memory.json
-stats --dump-json=stats.json
+run -- Instances
+buildkb --linting=none

@@ -1,4 +1,2 @@
 reasoner HermiT
 infer instancesOf "prog:SysLoader-Node and not domain:ValidNode"
-time --tag=infer
-memory peak --dump-json=memory.json

@@ -7,12 +7,20 @@ timeout {{timeout}}
 
 stop at 'Instances:Instances created'
 
-{% for warmupIdx in range(0, warmup+1) %}
-    run -- Instances
-    buildkb --linting=none
+{%- if task != "buildkb" %}
+    {% include "buildkb.template.sjdb" %}
+{%- endif %}
+
+{%- for warmupIdx in range(0, warmup) %}
+    {%- if task == "buildkb" and warmupIdx > 0 %}
+        kill
+    {%- endif %}
 
     {% include task + ".template.sjdb" %}
-    kill
-{% endfor %}
+{%- endfor %}
 
-time --dump-tagged-to-json=times.json
+{%- for repeatIdx in range(0, repeat) %}
+    {% include task + ".template.sjdb" %}
+    time --tag={{repeatIdx}}
+    time --dump-tagged-to-json=times.json
+{%- endfor %}

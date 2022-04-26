@@ -1,0 +1,15 @@
+classpaths './'
+sourcepath 'Instances.java'
+mapping set limit-sdk true
+mapping set no-sequence-descriptions true
+mapping set deep SysLoader-Instances.-void-main(java.lang.String[]).objects
+timeout {{timeout}}
+
+stop at 'Instances:Instances created'
+
+{%- if task != "buildkb" %}
+    {% include "buildkb.template.sjdb" %}
+{%- endif %}
+
+{% include task + ".template.sjdb" %}
+memory peak --dump-json=memory.json

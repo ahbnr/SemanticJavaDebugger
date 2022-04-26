@@ -1,3 +1,1 @@
 sparql --no-reasoner 'SELECT ?x WHERE { ?x a prog:SysLoader-C0 }'
-time --tag=sparql
-memory peak --dump-json=memory.json

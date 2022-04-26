@@ -11,6 +11,7 @@ matplotlib = "*"
 numpy = "*"
 tables = "*"
 jinja2 = "*"
+tqdm = "*"
 
 [dev-packages]
 ipykernel = "*"
