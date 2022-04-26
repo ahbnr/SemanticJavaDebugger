@@ -14,7 +14,12 @@ class MemoryCommand: REPLCommand(
 ) {
     init {
         subcommands(
-            object: REPLCommand(name = "peak", help = "Shows the maximum memory use ever observed during the execution of this application. This only includes the memory that was truly used, not allocated memory.") {
+            object: REPLCommand(name = "peak", help = """
+                Shows the maximum memory use ever observed during the execution of this application.
+                This only includes the memory that was truly used, not allocated memory.
+                
+                This command will fail if sjdb has not been started with the --monitor-memory flag.
+            """.trimIndent()) {
                 private val dumpJson by option().file(canBeDir = false)
 
                 override fun run() {

@@ -6,15 +6,16 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.options.*
-import de.ahbnr.semanticweb.jdi2owl.debugging.JvmDebugger
-import de.ahbnr.semanticweb.jdi2owl.mapping.genDefaultNs
 import de.ahbnr.semanticweb.jdi2owl.Logger
+import de.ahbnr.semanticweb.jdi2owl.debugging.JvmDebugger
 import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
 import de.ahbnr.semanticweb.jdi2owl.mapping.datatypes.JavaAccessModifierDatatype
+import de.ahbnr.semanticweb.jdi2owl.mapping.genDefaultNs
 import de.ahbnr.semanticweb.sjdb.repl.JLineLogger
 import de.ahbnr.semanticweb.sjdb.repl.REPL
-import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
 import de.ahbnr.semanticweb.sjdb.repl.commands.*
+import de.ahbnr.semanticweb.sjdb.repl.states.SemanticDebuggerState
+import de.ahbnr.semanticweb.sjdb.utils.MemoryUsageMonitor
 import org.apache.commons.io.FilenameUtils
 import org.jline.terminal.TerminalBuilder
 import org.koin.core.context.startKoin
@@ -44,121 +45,134 @@ class SemanticJavaDebugger : CliktCommand() {
         "--no-color" to "no-color"
     ).default("unknown")
 
+    private val monitorMemory by option()
+        .flag(default = false)
+        .help("Track memory usage statistics. Enables the memory command.")
+
     // Will store exit code for whole program
     var exitCode: Int = 0
         private set
 
     override fun run() {
-        // Initialize JLine
-        val terminalBuilder = TerminalBuilder.builder()
-        if (forceColor != "unknown") {
-            terminalBuilder.color(forceColor == "color")
-        }
+        if (monitorMemory)
+            MemoryUsageMonitor.enable()
 
-        val terminal = terminalBuilder.build()
+        try {
+            // Initialize JLine
+            val terminalBuilder = TerminalBuilder.builder()
+            if (forceColor != "unknown") {
+                terminalBuilder.color(forceColor == "color")
+            }
 
-        // Setup temporary directories for storing compilation results etc.
-        val systemTmpDir = System.getProperty("java.io.tmpdir")
-        val applicationTmpDir = Path.of(systemTmpDir, "SemanticJavaDebugger")
+            val terminal = terminalBuilder.build()
 
-        val compilerTmpDir =
-            applicationTmpDir.resolve(
-                if (commandFile != null) {
-                    if (Path.of(commandFile).isAbsolute) {
-                        Path.of(FilenameUtils.getBaseName(commandFile))
-                    } else {
-                        Path.of(
-                            FilenameUtils.getPath(commandFile),
-                            FilenameUtils.getBaseName(commandFile)
-                        )
-                    }
-                } else Path.of("repl")
-            )
-        compilerTmpDir.createDirectories()
+            // Setup temporary directories for storing compilation results etc.
+            val systemTmpDir = System.getProperty("java.io.tmpdir")
+            val applicationTmpDir = Path.of(systemTmpDir, "SemanticJavaDebugger")
 
-        // Setup commonly used objects and make them available through dependency injection
-        val ns = genDefaultNs()
-
-        JvmDebugger().use { jvmDebugger ->
-            // Setup dependency injection
-            @Suppress("USELESS_CAST")
-            startKoin {
-                modules(
-                    module {
-                        single { JLineLogger(terminal) as Logger }
-                        single { OntIRIs(ns) }
-                        single {
-                            SemanticDebuggerState(
-                                compilerTmpDir = compilerTmpDir
+            val compilerTmpDir =
+                applicationTmpDir.resolve(
+                    if (commandFile != null) {
+                        if (Path.of(commandFile).isAbsolute) {
+                            Path.of(FilenameUtils.getBaseName(commandFile))
+                        } else {
+                            Path.of(
+                                FilenameUtils.getPath(commandFile),
+                                FilenameUtils.getBaseName(commandFile)
                             )
                         }
-                        single { jvmDebugger }
-                    }
+                    } else Path.of("repl")
                 )
-            }
+            compilerTmpDir.createDirectories()
 
-            // Register custom datatypes with Jena
-            JavaAccessModifierDatatype.register()
+            // Setup commonly used objects and make them available through dependency injection
+            val ns = genDefaultNs()
 
-            try {
-                val readCommand = ReadCommand()
-
-                // Initialize REPL and enable commands
-                val repl = REPL(
-                    terminal = terminal,
-                    commands = listOf(
-                        AddTriplesCommand(),
-                        AssertCommand(),
-                        BuildKBCommand(),
-                        CheckKBCommand(),
-                        ClassPathsCommand(),
-                        CloseClass(),
-                        ContCommand(),
-                        DomainCommand(),
-                        DumpKBCommand(),
-                        InspectCommand(),
-                        JdiLookupCommand(),
-                        KillCommand(),
-                        ReverseCommand(),
-                        RhsChainCommand(),
-                        LocalsCommand(),
-                        LogCommand(),
-                        MappingCommand(),
-                        MemoryCommand(),
-                        InferCommand(),
-                        readCommand,
-                        ReadKBCommand(),
-                        ReasonerCommand(),
-                        RunCommand(),
-                        SectionCommand(),
-                        ShaclCommand(),
-                        SourcePathCommand(),
-                        SparqlCommand(),
-                        StatsCommand(),
-                        StopCommand(),
-                        TimeCommand(),
-                        TimeoutCommand()
+            JvmDebugger().use { jvmDebugger ->
+                // Setup dependency injection
+                @Suppress("USELESS_CAST")
+                startKoin {
+                    modules(
+                        module {
+                            single { JLineLogger(terminal) as Logger }
+                            single { OntIRIs(ns) }
+                            single {
+                                SemanticDebuggerState(
+                                    compilerTmpDir = compilerTmpDir
+                                )
+                            }
+                            single { jvmDebugger }
+                        }
                     )
-                )
-                readCommand.repl = repl
-
-                // If a sjdb script file was supplied, run it line-by-line through the REPL
-                val wasSuccessful = if (commandFile != null) {
-                    val fileInputStream = FileInputStream(commandFile!!)
-
-                    repl.interpretStream(fileInputStream)
-                } else {
-                    // Otherwise, run the REPL interactively
-                    repl.main()
-                    true
                 }
 
-                // Supply exit code to caller, base on result of REPL execution
-                exitCode = if (wasSuccessful) 0 else -1
-            } finally {
-                // Shut down dependency injection system
-                stopKoin()
+                // Register custom datatypes with Jena
+                JavaAccessModifierDatatype.register()
+
+                try {
+                    val readCommand = ReadCommand()
+
+                    // Initialize REPL and enable commands
+                    val repl = REPL(
+                        terminal = terminal,
+                        commands = listOf(
+                            AddTriplesCommand(),
+                            AssertCommand(),
+                            BuildKBCommand(),
+                            CheckKBCommand(),
+                            ClassPathsCommand(),
+                            CloseClass(),
+                            ContCommand(),
+                            DomainCommand(),
+                            DumpKBCommand(),
+                            InspectCommand(),
+                            JdiLookupCommand(),
+                            KillCommand(),
+                            ReverseCommand(),
+                            RhsChainCommand(),
+                            LocalsCommand(),
+                            LogCommand(),
+                            MappingCommand(),
+                            MemoryCommand(),
+                            InferCommand(),
+                            readCommand,
+                            ReadKBCommand(),
+                            ReasonerCommand(),
+                            RunCommand(),
+                            SectionCommand(),
+                            ShaclCommand(),
+                            SourcePathCommand(),
+                            SparqlCommand(),
+                            StatsCommand(),
+                            StopCommand(),
+                            TimeCommand(),
+                            TimeoutCommand()
+                        )
+                    )
+                    readCommand.repl = repl
+
+                    // If a sjdb script file was supplied, run it line-by-line through the REPL
+                    val wasSuccessful = if (commandFile != null) {
+                        val fileInputStream = FileInputStream(commandFile!!)
+
+                        repl.interpretStream(fileInputStream)
+                    } else {
+                        // Otherwise, run the REPL interactively
+                        repl.main()
+                        true
+                    }
+
+                    // Supply exit code to caller, base on result of REPL execution
+                    exitCode = if (wasSuccessful) 0 else -1
+                } finally {
+                    // Shut down dependency injection system
+                    stopKoin()
+                }
             }
+        }
+
+        finally {
+            MemoryUsageMonitor.disable()
         }
     }
 }
