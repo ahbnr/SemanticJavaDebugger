@@ -5,6 +5,8 @@ package de.ahbnr.semanticweb.sjdb.repl.commands
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import de.ahbnr.semanticweb.jdi2owl.linting.LinterMode
+import de.ahbnr.semanticweb.jdi2owl.linting.ModelSanityChecker
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.ConsistencyChecker
 import openllet.jena.PelletInfGraph
 import org.koin.core.component.KoinComponent
@@ -13,6 +15,7 @@ import org.koin.core.component.KoinComponent
 class CheckKBCommand : REPLCommand(name = "checkkb"), KoinComponent {
     private val checkIfConsistent: Boolean by option("--is-consistent").flag(default = false)
     private val checkForUnsatisfiableClasses: Boolean by option("--has-unsatisfiable-classes").flag(default = false)
+    private val runLinters: Boolean by option("--run-linters").flag(default = false)
 
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
@@ -88,6 +91,15 @@ class CheckKBCommand : REPLCommand(name = "checkkb"), KoinComponent {
                         }
                     }
                 }
+        }
+
+        if (runLinters) {
+            if (
+                !ModelSanityChecker()
+                    .fullCheck(knowledgeBase.ontology, knowledgeBase.buildParameters.limiter, LinterMode.FullReport)
+            ) {
+                logger.error("Found lints!")
+            }
         }
     }
 }
