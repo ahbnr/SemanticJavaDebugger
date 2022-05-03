@@ -21,11 +21,22 @@ class DumpKBCommand : REPLCommand(name = "dumpkb"), KoinComponent {
             throw ProgramResult(-1)
         }
 
-        RDFWriter
+        val writer = RDFWriter
             .create(knowledgeBase.ontology.asGraphModel())
             .lang(Lang.TURTLE)
-            .format(RDFFormat.TURTLE_PRETTY)
-            .output(file.outputStream())
+
+        try {
+            writer
+                .format(RDFFormat.TURTLE_PRETTY)
+                .output(file.outputStream())
+        }
+        catch (e: StackOverflowError) {
+            logger.warning("The turtle pretty printer ran into a stack overflow. This can for example happen if there are too deep RDF lists, since the pretty printer is implemented recursively on lists. We fall back to a flat turtle printer.")
+            writer
+                .format(RDFFormat.TURTLE_PRETTY)
+                .output(file.outputStream())
+        }
+
         logger.success("Knowledge base saved to ${file.absolutePath}.")
     }
 }
