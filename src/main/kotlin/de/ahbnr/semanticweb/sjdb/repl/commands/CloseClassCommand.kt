@@ -13,7 +13,7 @@ import com.github.ajalt.clikt.parameters.types.int
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.ClassCloser
 import org.koin.core.component.KoinComponent
 
-class CloseClass : REPLCommand(name = "close"), KoinComponent {
+class CloseClassCommand : REPLCommand(name = "close"), KoinComponent {
     val owlClass: String by argument()
 
     val noReasoner by option().flag(default = false)

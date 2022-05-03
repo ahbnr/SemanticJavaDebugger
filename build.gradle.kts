@@ -14,6 +14,8 @@ repositories {
 }
 
 dependencies {
+    implementation("com.google.guava:guava-testlib:31.1-jre")
+
     // local copy of jdi2owl mapper
     implementation("de.ahbnr.semanticweb:jdi2owl")
 
