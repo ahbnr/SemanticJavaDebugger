@@ -12,6 +12,7 @@ numpy = "*"
 tables = "*"
 jinja2 = "*"
 tqdm = "*"
+sklearn = "*"
 
 [dev-packages]
 ipykernel = "*"

@@ -55,17 +55,18 @@ def runSJDB(
         printer
 ):
     cmdline = [
-        "java",
-        "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
-        "-jar", config.sjdbJar,
+        "java"
     ]
 
     if monitorMemory:
         cmdline += [
-            "--monitor-memory",
+            # "--monitor-memory",
+            "-XX:+UseSerialGC",
         ]
 
     cmdline += [
+        "--add-opens", "jdk.jdi/com.sun.tools.jdi=ALL-UNNAMED",
+        "-jar", config.sjdbJar,
         taskfile
     ]
 

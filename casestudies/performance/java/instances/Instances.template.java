@@ -1,18 +1,17 @@
 {%- for i in range(0, num_classes)  %}
-class Super{{i}} { }
-
-class C{{i}} extends Super{{i}} {
-    private static C{{i}} staticRefField;
-    private static int staticPrimitiveField;
-
-    private C{{i}} refField;
-    private int primitiveField;
-
-    public void method() {
-        C{{i}} refVar = null;
-        int primitiveVar = 42;
-    }
-}
+class Super{{i}} { } {#- -#}
+class C{{i}} extends Super{{i}} { {#- -#}
+    private static C{{i}} staticRefField; {#- -#}
+    private static int staticPrimitiveField; {#- -#}
+ {#- -#}
+    private C{{i}} refField; {#- -#}
+    private int primitiveField; {#- -#}
+ {#- -#}
+    public void method() { {#- -#}
+        C{{i}} refVar = null; {#- -#}
+        int primitiveVar = 42; {#- -#}
+    } {#- -#}
+} {#- -#}
 {%- endfor  %}
 
 public class Instances {
@@ -33,11 +32,12 @@ public class Instances {
         {%- if gen_mode == "B" %}
             {%- set expected_num_instances.value=num_classes %}
 
-            var objects = new Object[{{num_classes}}];
-            {%- for classIdx in range(0, num_classes) %}
-                objects[{{classIdx}}] = new C{{classIdx}}();
-                {%- set instance_counter.value = instance_counter.value + 1  %}
-            {%- endfor %}
+            var objects = new Object[] {
+                {%- for classIdx in range(0, num_classes) %}
+                    new C{{classIdx}}(),
+                    {%- set instance_counter.value = instance_counter.value + 1  %}
+                {%- endfor %}
+            };
         {%- endif %}
 
         {%- if gen_mode == "C" %}

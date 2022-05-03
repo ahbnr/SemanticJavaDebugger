@@ -3,6 +3,7 @@ sourcepath 'Instances.java'
 mapping set limit-sdk true
 mapping set no-sequence-descriptions true
 mapping set deep SysLoader-Instances.-void-main(java.lang.String[]).objects
+{# mapping set make-objects-distinct true #}
 timeout {{timeout}}
 
 stop at 'Instances:Instances created'
@@ -18,6 +19,28 @@ stop at 'Instances:Instances created'
 
     {% include task + ".template.sjdb" %}
 {%- endfor %}
+
+{#
+close --no-reasoner prog:SysLoader-C0
+#}
+{#
+add-triples '<<EOF
+    java:x rdf:type owl:AllDisjointClasses .
+    java:x owl:members (
+    {%- for i in range(0, num_classes) %}
+        prog:SysLoader-C{{i}}
+    {%- endfor %}
+    ) .
+'EOF
+add-triples '<<EOF
+    java:y rdf:type owl:AllDisjointClasses .
+    java:y owl:members (
+    {%- for i in range(0, num_classes) %}
+        prog:SysLoader-Super{{i}}
+    {%- endfor %}
+    ) .
+'EOF
+#}
 
 {%- for repeatIdx in range(0, repeat) %}
     {% include task + ".template.sjdb" %}
