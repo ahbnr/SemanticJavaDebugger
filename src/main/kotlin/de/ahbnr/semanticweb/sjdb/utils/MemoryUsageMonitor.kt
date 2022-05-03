@@ -8,7 +8,7 @@ object MemoryUsageMonitor {
     val peakMemoryUse: Long
         get() {
             Object() // ensure there is garbage to collect
-            GcFinalization.awaittFullGc()
+            GcFinalization.awaitFullGc()
             return ManagementFactory.getMemoryPoolMXBeans().sumOf { it.peakUsage.used }
         }
 }
