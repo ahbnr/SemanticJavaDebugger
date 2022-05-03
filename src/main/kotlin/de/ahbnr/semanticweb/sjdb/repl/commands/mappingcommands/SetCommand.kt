@@ -12,6 +12,7 @@ class SetCommand : REPLCommand(name = "set") {
     private val limitSdk = "limit-sdk"
     private val deep = "deep"
     private val noSequenceDescriptions = "no-sequence-descriptions"
+    private val makeObjectsDistinct = "make-objects-distinct"
 
     private val setting: () -> Unit by argument().choice(
         limitSdk to { state.mappingSettings.limitSdk = tryGetBooleanValue() },
@@ -22,7 +23,8 @@ class SetCommand : REPLCommand(name = "set") {
                 addAll(newDeep)
             }
         },
-        noSequenceDescriptions to { state.mappingSettings.noSequenceDescriptions = tryGetBooleanValue() }
+        noSequenceDescriptions to { state.mappingSettings.noSequenceDescriptions = tryGetBooleanValue() },
+        makeObjectsDistinct to { state.mappingSettings.makeObjectsDistinct = tryGetBooleanValue() }
     )
     private val values by argument().multiple()
 

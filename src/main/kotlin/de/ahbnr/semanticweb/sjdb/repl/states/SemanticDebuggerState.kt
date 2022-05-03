@@ -9,8 +9,6 @@ import org.koin.core.component.inject
 import org.semanticweb.owlapi.model.OWLOntologyChangeListener
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 class SemanticDebuggerState(
     val compilerTmpDir: Path = Paths.get("") // CWD
@@ -21,6 +19,7 @@ class SemanticDebuggerState(
         // use high performance settings as default
         limitSdk = true
         closeReferenceTypes = false
+        makeObjectsDistinct = false
     }
 
     var applicationDomainDefFile: String? = null
