@@ -1,4 +1,4 @@
-*.h5
+store_backup*
 results.pickle
 tasks.sjdb
 
