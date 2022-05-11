@@ -2,7 +2,10 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.infercommands
 
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 
-class UnsatisfiableClassesCommand : REPLCommand(name = "unsatisfiableClasses") {
+class UnsatisfiableClassesCommand : REPLCommand(
+    name = "unsatisfiableClasses",
+    help = "Returns all named OWL classes that are not satisfiable excluding owl:Nothing."
+) {
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
 

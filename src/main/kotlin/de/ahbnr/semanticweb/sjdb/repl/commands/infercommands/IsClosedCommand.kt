@@ -4,7 +4,16 @@ import com.github.ajalt.clikt.core.ProgramResult
 import org.semanticweb.owlapi.apibinding.OWLFunctionalSyntaxFactory
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 
-class IsClosedCommand : ExpressionSubCommand(name = "isClosed") {
+class IsClosedCommand: ExpressionSubCommand(
+    name = "isClosed",
+    help = """
+        Determines, whether the knowledge base entails a complete enumeration of all
+        named individuals of a class.
+    """.trimIndent(),
+    expressionHelp = """
+        OWL class expression in manchester syntax.
+    """.trimIndent()
+) {
     override fun run() {
         val evaluator = getEvaluator()
 

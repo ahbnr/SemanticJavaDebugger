@@ -5,7 +5,15 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import kotlin.streams.asSequence
 
-class InstancesOfCommand : ExpressionSubCommand(name = "instancesOf") {
+class InstancesOfCommand: ExpressionSubCommand(
+    name = "instancesOf",
+    help = """
+        List all named individuals which belong to the given class.
+    """.trimIndent(),
+    expressionHelp = """
+        OWL class expression in manchester syntax.
+    """.trimIndent()
+) {
     private val representativeOnly: Boolean by option().flag(default = false)
 
     override fun run() {

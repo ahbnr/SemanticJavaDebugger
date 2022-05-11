@@ -2,7 +2,11 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.infercommands
 
 import com.github.ajalt.clikt.core.ProgramResult
 
-class SignatureCommand : ExpressionSubCommand(name = "signature") {
+class SignatureCommand : ExpressionSubCommand(
+    name = "signature",
+    help = "Computes the signature of an OWL class.",
+    expressionHelp = "OWL class in manchester syntax."
+) {
     override fun run() {
         val evaluator = getEvaluator()
 

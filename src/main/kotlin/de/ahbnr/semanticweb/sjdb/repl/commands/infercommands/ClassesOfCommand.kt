@@ -2,7 +2,12 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.infercommands
 
 import kotlin.streams.asSequence
 
-class ClassesOfCommand : ExpressionSubCommand(name = "classesOf") {
+class ClassesOfCommand : ExpressionSubCommand(
+    name = "classesOf",
+    help = """
+        Lists all OWL classes an individual belongs to.
+    """.trimIndent()
+) {
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
         val evaluator = getEvaluator()

@@ -2,7 +2,6 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.infercommands
 
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
-import com.github.ajalt.clikt.parameters.arguments.transformAll
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.default
@@ -12,7 +11,7 @@ import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 import de.ahbnr.semanticweb.sjdb.repl.commands.utils.OwlExpressionEvaluator
 import de.ahbnr.semanticweb.sjdb.utils.UsabilityPreprocessor
 
-abstract class ExpressionSubCommand(name: String) : REPLCommand(name = name) {
+abstract class ExpressionSubCommand(name: String, help: String = "", expressionHelp: String = ""): REPLCommand(name = name, help = help) {
     protected class SyntacticExtractionOptions : OptionGroup() {
         val classRelationDepth by option().int().default(-1)
     }
@@ -21,7 +20,7 @@ abstract class ExpressionSubCommand(name: String) : REPLCommand(name = name) {
         "syntactic" to SyntacticExtractionOptions()
     )
 
-    val rawDlExpression: String by argument().convert { UsabilityPreprocessor.preprocess(it) }
+    val rawDlExpression: String by argument(help = expressionHelp).convert { UsabilityPreprocessor.preprocess(it) }
 
     protected fun getEvaluator(): OwlExpressionEvaluator {
         val knowledgeBase = tryGetKnowledgeBase()

@@ -3,7 +3,13 @@ package de.ahbnr.semanticweb.sjdb.repl.commands.infercommands
 import de.ahbnr.semanticweb.sjdb.repl.commands.REPLCommand
 import org.semanticweb.owlapi.reasoner.InferenceType
 
-class ClassificationCommand : REPLCommand(name = "classification") {
+class ClassificationCommand : REPLCommand(
+    name = "classification",
+    help = """
+        Computes all subsumptions between named classes.
+        It may be useful to benchmark reasoner performance on a knowledge base.
+    """.trimIndent()
+) {
     override fun run() {
         val knowledgeBase = tryGetKnowledgeBase()
 
