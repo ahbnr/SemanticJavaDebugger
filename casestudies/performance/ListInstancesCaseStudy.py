@@ -17,28 +17,28 @@ starttime = datetime.datetime.now()
 # one class, instances increase
 experiment_A = True
 # one instance per class, classes increase
-experiment_B = False
-experiment_B2 = False
+experiment_B = True
+experiment_B2 = True
 # instances increase and classes increase. Instances are equally distributed amongst the classes
-experiment_C = False
+experiment_C = True
 
 triple_stats = False
 
 write_results = True
 
-measure_times = False
+measure_times = True
 measure_memory = True
 
 measure_low = True
-measure_high = False
+measure_high = True
 
 resultColumns = [
     "times",
     "memory"
 ]
 
-warmup = 0
-repeat = 1
+warmup = 5
+repeat = 10
 timeout = 60
 
 tasks = ["buildkb", "sparql", "infer"]
@@ -64,6 +64,12 @@ if measure_low:
 if measure_high:
     num_classes_options_dict['high'] = num_classes_options_high
     num_instances_options_dict['high'] = num_instances_options_high
+
+
+def check_if_paused(t):
+    while os.path.exists("suspend"):
+        t.set_description("Detected suspend file. Suspending until ENTER is pressed")
+        input()
 
 
 class ExperimentResult(NamedTuple):
@@ -145,6 +151,8 @@ def run_single_experiment(
         memory = 0
         with tqdm(range(0, repeat), total=repeat) as t:
             for repeatIdx in t:
+                check_if_paused(t)
+
                 avgUsage = int(memory / repeatIdx / (1024 * 1024)) if repeatIdx > 0 else 0
                 avgUsageStr = f"{avgUsage} MiB"
                 lastUsageStr = f"{int(lastMemoryUsage / (1024 * 1024))} MiB"
@@ -183,6 +191,8 @@ def experiment_for_each_task(
     memory: Dict[str, int] = dict()
     with tqdm(tasks, total=len(tasks)) as t:
         for task in t:
+            check_if_paused(t)
+
             t.set_description(f"TASK {task}")
             if task in excluded_tasks:
                 continue
@@ -209,6 +219,8 @@ def experiment_for_each_task(
 if experiment_A:
     with tqdm(num_instances_options_dict) as tOuter:
         for key in tOuter:
+            check_if_paused(tOuter)
+
             results: pd.DataFrame = pd.DataFrame(np.empty((0, len(resultColumns))), columns=resultColumns)
 
             tOuter.set_description(f"EXPERIMENT A ({key})")
@@ -216,6 +228,7 @@ if experiment_A:
 
             with tqdm(enumerate(num_instances_options), total=len(num_instances_options)) as t:
                 for i, num_instances in t:
+                    check_if_paused(t)
                     t.set_description(f"Instances: {num_instances}")
 
                     tqdm.write("Evaluating for {} instances...".format(num_instances))
@@ -240,6 +253,7 @@ if experiment_A:
 if experiment_B:
     with tqdm({'low': num_classes_options_low}) as tOuter:
         for key in tOuter:
+            check_if_paused(t)
             results: pd.DataFrame = pd.DataFrame(np.empty((0, len(resultColumns))), columns=resultColumns)
 
             tOuter.set_description(f"EXPERIMENT B ({key})")
@@ -247,6 +261,7 @@ if experiment_B:
 
             with tqdm(enumerate(num_classes_options), total=len(num_classes_options)) as t:
                 for i, num_classes in t:
+                    check_if_paused(t)
                     t.set_description(f"NUM CLASSES: {num_classes})")
 
                     tqdm.write("Evaluating for {} classes...".format(num_classes))
@@ -273,6 +288,7 @@ if experiment_B2:
 
     with tqdm(enumerate(num_classes_options), total=len(num_classes_options)) as t:
         for i, num_classes in t:
+            check_if_paused(t)
             t.set_description(f"EXPERIMENT B2 - num classes: {num_classes})")
 
             tqdm.write("Evaluating for {} classes...".format(num_classes))
@@ -315,6 +331,7 @@ if experiment_C:
 
     with tqdm(enumerate(steps), total=len(steps)) as t:
         for i, step in t:
+            check_if_paused(t)
             num_classes, num_instances = step
 
             t.set_description(f"EXPERIMENT C ({num_classes} classes, {num_instances} instances)")

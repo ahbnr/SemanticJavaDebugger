@@ -10,7 +10,7 @@ from runner import compileProject, runSJDB, retrieveAverageTime, retrieveMemory
 
 starttime = datetime.datetime.now()
 
-low_range_evaluation = False
+low_range_evaluation = True
 infer_evaluation = False
 high_range_evaluation = True
 
@@ -21,12 +21,12 @@ resultColumns = [
     "memory"
 ]
 
-warmup = 0
-repeat = 1
+warmup = 5
+repeat = 10
 timeout = 120
 
 measure_memory = True
-measure_times = False
+measure_times = True
 
 tasks = ["buildkb", "sparql", "shacl", "infer"]
 
