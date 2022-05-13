@@ -104,6 +104,7 @@ class SemanticJavaDebugger : CliktCommand() {
 
             try {
                 val readCommand = ReadCommand()
+                val helpCommand = HelpCommand()
 
                 // Initialize REPL and enable commands
                 val repl = REPL(
@@ -118,6 +119,7 @@ class SemanticJavaDebugger : CliktCommand() {
                         ContCommand(),
                         DomainCommand(),
                         DumpKBCommand(),
+                        helpCommand,
                         InspectCommand(),
                         JdiLookupCommand(),
                         KillCommand(),
@@ -143,6 +145,7 @@ class SemanticJavaDebugger : CliktCommand() {
                     )
                 )
                 readCommand.repl = repl
+                helpCommand.repl = repl
 
                 // If a sjdb script file was supplied, run it line-by-line through the REPL
                 val wasSuccessful = if (commandFile != null) {

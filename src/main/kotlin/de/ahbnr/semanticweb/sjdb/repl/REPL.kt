@@ -26,8 +26,6 @@ import sun.misc.SignalHandler
 import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file.Path
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 import kotlin.io.path.createDirectories
 import kotlin.time.Duration
@@ -55,7 +53,7 @@ class REPL(
 
     private var mode: Mode = Mode.Normal
 
-    private val commandMap = commands.map { it.commandName to it }.toMap()
+    val commandMap = commands.map { it.commandName to it }.toMap()
     private val reader: LineReader
     private val historyPath: Path
 
