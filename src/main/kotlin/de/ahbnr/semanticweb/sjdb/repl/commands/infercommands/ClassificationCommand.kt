@@ -14,7 +14,7 @@ class ClassificationCommand : REPLCommand(
         val knowledgeBase = tryGetKnowledgeBase()
 
         knowledgeBase
-            .getOwlClassExpressionReasoner(knowledgeBase.ontology)
+            .getDefaultOWLReasoner(knowledgeBase.ontology)
             .use { reasoner ->
                 // Classification is the task of computing all entailed class subsumptions between named classes
 

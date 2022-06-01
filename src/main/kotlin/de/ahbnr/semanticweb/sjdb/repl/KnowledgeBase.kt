@@ -242,7 +242,7 @@ class KnowledgeBase(
 
 
     fun getConsistencyReasoner(): CloseableOWLReasoner = getOwlApiReasoner(consistencyReasoner, ontology)
-    fun getOwlClassExpressionReasoner(baseOntology: Ontology): CloseableOWLReasoner =
+    fun getDefaultOWLReasoner(baseOntology: Ontology): CloseableOWLReasoner =
         getOwlApiReasoner(owlClassExpressionReasoner, baseOntology)
 
     fun getSyntacticModuleExtractionReasoner(): CloseableOWLReasoner =

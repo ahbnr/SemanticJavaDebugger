@@ -200,7 +200,7 @@ class OwlExpressionEvaluator(
                 module
             } else knowledgeBase.ontology
 
-        return knowledgeBase.getOwlClassExpressionReasoner(ontology)
+        return knowledgeBase.getDefaultOWLReasoner(ontology)
     }
 
     fun <T> handleReasonerErrors(action: () -> T): T? =

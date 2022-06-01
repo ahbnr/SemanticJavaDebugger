@@ -50,7 +50,7 @@ class ClassCloser(
                 } else knowledgeBase.ontology
 
             knowledgeBase
-                .getOwlClassExpressionReasoner(ontology)
+                .getDefaultOWLReasoner(ontology)
                 .use { reasoner ->
                     reasoner
                         .getInstances(`class`)

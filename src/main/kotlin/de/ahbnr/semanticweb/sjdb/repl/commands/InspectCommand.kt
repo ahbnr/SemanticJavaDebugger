@@ -14,7 +14,12 @@ import org.apache.jena.riot.RDFWriter
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class InspectCommand : REPLCommand(name = "inspect"), KoinComponent {
+class InspectCommand : REPLCommand(
+    name = "inspect",
+    help = """
+        Recursively lists the properties associated with a given IRI.
+    """.trimIndent()
+), KoinComponent {
     private val URIs: OntIRIs by inject()
     private val variableOrIRI: String by argument()
 

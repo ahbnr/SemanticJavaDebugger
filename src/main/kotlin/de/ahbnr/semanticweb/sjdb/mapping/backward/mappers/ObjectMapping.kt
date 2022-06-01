@@ -1,10 +1,10 @@
 package de.ahbnr.semanticweb.sjdb.mapping.backward.mappers
 
 import com.sun.jdi.ObjectReference
+import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.jdi2owl.debugging.JvmState
 import de.ahbnr.semanticweb.jdi2owl.mapping.MappingLimiter
 import de.ahbnr.semanticweb.jdi2owl.mapping.OntIRIs
-import de.ahbnr.semanticweb.jdi2owl.Logger
 import de.ahbnr.semanticweb.sjdb.repl.KnowledgeBase
 import org.apache.jena.rdf.model.Literal
 import org.apache.jena.rdf.model.RDFNode
@@ -50,7 +50,7 @@ object ObjectMapping : KoinComponent {
 
             // As a last resort, check if reasoner can find the mapping
             val inferredSameIndividuals = knowledgeBase
-                .getOwlClassExpressionReasoner(knowledgeBase.ontology)
+                .getDefaultOWLReasoner(knowledgeBase.ontology)
                 .use { reasoner ->
                     val owlIndividual = OWLFunctionalSyntaxFactory.NamedIndividual(IRI.create(resource.uri))
                     if (!knowledgeBase.ontology.isDeclared(owlIndividual, Imports.INCLUDED))

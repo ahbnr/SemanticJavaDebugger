@@ -16,7 +16,7 @@ class RealisationCommand : REPLCommand(
         val knowledgeBase = tryGetKnowledgeBase()
 
         knowledgeBase
-            .getOwlClassExpressionReasoner(knowledgeBase.ontology)
+            .getDefaultOWLReasoner(knowledgeBase.ontology)
             .use { reasoner ->
                 // Based on OWL2Bench code:
                 // https://github.com/kracr/owl2bench/blob/master/Experiments/java%20runnable%20jar%20files/Java%20codes%20of%20the%20runnable%20jars/hermit/src/main/java/debug/hermit/Hermit.java

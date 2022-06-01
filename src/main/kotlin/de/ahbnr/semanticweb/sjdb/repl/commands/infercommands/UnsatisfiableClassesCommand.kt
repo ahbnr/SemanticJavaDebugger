@@ -10,7 +10,7 @@ class UnsatisfiableClassesCommand : REPLCommand(
         val knowledgeBase = tryGetKnowledgeBase()
 
         knowledgeBase
-            .getOwlClassExpressionReasoner(knowledgeBase.ontology)
+            .getDefaultOWLReasoner(knowledgeBase.ontology)
             .use { reasoner ->
                 // FIXME: Is this the correct way of doing it?
                 val unsat = reasoner.unsatisfiableClasses.entitiesMinusBottom

@@ -14,10 +14,12 @@ close prog:SysLoader-casestudies.btrees.structure.BTreeNode --no-reasoner
 
 # We can see that there is a node which is not valid
 infer entails 'SubClassOf( prog:SysLoader-casestudies.btrees.structure.BTreeNode domain:ValidNode )'
+time
 assert infer entailsNot 'SubClassOf( prog:SysLoader-casestudies.btrees.structure.BTreeNode domain:ValidNode )'
 
 # Ok, then let's ask which nodes are not valid:
 infer instancesOf 'prog:SysLoader-casestudies.btrees.structure.BTreeNode and not domain:ValidNode'
+time
 
 # What condition does it violate? Lets check
 
@@ -61,6 +63,7 @@ run casestudies.btrees.structure.StructureTest
 buildkb
 close prog:SysLoader-casestudies.btrees.structure.BTreeNode --no-reasoner
 infer entails 'SubClassOf( prog:SysLoader-casestudies.btrees.structure.BTreeNode domain:ValidNode )'
+time
 assert infer entails 'SubClassOf( prog:SysLoader-casestudies.btrees.structure.BTreeNode domain:ValidNode )'
 
 # But conditions are violated after splitting:
@@ -70,6 +73,7 @@ cont
 buildkb
 close prog:SysLoader-casestudies.btrees.structure.BTreeNode --no-reasoner
 infer entails 'SubClassOf( prog:SysLoader-casestudies.btrees.structure.BTreeNode domain:ValidNode )'
+time
 assert infer entailsNot 'SubClassOf( prog:SysLoader-casestudies.btrees.structure.BTreeNode domain:ValidNode )'
 
 cont

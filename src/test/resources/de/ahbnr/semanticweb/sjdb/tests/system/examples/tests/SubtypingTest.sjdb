@@ -13,7 +13,7 @@ assert sparql fail -- '<<EOF
     SELECT ?classArray
     WHERE {
         ?classArray a java:Class ;
-                    a java:Array .
+                    a java:ArrayType .
     }
 'EOF
 
@@ -30,7 +30,7 @@ assert sparql success -- '<<EOF
 assert sparql success -- '<<EOF
     SELECT ?objectArray
     WHERE {
-        ?objectArray a java:Array .
+        ?objectArray a java:ArrayType .
         FILTER (?objectArray = prog:`java.lang.Object[]`)
     }
 'EOF
@@ -59,7 +59,7 @@ assert sparql fail -- '<<EOF
 assert sparql fail -- '<<EOF
     SELECT ?array
     WHERE {
-        ?array a java:Array .
+        ?array a java:ArrayType .
         FILTER NOT EXISTS {
             ?array rdfs:subClassOf prog:java.lang.Object .
         }
@@ -70,7 +70,7 @@ assert sparql fail -- '<<EOF
 assert sparql fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
-        ?arrayType a java:Array .
+        ?arrayType a java:ArrayType .
         FILTER NOT EXISTS {
             ?arrayType rdfs:subClassOf prog:java.lang.Cloneable ;
                        rdfs:subClassOf prog:java.io.Serializable .
@@ -82,7 +82,7 @@ assert sparql fail -- '<<EOF
 assert sparql fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
-        ?arrayType a java:Array .
+        ?arrayType a java:ArrayType .
         ?hasElementRelation rdfs:subPropertyOf java:hasElement ;
                             rdfs:domain ?arrayType ;
                             rdfs:range ?arrayElementClass .
@@ -97,7 +97,7 @@ assert sparql fail -- '<<EOF
 assert sparql fail -- '<<EOF
     SELECT ?arrayType
     WHERE {
-        ?arrayType a java:Array .
+        ?arrayType a java:ArrayType .
         ?hasElementRelation rdfs:subPropertyOf java:hasElement ;
                             rdfs:domain ?arrayType ;
                             rdfs:range ?arrayElementClass .

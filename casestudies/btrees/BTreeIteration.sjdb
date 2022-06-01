@@ -28,7 +28,8 @@ buildkb
 # The conditional breakpoints will be hit for this incorrect implementation
 # Now, lets find the cause of the postcondition violation:
 
-# Lets see which nodes are the children of the current node
+# Lets see which nodes are the current node and the children of the current node
+infer instancesOf domain:CurrentNode
 infer instancesOf domain:ChildrenOfCurrentNode
 
 # TODO: For some reason Openllet SPARQL-DL fails here
