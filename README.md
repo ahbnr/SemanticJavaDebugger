@@ -3,7 +3,7 @@
 
 Semantic debugging, as introduced by Kamburjan et al. [(link)](https://doi.org/10.1007/978-3-030-77385-4_8), refers to the practice of applying technologies of the semantic web to query the run-time state of a program and combine it with external domain knowledge.
 
-This repository provides the frontend implementation of a semantic debugging tool for the Java programming language, called the Semantic Java Debugger or sjdb.
+This repository provides the frontend implementation of a semantic debugging tool for the Java programming language, called the *Semantic Java Debugger* or `sjdb`.
 The implementation of the backend has been factored out into a separate repository, see [jdi2owl](https://github.com/ahbnr/jdi2owl).
 
 The sjdb tool provides an interactive, command line-based user interface through which users can
@@ -27,7 +27,7 @@ Please make sure that the following dependencies are available on your system:
 * Git version 2.28.3
 
 One of the core components of `sjdb` is `jdi2owl` which has been factored out into a separate repository.
-Its integrated into this repository as a git submodule and can be downloaded simply by running the following command:
+It has been integrated into this repository as a git submodule and can be downloaded simply by running the following script:
 
 ```sh
 ./fetch-libs.sh
@@ -62,7 +62,8 @@ Just call the following scripts to run the case studies for the different sectio
   * `casestudies/PizzaSubscriptionService/runSimple.sh`
   * `casestudies/PizzaSubscriptionService/runFuzzing.sh`
 
-Furthermore, many `.sjdb` scripts were implemented as part of automatic testing which can also serve as usage examples.
+Moreover, many `.sjdb` scripts were implemented as part of of the automatic testing pipeline of this project.
+These tests can also serve as usage examples.
 You can run the tests by executing
 ```sh
 ./gradlew test
